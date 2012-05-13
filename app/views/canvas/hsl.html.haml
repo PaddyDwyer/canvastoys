@@ -1,4 +1,18 @@
 %h1 HSL Selector
+#hsl
+  %label{:for => "h"} h
+  %input{:id => "hi", :type => "range", :min => "0", :max => "365", :value => "0"}
+  %br
+  %canvas{:id => "hcan", :width => "200", :height => "35"}
+  %br
 
-%label{:for => "h"} h
-%input{:type => "range", :min => "0", :max => "365"}
+  %label{:for => "s"} s
+  %input{:id => "si", :type => "range", :min => "0", :max => "100", :value => "100"}
+  %br
+  %canvas{:id => "scan", :width => "200", :height => "35"}
+  %br
+
+  %label{:for => "l"} l
+  %input{:id => "li", :type => "range", :min => "0", :max => "100", :value => "50"}
+  %br
+  %canvas{:id => "lcan", :width => "200", :height => "35"}
