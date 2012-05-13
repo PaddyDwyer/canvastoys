@@ -1,5 +1,6 @@
 Canvas::Application.routes.draw do
   get "canvas/tron"
+  get "canvas/hsl"
 
   # The priority is based upon order of creation:
   # first created -> highest priority.
