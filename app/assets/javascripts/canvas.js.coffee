@@ -45,6 +45,9 @@ class HslSelector
       this.draw()
 
     $("input").bind 'change', (event) =>
+      target = $(event.target)
+      alt = $("#" + target.data("alt"))
+      alt.val(target.val())
       this.draw()
 
   draw: () ->
