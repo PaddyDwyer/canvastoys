@@ -27,8 +27,13 @@ class Tron
 
       @ctx.fillRect 0, 0, 400, 400
 
-      @ctx.fillStyle = "hsl(241, 100%, 95%)"
-      @ctx.fillRect 76, 0, 20, 400
+      grad = @ctx.createLinearGradient 0, 76, 0, 96
+      grad.addColorStop 0, "hsl(174, 100%, 78%)"
+      grad.addColorStop 0.3, "hsl(174, 100%, 98%)"
+      grad.addColorStop 0.7, "hsl(174, 100%, 98%)"
+      grad.addColorStop 1, "hsl(174, 100%, 78%)"
+      @ctx.fillStyle = grad
+      @ctx.fillRect 0, 76, 400, 20
 
 class HslSelector
   constructor: () ->
