@@ -3,6 +3,13 @@
 // You can use Sass (SCSS) here: http://sass-lang.com/
 
 #hsl {
+  #color {
+    width: 200px;
+    height: 35px;
+    border: solid 1px #000;
+    background-color: hsl(0, 100%, 50%);
+    margin-left:15px;
+  }
   input {
     width: 200px;
   }

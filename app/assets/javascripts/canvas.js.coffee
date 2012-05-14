@@ -68,6 +68,7 @@ class HslSelector
       @lctx.lineTo x, 35
       @lctx.closePath()
       @lctx.stroke()
+    $("#color").css("background-color", new Hsl(this.getH(), this.getS(), this.getL()).rep())
 
   getH: () ->
     $("#hi").val()
