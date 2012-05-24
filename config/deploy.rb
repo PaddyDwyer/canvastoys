@@ -50,10 +50,13 @@ set :default_environment, {
 set :bundle_flags, "--deployment --binstubs --quiet --shebang ruby-local-exec"
 
 # Unicorn deploy restart https://gist.github.com/393178
-set :unicorn_binary, "#{release_path}/bin/unicorn_rails"
+set :unicorn_binary, "#{current_path}/bin/unicorn_rails"
 set :unicorn_config, "#{current_path}/config/unicorn.rb"
 set :unicorn_pid, "#{current_path}/tmp/pids/unicorn.pid"
 namespace :deploy do
+  task :routes do
+    run "cd #{current_path} && bundle exec rake routes"
+  end
   task :start do
     run "cd #{current_path} && #{unicorn_binary} -c #{unicorn_config} -E #{rails_env} -D"
   end
