@@ -79,6 +79,7 @@ namespace :deploy do
 end
 
 task :show_options do
+  p "ssh key is #{ssh_options[:keys]}"
   p "user is #{user}"
   p "deploy_to is #{deploy_to}"
   p "port is #{port}"
