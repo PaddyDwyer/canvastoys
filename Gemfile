@@ -30,9 +30,6 @@ end
 
 gem 'jquery-rails'
 
-# Enable perf testing
-gem 'ruby-prof', :git => 'git://github.com/wycats/ruby-prof.git'
-
 # To use ActiveModel has_secure_password
 # gem 'bcrypt-ruby', '~> 3.0.0'
 
@@ -55,5 +52,8 @@ group :production do
   gem 'therubyracer'
 end
 group :test do
+  # Enable perf testing
+  gem 'ruby-prof', :git => 'git://github.com/wycats/ruby-prof.git'
+
   gem 'test-unit'
 end
