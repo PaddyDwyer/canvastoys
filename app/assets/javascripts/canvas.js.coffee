@@ -29,16 +29,14 @@ class Tron
 
       grad = @ctx.createLinearGradient 76, 0, 96, 0
       grad.addColorStop 0, "hsl(60, 100%, 78%)"
-      grad.addColorStop 0.3, "hsl(60, 100%, 98%)"
-      grad.addColorStop 0.7, "hsl(60, 100%, 98%)"
+      grad.addColorStop 0.5, "hsl(60, 100%, 98%)"
       grad.addColorStop 1, "hsl(60, 100%, 78%)"
       @ctx.fillStyle = grad
       @ctx.fillRect 76, 0, 20, 400
 
       grad = @ctx.createLinearGradient 0, 76, 0, 96
       grad.addColorStop 0, "hsl(174, 100%, 78%)"
-      grad.addColorStop 0.3, "hsl(174, 100%, 98%)"
-      grad.addColorStop 0.7, "hsl(174, 100%, 98%)"
+      grad.addColorStop 0.5, "hsl(174, 100%, 98%)"
       grad.addColorStop 1, "hsl(174, 100%, 78%)"
       @ctx.fillStyle = grad
       @ctx.fillRect 0, 76, 400, 20
