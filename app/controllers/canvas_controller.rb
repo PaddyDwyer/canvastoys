@@ -4,4 +4,7 @@ class CanvasController < ApplicationController
 
   def hsl
   end
+
+  def highlighter
+  end
 end

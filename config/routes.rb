@@ -2,6 +2,7 @@ Canvas::Application.routes.draw do
   scope ENV['RAILS_RELATIVE_URL_ROOT'] || '/' do
     get "canvas/tron" => "canvas#tron"
     get "canvas/hsl" => "canvas#hsl"
+    get "canvas/highlighter" => "canvas#highlighter"
 
     # The priority is based upon order of creation:
     # first created -> highest priority.

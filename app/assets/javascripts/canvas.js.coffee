@@ -1,6 +1,36 @@
 # Place all the behaviors and hooks related to the matching controller here.
 # All this logic will automatically be available in application.js.
 # You can use CoffeeScript in this file: http://jashkenas.github.com/coffee-script/
+class Highlighter
+  constructor: (@img) ->
+    img = $(@img)
+    @overlay = $("<div id='img_overlay'></div>")
+      .css("position", "absolute")
+      .css("left", 0)
+      .css("top", 0)
+      .css("width", img.width())
+      .css("height", img.height())
+    img.parent().append(@overlay)
+    @overlay.mousemove( $.proxy this.handler, this )
+
+  handler: (event) ->
+    pos = @overlay.offset()
+    x = event.pageX - pos.left
+    y = event.pageY - pos.top
+    bgWebKit       = "-webkit-gradient(radial, #{x} #{y}, 0px, #{x} #{y}, 100%, color-stop(0%,rgba(0,0,0,0)),  color-stop(50%,rgba(0,0,0,0.8)))" #/* Chrome,Safari4+ */
+    bgWebKitRadial = "-webkit-radial-gradient(#{x}px #{y}px, ellipse cover,  rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 50%)" #/* Chrome10+,Safari5.1+ */
+    bgMoz          = "-moz-radial-gradient(#{x}px #{y}px, ellipse cover,  rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 50%)" #/* FF3.6+ */
+    bgO            = "-o-radial-gradient(#{x}px #{y}px, ellipse cover,  rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 50%)" #/* Opera 12+ */
+    bgMS           = "-ms-radial-gradient(#{x}px #{y}px, ellipse cover,  rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 50%)" #/* IE10+ */
+    bg             = "radial-gradient(#{x}px #{y}px, ellipse cover,  rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 50%)" #/* W3C */
+    @overlay
+      .css({background: bgWebKit})
+      .css({background: bgWebKitRadial})
+      .css({backgroundImage: bgMoz})
+      .css({background: bgO})
+      .css({background: bgMS})
+      .css({background: bg})
+
 class Hsl
   constructor: (@h, @s, @l) ->
 
@@ -100,3 +130,5 @@ $( document ).ready () ->
     new Tron()
   if $("div#hsl").length != 0
     new HslSelector()
+  if $("div#highlighter").length != 0
+    new Highlighter("img")
