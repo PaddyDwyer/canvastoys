@@ -4,17 +4,20 @@
 class Highlighter
   constructor: (@img) ->
     img = $(@img)
-    @overlay = $("<div id='img_overlay'></div>")
-      .css("position", "absolute")
-      .css("left", 0)
-      .css("top", 0)
-      .css("width", img.width())
-      .css("height", img.height())
-    img.parent().append(@overlay)
-    @overlay.mousemove( $.proxy this.handler, this )
+    img.each (index, elem) ->
+      pos = $(elem).position()
+      overlay = $("<div id='img_overlay'></div>")
+        .css("position", "absolute")
+        .css("left", pos.left)
+        .css("top", pos.top)
+        .css("width", elem.width())
+        .css("height", elem.height())
+      elem.parent().append(overlay)
+      overlay.mousemove( this.mmhandler )
+      overlay.mouseout( this.mohandler )
 
-  handler: (event) ->
-    pos = @overlay.offset()
+  mmhandler: (event) ->
+    pos = this.offset()
     x = event.pageX - pos.left
     y = event.pageY - pos.top
     bgWebKit       = "-webkit-gradient(radial, #{x} #{y}, 0px, #{x} #{y}, 100%, color-stop(0%,rgba(0,0,0,0)),  color-stop(50%,rgba(0,0,0,0.8)))" #/* Chrome,Safari4+ */
@@ -23,13 +26,16 @@ class Highlighter
     bgO            = "-o-radial-gradient(#{x}px #{y}px, ellipse cover,  rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 50%)" #/* Opera 12+ */
     bgMS           = "-ms-radial-gradient(#{x}px #{y}px, ellipse cover,  rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 50%)" #/* IE10+ */
     bg             = "radial-gradient(#{x}px #{y}px, ellipse cover,  rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 50%)" #/* W3C */
-    @overlay
+    this
       .css({background: bgWebKit})
       .css({background: bgWebKitRadial})
-      .css({backgroundImage: bgMoz})
+      .css({background: bgMoz})
       .css({background: bgO})
       .css({background: bgMS})
       .css({background: bg})
+
+  mohandler: (event) ->
+    this.css {background: "none"}
 
 class Hsl
   constructor: (@h, @s, @l) ->
