@@ -4,29 +4,32 @@
 class Highlighter
   constructor: (@img) ->
     img = $(@img)
-    img.each (index, elem) ->
-      pos = $(elem).position()
+    img.each (index, elem) =>
+      console.log(this)
+      $elem = $(elem)
+      pos = $elem.position()
       overlay = $("<div id='img_overlay'></div>")
         .css("position", "absolute")
         .css("left", pos.left)
         .css("top", pos.top)
-        .css("width", elem.width())
-        .css("height", elem.height())
-      elem.parent().append(overlay)
+        .css("width", $elem.width())
+        .css("height", $elem.height())
+      $elem.parent().append(overlay)
       overlay.mousemove( this.mmhandler )
       overlay.mouseout( this.mohandler )
 
   mmhandler: (event) ->
-    pos = this.offset()
+    elem = $(this)
+    pos = elem.offset()
     x = event.pageX - pos.left
     y = event.pageY - pos.top
     bgWebKit       = "-webkit-gradient(radial, #{x} #{y}, 0px, #{x} #{y}, 100%, color-stop(0%,rgba(0,0,0,0)),  color-stop(50%,rgba(0,0,0,0.8)))" #/* Chrome,Safari4+ */
-    bgWebKitRadial = "-webkit-radial-gradient(#{x}px #{y}px, ellipse cover,  rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 50%)" #/* Chrome10+,Safari5.1+ */
-    bgMoz          = "-moz-radial-gradient(#{x}px #{y}px, ellipse cover,  rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 50%)" #/* FF3.6+ */
-    bgO            = "-o-radial-gradient(#{x}px #{y}px, ellipse cover,  rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 50%)" #/* Opera 12+ */
-    bgMS           = "-ms-radial-gradient(#{x}px #{y}px, ellipse cover,  rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 50%)" #/* IE10+ */
-    bg             = "radial-gradient(#{x}px #{y}px, ellipse cover,  rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 50%)" #/* W3C */
-    this
+    bgWebKitRadial = "-webkit-radial-gradient(#{x}px #{y}px, circle cover,  rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 50%)" #/* Chrome10+,Safari5.1+ */
+    bgMoz          = "-moz-radial-gradient(#{x}px #{y}px, circle cover,  rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 50%)" #/* FF3.6+ */
+    bgO            = "-o-radial-gradient(#{x}px #{y}px, circle cover,  rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 50%)" #/* Opera 12+ */
+    bgMS           = "-ms-radial-gradient(#{x}px #{y}px, circle cover,  rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 50%)" #/* IE10+ */
+    bg             = "radial-gradient(#{x}px #{y}px, circle cover,  rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 50%)" #/* W3C */
+    elem
       .css({background: bgWebKit})
       .css({background: bgWebKitRadial})
       .css({background: bgMoz})
