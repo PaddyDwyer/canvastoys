@@ -1,0 +1,12 @@
+defaults: &defaults
+  show_analytics: false
+
+development:
+  <<: *defaults
+
+test:
+  <<: *defaults
+
+production:
+  <<: *defaults
+  show_analytics: true
