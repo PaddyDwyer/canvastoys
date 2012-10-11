@@ -32,7 +32,7 @@ set :deploy_via,    :remote_cache
 
 # Uses local instead of remote server keys, good for github ssh key deploy.
 ssh_options[:forward_agent] = true
-ssh_options[:keys] = [File.join(ENV["HOME"], ".ssh", "id_rsa")]
+ssh_options[:keys] = [File.join(ENV["HOME"], ".ssh", "kertap_rsa")]
 ssh_options[:port] = port
 
 # Server Roles
