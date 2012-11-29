@@ -1,0 +1,7 @@
+- content_for :head do
+  %script{ :type => 'text/paperscript', :src => '/assets/ps/brush.js?body=1', :canvas => 'brush'}
+
+%h1 Paper
+
+#paper
+  %canvas{ :id => 'brush', :width => '800', :height => '800' }

@@ -7,4 +7,7 @@ class CanvasController < ApplicationController
 
   def highlighter
   end
+
+  def paper
+  end
 end
