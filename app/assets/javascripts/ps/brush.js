@@ -1,8 +1,8 @@
 var myPath = new Path();
 myPath.add(new Point(50, 215));
-myPath.add(new Point(80, 380));
-myPath.add(new Point(180, 100));
-myPath.add(new Point(200, 450));
+myPath.add(new Point(100, 380));
+myPath.add(new Point(280, 100));
+myPath.add(new Point(250, 450));
 myPath.add(new Point(500, 100));
 //myPath.add(new Point(450, 200));
 myPath.add(new Point(500, 500));
@@ -10,7 +10,7 @@ myPath.add(new Point(500, 500));
 myPath.smooth();
 
 myPath.strokeColor = '#ff0000';
-myPath.strokeWidth = 50;
+myPath.strokeWidth = 78;
 
 myPath.strokeCap = 'butt';
 
@@ -21,7 +21,7 @@ updateStartCap = function(thePath) {
 
   if (!startCap) {
     console.log("creating startCap", point);
-    startCap = new Path.Circle(point, 25);
+    startCap = new Path.Circle(point, 40);
     startCap.fillColor = '#ff0000';
     console.log(startCap);
   } else {
@@ -42,73 +42,73 @@ updateEndCap = function(thePath) {
 
 
   if (!endCap) {
-    transformedPoint = point - [24.5, 135];
+    transformedPoint = point - [38.5, 135];
     var bigBlob = new Path();
     bigBlob.strokeColor = '#ff0000';
     bigBlob.fillColor = '#ff0000';
     bigBlob.strokeWidth = 1;
     bigBlob.strokeCap = 'butt';
-    handleIn = new Point(3,0);
-    handleOut = new Point(-3,0);
+    handleIn = new Point(5,0);
+    handleOut = new Point(-5,0);
     bigBlob.add(new Point(0, 135) + transformedPoint);
-    bigBlob.add(new Point(49, 135) + transformedPoint);
-    bigBlob.add(new Point(49, 16) + transformedPoint);
-    bigBlob.add(new Segment(new Point(45, 12.5) + transformedPoint, handleIn, handleOut));
-    bigBlob.add(new Point(42, 16) + transformedPoint);
-    bigBlob.add(new Point(42, 131.5) + transformedPoint);
-    bigBlob.add(new Segment(new Point(36.5, 135) + transformedPoint, handleIn, handleOut));
-    bigBlob.add(new Point(33, 131.5) + transformedPoint);
-    bigBlob.add(new Point(33, 30) + transformedPoint);
-    bigBlob.add(new Segment(new Point(30, 26.5) + transformedPoint, handleIn, handleOut));
-    bigBlob.add(new Point(27, 30) + transformedPoint);
-    bigBlob.add(new Point(27, 50) + transformedPoint);
-    bigBlob.add(new Segment(new Point(22.5, 53.5) + transformedPoint, handleIn, handleOut));
-    bigBlob.add(new Point(19, 50) + transformedPoint);
-    bigBlob.add(new Point(19, 38) + transformedPoint);
-    bigBlob.add(new Segment(new Point(16.5, 35.5) + transformedPoint, handleIn, handleOut));
-    bigBlob.add(new Point(13, 38) + transformedPoint);
-    bigBlob.add(new Point(13, 68) + transformedPoint);
-    bigBlob.add(new Segment(new Point(9.5, 71.5) + transformedPoint, handleIn, handleOut));
-    bigBlob.add(new Point(6, 68) + transformedPoint);
-    bigBlob.add(new Point(6, 4) + transformedPoint);
-    bigBlob.add(new Segment(new Point(3, 0.5) + transformedPoint, handleIn, handleOut));
-    bigBlob.add(new Point(0, 4) + transformedPoint);
+    bigBlob.add(new Point(77, 135) + transformedPoint);
+    bigBlob.add(new Point(77, 18) + transformedPoint);
+    bigBlob.add(new Segment(new Point(71.5, 12.5) + transformedPoint, handleIn, handleOut));
+    bigBlob.add(new Point(66, 18) + transformedPoint);
+    bigBlob.add(new Point(66, 129.5) + transformedPoint);
+    bigBlob.add(new Segment(new Point(60.5, 135) + transformedPoint, handleIn, handleOut));
+    bigBlob.add(new Point(55, 129.5) + transformedPoint);
+    bigBlob.add(new Point(55, 32) + transformedPoint);
+    bigBlob.add(new Segment(new Point(49.5, 26.5) + transformedPoint, handleIn, handleOut));
+    bigBlob.add(new Point(44, 32) + transformedPoint);
+    bigBlob.add(new Point(44, 48) + transformedPoint);
+    bigBlob.add(new Segment(new Point(38.5, 53.5) + transformedPoint, handleIn, handleOut));
+    bigBlob.add(new Point(33, 48) + transformedPoint);
+    bigBlob.add(new Point(33, 40) + transformedPoint);
+    bigBlob.add(new Segment(new Point(27.5, 35.5) + transformedPoint, handleIn, handleOut));
+    bigBlob.add(new Point(22, 40) + transformedPoint);
+    bigBlob.add(new Point(22, 66) + transformedPoint);
+    bigBlob.add(new Segment(new Point(16.5, 71.5) + transformedPoint, handleIn, handleOut));
+    bigBlob.add(new Point(11, 66) + transformedPoint);
+    bigBlob.add(new Point(11, 6) + transformedPoint);
+    bigBlob.add(new Segment(new Point(5.5, 0.5) + transformedPoint, handleIn, handleOut));
+    bigBlob.add(new Point(0, 6) + transformedPoint);
     bigBlob.closePath();
 
     var leftGap = new Path();
-    leftGap.add(new Point(6, 125) + transformedPoint);
-    leftGap.add(new Segment(new Point(9.5, 128.5) + transformedPoint, handleIn, handleOut));
-    leftGap.add(new Point(13, 125) + transformedPoint); 
-    leftGap.add(new Point(13, 91) + transformedPoint);
-    leftGap.add(new Segment(new Point(9.5, 87.5) + transformedPoint, handleIn, handleOut));
-    leftGap.add(new Point(6, 91) + transformedPoint);
+    leftGap.add(new Point(11, 125) + transformedPoint);
+    leftGap.add(new Segment(new Point(16.5, 130.5) + transformedPoint, handleOut, handleIn));
+    leftGap.add(new Point(22, 125) + transformedPoint); 
+    leftGap.add(new Point(22, 91) + transformedPoint);
+    leftGap.add(new Segment(new Point(16.5, 85.5) + transformedPoint, handleIn, handleOut));
+    leftGap.add(new Point(11, 91) + transformedPoint);
     leftGap.closePath();
 
     var midGap = new Path();
-    midGap.add(new Point(19, 106) + transformedPoint);
-    midGap.add(new Point(23, 109.5) + transformedPoint);
-    midGap.add(new Point(27, 106) + transformedPoint);
-    midGap.add(new Point(27, 65) + transformedPoint);
-    midGap.add(new Point(23, 62.5) + transformedPoint);
-    midGap.add(new Point(19, 65) + transformedPoint);
+    midGap.add(new Point(33, 106) + transformedPoint);
+    midGap.add(new Segment(new Point(38.5, 111.5) + transformedPoint, handleOut, handleIn));
+    midGap.add(new Point(44, 106) + transformedPoint);
+    midGap.add(new Point(44, 65) + transformedPoint);
+    midGap.add(new Segment(new Point(38.5, 60.5) + transformedPoint, handleIn, handleOut));
+    midGap.add(new Point(33, 65) + transformedPoint);
     midGap.closePath();
 
     var leftBlob = new Path();
-    leftBlob.add(new Point(13, 20) + transformedPoint);
-    leftBlob.add(new Point(16, 23.5) + transformedPoint);
-    leftBlob.add(new Point(19, 20) + transformedPoint);
-    leftBlob.add(new Point(19, -26) + transformedPoint);
-    leftBlob.add(new Point(16, -29.5) + transformedPoint);
-    leftBlob.add(new Point(13, -26) + transformedPoint);
+    leftBlob.add(new Point(22, 20) + transformedPoint);
+    leftBlob.add(new Segment(new Point(27.5, 25.5) + transformedPoint, handleOut, handleIn));
+    leftBlob.add(new Point(33, 20) + transformedPoint);
+    leftBlob.add(new Point(33, -26) + transformedPoint);
+    leftBlob.add(new Segment(new Point(27.5, -31.5) + transformedPoint, handleIn, handleOut));
+    leftBlob.add(new Point(22, -26) + transformedPoint);
     leftBlob.closePath();
 
     var rightBlob = new Path();
-    rightBlob.add(new Point(27, 20) + transformedPoint);
-    rightBlob.add(new Point(30, 23.5) + transformedPoint);
-    rightBlob.add(new Point(33, 20) + transformedPoint);
-    rightBlob.add(new Point(33, -11) + transformedPoint);
-    rightBlob.add(new Point(30, -14.5) + transformedPoint);
-    rightBlob.add(new Point(27, -11) + transformedPoint);
+    rightBlob.add(new Point(44, 18) + transformedPoint);
+    rightBlob.add(new Segment(new Point(49.5, 23.5) + transformedPoint, handleOut, handleIn));
+    rightBlob.add(new Point(55, 18) + transformedPoint);
+    rightBlob.add(new Point(55, -11) + transformedPoint);
+    rightBlob.add(new Segment(new Point(49.5, -16.5) + transformedPoint, handleIn, handleOut));
+    rightBlob.add(new Point(44, -11) + transformedPoint);
     rightBlob.closePath();
 
     endCap = new CompoundPath([bigBlob, leftGap, midGap, leftBlob, rightBlob]);
