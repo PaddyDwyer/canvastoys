@@ -115,7 +115,7 @@ var drawBrush1 = function(translationPoint) {
   bigBlob.arcTo(new Point(56, 2), new Point(60, 5)); //tip
   bigBlob.curveTo(new Point(59, 83), new Point(50, 156));
   bigBlob.arcTo(new Point(53, 161), new Point(58, 158)); //tip
-  bigBlob.curveTo(new Point(68, 76), new Point(69, 0));
+  bigBlob.curveTo(new Point(67, 76), new Point(69, 0));
   bigBlob.closePath();
   // set the colors for the path.
   bigBlob.strokeColor = '#ff0000';
@@ -158,10 +158,10 @@ var drawBrush1 = function(translationPoint) {
   var endCap = new CompoundPath([bigBlob, leftGap, rightGap, leftBlob, rightBlob]);
   // The cap is drawn based on the original images and attempts to be pixel perfect.
   // We scale it up to match the width of the stroke.
-  endCap.scale(1.36, endCap.bounds.topLeft);
+  endCap.scale(1.35, endCap.bounds.topLeft);
   // We get the square the cap is stored in so we can position it correctly.
   var bounds = endCap.bounds;
-  endCap.translate(translationPoint - new Point(bounds.width - 40, 0));
+  endCap.translate(translationPoint - new Point(bounds.width - 39, 0));
 
   // Return the cap so it can be used again.
   return endCap;
@@ -280,7 +280,7 @@ var drawBrush3 = function(translationPoint) {
   var endCap = new CompoundPath([bigBlob, leftGap, rightGap, leftBlob, rightBlob]);
   endCap.scale(1.36, endCap.bounds.topLeft);
   var bounds = endCap.bounds;
-  endCap.translate(translationPoint - new Point(bounds.width - 36.5, 0));
+  endCap.translate(translationPoint - new Point(bounds.width - 40.5, 0));
 
   return endCap;
 }
