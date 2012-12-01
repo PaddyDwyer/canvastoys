@@ -35,7 +35,7 @@ var lastAngle = 0;
 var lastPoint;
 updateEndCap = function(thePath, drawCallback) {
   if (!drawCallback) {
-    drawCallback = drawBrush3;
+    drawCallback = drawBrush1;
   }
   length = thePath.length;
   point = thePath.getPointAt(length);
