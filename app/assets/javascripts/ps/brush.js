@@ -230,19 +230,19 @@ var drawBrush3 = function(translationPoint) {
   var bigBlob = new Path();
   bigBlob.add(new Point(121, 0));
   bigBlob.curveTo(new Point(99, 92), new Point(33, 167));
-  bigBlob.curveTo(new Point(32, 173), new Point(38, 175)); //tip
+  bigBlob.arcTo(new Point(32, 173), new Point(38, 175)); //tip
   bigBlob.curveTo(new Point(69, 147), new Point(92, 120));
-  bigBlob.curveTo(new Point(97, 119), new Point(99, 124)); //tip
+  bigBlob.arcTo(new Point(97, 119), new Point(99, 124)); //tip
   bigBlob.curveTo(new Point(85, 141), new Point(71, 157));
-  bigBlob.curveTo(new Point(71, 162), new Point(77, 162)); //tip
+  bigBlob.arcTo(new Point(71, 162), new Point(77, 162)); //tip
   bigBlob.curveTo(new Point(81, 157), new Point(84, 154));
-  bigBlob.curveTo(new Point(88.5, 154), new Point(90.5, 158)); //tip
+  bigBlob.arcTo(new Point(88.5, 154), new Point(90.5, 158)); //tip
   bigBlob.curveTo(new Point(83, 167), new Point(76, 174));
-  bigBlob.curveTo(new Point(76, 180), new Point(82, 180)); //tip
+  bigBlob.arcTo(new Point(76, 180), new Point(82, 180)); //tip
   bigBlob.curveTo(new Point(134, 113), new Point(159, 34));
-  bigBlob.curveTo(new Point(163, 30), new Point(167.5, 34)); //tip
+  bigBlob.arcTo(new Point(163, 30), new Point(167.5, 34)); //tip
   bigBlob.curveTo(new Point(135, 128), new Point(76, 196));
-  bigBlob.curveTo(new Point(73, 203), new Point(80, 203)); //tip
+  bigBlob.arcTo(new Point(73, 203), new Point(80, 203)); //tip
   bigBlob.curveTo(new Point(153, 112), new Point(178, 0));
   bigBlob.closePath();
   bigBlob.strokeColor = '#ff0000';
@@ -252,30 +252,30 @@ var drawBrush3 = function(translationPoint) {
   var leftGap = new Path();
   leftGap.add(new Point(119, 68));
   leftGap.curveTo(new Point(112, 86), new Point(104, 100));
-  leftGap.curveTo(new Point(105, 106), new Point(110, 105)); //tip
+  leftGap.arcTo(new Point(105, 106), new Point(110, 105)); //tip
   leftGap.curveTo(new Point(119, 89), new Point(126, 73));
-  leftGap.curveTo(new Point(124, 67), new Point(119, 68)); //tip
+  leftGap.arcTo(new Point(124, 67), new Point(119, 68)); //tip
 
   var rightGap = new Path();
   rightGap.add(new Point(119, 108));
   rightGap.curveTo(new Point(104, 129), new Point(92, 144));
-  rightGap.curveTo(new Point(92, 150), new Point(99, 150)); //tip
+  rightGap.arcTo(new Point(92, 150), new Point(99, 150)); //tip
   rightGap.curveTo(new Point(112, 132), new Point(126, 112));
-  rightGap.curveTo(new Point(124.5, 105.5), new Point(119, 108)); //tip
+  rightGap.arcTo(new Point(124.5, 105.5), new Point(119, 108)); //tip
 
   var leftBlob = new Path();
   leftBlob.add(new Point(55, 171));
   leftBlob.curveTo(new Point(25, 195), new Point(2, 210));
-  leftBlob.curveTo(new Point(-1, 216), new Point(4, 218)); //tip
+  leftBlob.arcTo(new Point(-1, 216), new Point(4, 218)); //tip
   leftBlob.curveTo(new Point(34, 198), new Point(60, 177));
-  leftBlob.curveTo(new Point(61, 171), new Point(55, 171)); //tip
+  leftBlob.arcTo(new Point(61, 171), new Point(55, 171)); //tip
 
   var rightBlob = new Path();
   rightBlob.add(new Point(69, 181));
   rightBlob.curveTo(new Point(57, 190), new Point(44, 200));
-  rightBlob.curveTo(new Point(43, 206), new Point(49, 206)); //tip
+  rightBlob.arcTo(new Point(43, 206), new Point(49, 206)); //tip
   rightBlob.curveTo(new Point(61, 197), new Point(74, 186));
-  rightBlob.curveTo(new Point(74, 181), new Point(69, 181)); //tip
+  rightBlob.arcTo(new Point(74, 181), new Point(69, 181)); //tip
 
   var endCap = new CompoundPath([bigBlob, leftGap, rightGap, leftBlob, rightBlob]);
   endCap.scale(1.36, endCap.bounds.topLeft);
