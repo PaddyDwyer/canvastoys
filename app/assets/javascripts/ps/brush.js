@@ -102,7 +102,7 @@ var drawBrush1 = function(translationPoint) {
   var bigBlob = new Path();
   bigBlob.add(new Point(12,0));
   bigBlob.curveTo(new Point(10, 81), new Point(0, 160));
-  bigBlob.arcTo(new Point(2, 165), new Point(7, 163)); //tip
+  bigBlob.arcTo(new Point(2, 164), new Point(7, 163)); //tip
   bigBlob.curveTo(new Point(12.5, 123), new Point(18, 82));
   bigBlob.arcTo(new Point(22.3, 79), new Point(26, 83)); //tip
   bigBlob.curveTo(new Point(25, 101), new Point(22, 126));
@@ -126,9 +126,9 @@ var drawBrush1 = function(translationPoint) {
   // This draws a cylinder that's curved.
   var leftGap = new Path();
   leftGap.add(new Point(21, 19));
-  leftGap.curveTo(new Point(21, 40), new Point(20, 57));
+  leftGap.curveTo(new Point(20.5, 40), new Point(20, 57));
   leftGap.arcTo(new Point(23.3, 61), new Point(27, 59)); //tip
-  leftGap.curveTo(new Point(28, 41), new Point(28, 20));
+  leftGap.curveTo(new Point(27.5, 41), new Point(28, 20));
   leftGap.arcTo(new Point(24.5, 16), new Point(21, 19)); //tip
 
   var rightGap = new Path();
@@ -143,9 +143,9 @@ var drawBrush1 = function(translationPoint) {
   var leftBlob = new Path();
   leftBlob.add(new Point(19, 149));
   leftBlob.curveTo(new Point(13, 181), new Point(2, 209));
-  leftBlob.arcTo(new Point(2, 216), new Point(8, 215)); //tip
+  leftBlob.arcTo(new Point(2, 214), new Point(8, 215)); //tip
   leftBlob.curveTo(new Point(20, 183), new Point(26, 151));
-  leftBlob.arcTo(new Point(23.5, 145), new Point(19, 148)); //tip
+  leftBlob.arcTo(new Point(23.5, 146), new Point(19, 148)); //tip
 
   var rightBlob = new Path();
   rightBlob.add(new Point(35, 148));
