@@ -33,7 +33,10 @@ updateStartCap = function(thePath) {
 var endCap;
 var lastAngle = 0;
 var lastPoint;
-updateEndCap = function(thePath) {
+updateEndCap = function(thePath, drawCallback) {
+  if (!drawCallback) {
+    drawCallback = drawBrush1;
+  }
   length = thePath.length;
   point = thePath.getPointAt(length);
   //point = new Point(60, 180);
@@ -42,82 +45,7 @@ updateEndCap = function(thePath) {
 
 
   if (!endCap) {
-    /*
-    transformedPoint = point - [38.5, 135];
-    var bigBlob = new Path();
-    bigBlob.strokeColor = '#ff0000';
-    bigBlob.fillColor = '#ff0000';
-    bigBlob.strokeWidth = 1;
-    bigBlob.strokeCap = 'butt';
-    handleIn = new Point(5,0);
-    handleOut = new Point(-5,0);
-    bigBlob.add(new Point(0, 135) + transformedPoint);
-    bigBlob.add(new Point(77, 135) + transformedPoint);
-    bigBlob.add(new Point(77, 18) + transformedPoint);
-    bigBlob.add(new Segment(new Point(71.5, 12.5) + transformedPoint, handleIn, handleOut));
-    bigBlob.add(new Point(66, 18) + transformedPoint);
-    bigBlob.add(new Point(66, 129.5) + transformedPoint);
-    bigBlob.add(new Segment(new Point(60.5, 135) + transformedPoint, handleIn, handleOut));
-    bigBlob.add(new Point(55, 129.5) + transformedPoint);
-    bigBlob.add(new Point(55, 32) + transformedPoint);
-    bigBlob.add(new Segment(new Point(49.5, 26.5) + transformedPoint, handleIn, handleOut));
-    bigBlob.add(new Point(44, 32) + transformedPoint);
-    bigBlob.add(new Point(44, 48) + transformedPoint);
-    bigBlob.add(new Segment(new Point(38.5, 53.5) + transformedPoint, handleIn, handleOut));
-    bigBlob.add(new Point(33, 48) + transformedPoint);
-    bigBlob.add(new Point(33, 40) + transformedPoint);
-    bigBlob.add(new Segment(new Point(27.5, 35.5) + transformedPoint, handleIn, handleOut));
-    bigBlob.add(new Point(22, 40) + transformedPoint);
-    bigBlob.add(new Point(22, 66) + transformedPoint);
-    bigBlob.add(new Segment(new Point(16.5, 71.5) + transformedPoint, handleIn, handleOut));
-    bigBlob.add(new Point(11, 66) + transformedPoint);
-    bigBlob.add(new Point(11, 6) + transformedPoint);
-    bigBlob.add(new Segment(new Point(5.5, 0.5) + transformedPoint, handleIn, handleOut));
-    bigBlob.add(new Point(0, 6) + transformedPoint);
-    bigBlob.closePath();
-
-    var leftGap = new Path();
-    leftGap.add(new Point(11, 125) + transformedPoint);
-    leftGap.add(new Segment(new Point(16.5, 130.5) + transformedPoint, handleOut, handleIn));
-    leftGap.add(new Point(22, 125) + transformedPoint); 
-    leftGap.add(new Point(22, 91) + transformedPoint);
-    leftGap.add(new Segment(new Point(16.5, 85.5) + transformedPoint, handleIn, handleOut));
-    leftGap.add(new Point(11, 91) + transformedPoint);
-    leftGap.closePath();
-
-    var midGap = new Path();
-    midGap.add(new Point(33, 106) + transformedPoint);
-    midGap.add(new Segment(new Point(38.5, 111.5) + transformedPoint, handleOut, handleIn));
-    midGap.add(new Point(44, 106) + transformedPoint);
-    midGap.add(new Point(44, 65) + transformedPoint);
-    midGap.add(new Segment(new Point(38.5, 60.5) + transformedPoint, handleIn, handleOut));
-    midGap.add(new Point(33, 65) + transformedPoint);
-    midGap.closePath();
-
-    var leftBlob = new Path();
-    leftBlob.add(new Point(22, 20) + transformedPoint);
-    leftBlob.add(new Segment(new Point(27.5, 25.5) + transformedPoint, handleOut, handleIn));
-    leftBlob.add(new Point(33, 20) + transformedPoint);
-    leftBlob.add(new Point(33, -26) + transformedPoint);
-    leftBlob.add(new Segment(new Point(27.5, -31.5) + transformedPoint, handleIn, handleOut));
-    leftBlob.add(new Point(22, -26) + transformedPoint);
-    leftBlob.closePath();
-
-    var rightBlob = new Path();
-    rightBlob.add(new Point(44, 18) + transformedPoint);
-    rightBlob.add(new Segment(new Point(49.5, 23.5) + transformedPoint, handleOut, handleIn));
-    rightBlob.add(new Point(55, 18) + transformedPoint);
-    rightBlob.add(new Point(55, -11) + transformedPoint);
-    rightBlob.add(new Segment(new Point(49.5, -16.5) + transformedPoint, handleIn, handleOut));
-    rightBlob.add(new Point(44, -11) + transformedPoint);
-    rightBlob.closePath();
-
-    endCap = new CompoundPath([bigBlob, leftGap, midGap, leftBlob, rightBlob]);
-    endCap.rotate(tangent.angle + 90, point);
-    */
-    endCap = drawBrush1();
-    var bounds = endCap.bounds;
-    endCap.translate(point - new Point(bounds.width - 39, 0));
+    endCap = drawCallback(point);
     endCap.rotate(tangent.angle - 90, point);
     lastPoint = point;
     lastAngle = tangent.angle;
@@ -131,7 +59,7 @@ updateEndCap = function(thePath) {
 
 }
 
-var drawBrush1 = function() {
+var drawBrush1 = function(translationPoint) {
   var bigBlob = new Path();
   bigBlob.add(new Point(20,0));
   bigBlob.curveTo(new Point(15, 81), new Point(0, 161));
@@ -184,11 +112,13 @@ var drawBrush1 = function() {
 
   var endCap = new CompoundPath([bigBlob, leftGap, rightGap, leftBlob, rightBlob]);
   endCap.scale(1.37, endCap.bounds.topLeft);
+  var bounds = endCap.bounds;
+  endCap.translate(translationPoint - new Point(bounds.width - 39, 0));
 
   return endCap;
 }
 
-var drawBrush2 = function() {
+var drawBrush2 = function(translationPoint) {
   var bigBlob = new Path();
   bigBlob.add(new Point(2, 0));
   bigBlob.curveTo(new Point(1, 78), new Point(5, 183));
@@ -239,12 +169,14 @@ var drawBrush2 = function() {
   rightBlob.curveTo(new Point(40, 176), new Point(37, 178));
 
   var endCap = new CompoundPath([bigBlob, leftGap, rightGap, leftBlob, rightBlob]);
-  //endCap.scale(1.37, endCap.bounds.topLeft);
+  endCap.scale(1.41, endCap.bounds.topLeft);
+  var bounds = endCap.bounds;
+  endCap.translate(translationPoint - new Point(bounds.width - 47, 0));
 
   return endCap;
 }
 
-var drawBrush3 = function() {
+var drawBrush3 = function(translationPoint) {
   var bigBlob = new Path();
   bigBlob.add(new Point(121, 0));
   bigBlob.curveTo(new Point(99, 92), new Point(33, 167));
@@ -295,14 +227,15 @@ var drawBrush3 = function() {
   rightBlob.curveTo(new Point(73, 182), new Point(69, 181));
 
   var endCap = new CompoundPath([bigBlob, leftGap, rightGap, leftBlob, rightBlob]);
-  //endCap.scale(1.37, endCap.bounds.topLeft);
+  endCap.scale(1.37, endCap.bounds.topLeft);
+  var bounds = endCap.bounds;
+  endCap.translate(translationPoint - new Point(bounds.width - 37, 0));
 
   return endCap;
 }
 
 updateEndCap(myPath);
 updateStartCap(myPath);
-drawBrush3();
     
 
   var hitOptions = {
@@ -312,6 +245,7 @@ drawBrush3();
     tolerance: 5
   };
 
+var endCapCount = 0;
 
   //tool = new Tool();
 
@@ -320,7 +254,6 @@ drawBrush3();
     segment = path = null;
     var hitResult = myPath.hitTest(event.point, hitOptions);
     //var hitResult = project.hitTest(event.point, hitOptions);
-    console.log(hitResult.type)
 
     if (event.modifiers.shift) {
       if (hitResult.type == 'segment') {
@@ -343,9 +276,22 @@ drawBrush3();
       }
     }
 
-    movePath = hitResult.type == 'fill';
-    if (movePath){
-      project.activeLayer.addChild(hitResult.item);
+    hitResult = endCap.hitTest(event.point, {fill:true});
+    if (hitResult) {
+      endCapCount = (endCapCount + 1) % 3;
+      endCap.remove();
+      endCap = null;
+
+      var drawCallback;
+      if (endCapCount == 0) {
+        drawCallback = drawBrush1;
+      } else if (endCapCount == 1) {
+        drawCallback = drawBrush2;
+      } else if (endCapCount == 2) {
+        drawCallback = drawBrush3;
+      }
+
+      updateEndCap(myPath, drawCallback);
     }
   }
 
@@ -362,11 +308,7 @@ drawBrush3();
     if (segment) {
       segment.point = event.point;
       path.smooth();
+      updateEndCap(path);
+      updateStartCap(path);
     }
-
-    if (movePath){
-      path.position = event.point;
-    }
-    updateEndCap(path);
-    updateStartCap(path);
 }
