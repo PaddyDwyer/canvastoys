@@ -55,7 +55,7 @@ var lastPoint;
 updateEndCap = function(thePath, drawCallback) {
   // drawCallback is what we use to pic which brush tip to draw. It defaults to brush1
   if (!drawCallback) {
-    drawCallback = drawBrush1;
+    drawCallback = drawBrush3;
   }
   length = thePath.length;
   // point is the current position of the end of the path.
@@ -145,12 +145,12 @@ var drawBrush1 = function(translationPoint) {
   leftBlob.curveTo(new Point(13, 181), new Point(2, 209));
   leftBlob.curveTo(new Point(2, 216), new Point(8, 215)); //tip
   leftBlob.curveTo(new Point(20, 183), new Point(26, 151));
-  leftBlob.curveTo(new Point(24, 144), new Point(19, 148)); //tip
+  leftBlob.curveTo(new Point(23.5, 145), new Point(19, 148)); //tip
 
   var rightBlob = new Path();
   rightBlob.add(new Point(35, 148));
   rightBlob.curveTo(new Point(33, 162), new Point(29, 178));
-  rightBlob.curveTo(new Point(32, 182), new Point(37, 180)); //tip
+  rightBlob.curveTo(new Point(32, 183), new Point(37, 180)); //tip
   rightBlob.curveTo(new Point(40, 163), new Point(43, 148));
   rightBlob.curveTo(new Point(40, 144), new Point(35, 147)); //tip
 
@@ -158,10 +158,10 @@ var drawBrush1 = function(translationPoint) {
   var endCap = new CompoundPath([bigBlob, leftGap, rightGap, leftBlob, rightBlob]);
   // The cap is drawn based on the original images and attempts to be pixel perfect.
   // We scale it up to match the width of the stroke.
-  endCap.scale(1.37, endCap.bounds.topLeft);
+  endCap.scale(1.36, endCap.bounds.topLeft);
   // We get the square the cap is stored in so we can position it correctly.
   var bounds = endCap.bounds;
-  endCap.translate(translationPoint - new Point(bounds.width - 39, 0));
+  endCap.translate(translationPoint - new Point(bounds.width - 40, 0));
 
   // Return the cap so it can be used again.
   return endCap;
@@ -169,7 +169,7 @@ var drawBrush1 = function(translationPoint) {
 
 var drawBrush2 = function(translationPoint) {
   var bigBlob = new Path();
-  bigBlob.add(new Point(2, 0));
+  bigBlob.add(new Point(0, 0));
   bigBlob.curveTo(new Point(1, 78), new Point(5, 183));
   bigBlob.curveTo(new Point(9, 187), new Point(13, 183)); //tip
   bigBlob.curveTo(new Point(8, 84), new Point(9, 4));
@@ -209,19 +209,19 @@ var drawBrush2 = function(translationPoint) {
   leftBlob.curveTo(new Point(22, 194), new Point(24, 208));
   leftBlob.curveTo(new Point(28, 211), new Point(31, 206)); //tip
   leftBlob.curveTo(new Point(30, 191), new Point(29, 176));
-  leftBlob.curveTo(new Point(25, 171), new Point(21, 175)); //tip
+  leftBlob.curveTo(new Point(25, 172), new Point(21, 175)); //tip
 
   var rightBlob = new Path();
   rightBlob.add(new Point(37, 178));
   rightBlob.curveTo(new Point(40, 216), new Point(44, 248));
   rightBlob.curveTo(new Point(49, 250), new Point(52, 245)); //tip
   rightBlob.curveTo(new Point(48, 213), new Point(44, 178));
-  rightBlob.curveTo(new Point(40, 173), new Point(37, 178)); //tip
+  rightBlob.curveTo(new Point(40.4, 175), new Point(37, 178)); //tip
 
   var endCap = new CompoundPath([bigBlob, leftGap, rightGap, leftBlob, rightBlob]);
-  endCap.scale(1.41, endCap.bounds.topLeft);
+  endCap.scale(1.38, endCap.bounds.topLeft);
   var bounds = endCap.bounds;
-  endCap.translate(translationPoint - new Point(bounds.width - 47, 0));
+  endCap.translate(translationPoint - new Point(bounds.width - 48.5, 0));
 
   return endCap;
 }
@@ -236,11 +236,11 @@ var drawBrush3 = function(translationPoint) {
   bigBlob.curveTo(new Point(85, 141), new Point(71, 157));
   bigBlob.curveTo(new Point(71, 162), new Point(77, 162)); //tip
   bigBlob.curveTo(new Point(81, 157), new Point(84, 154));
-  bigBlob.curveTo(new Point(89, 154), new Point(91, 158)); //tip
+  bigBlob.curveTo(new Point(88.5, 154), new Point(90.5, 158)); //tip
   bigBlob.curveTo(new Point(83, 167), new Point(76, 174));
   bigBlob.curveTo(new Point(76, 180), new Point(82, 180)); //tip
   bigBlob.curveTo(new Point(134, 113), new Point(159, 34));
-  bigBlob.curveTo(new Point(163, 30), new Point(168, 34)); //tip
+  bigBlob.curveTo(new Point(163, 30), new Point(167.5, 34)); //tip
   bigBlob.curveTo(new Point(135, 128), new Point(76, 196));
   bigBlob.curveTo(new Point(73, 203), new Point(80, 203)); //tip
   bigBlob.curveTo(new Point(153, 112), new Point(178, 0));
@@ -261,7 +261,7 @@ var drawBrush3 = function(translationPoint) {
   rightGap.curveTo(new Point(104, 129), new Point(92, 144));
   rightGap.curveTo(new Point(92, 150), new Point(99, 150)); //tip
   rightGap.curveTo(new Point(112, 132), new Point(126, 112));
-  rightGap.curveTo(new Point(125, 106), new Point(119, 108)); //tip
+  rightGap.curveTo(new Point(124.5, 105.5), new Point(119, 108)); //tip
 
   var leftBlob = new Path();
   leftBlob.add(new Point(55, 171));
@@ -278,9 +278,9 @@ var drawBrush3 = function(translationPoint) {
   rightBlob.curveTo(new Point(74, 181), new Point(69, 181)); //tip
 
   var endCap = new CompoundPath([bigBlob, leftGap, rightGap, leftBlob, rightBlob]);
-  endCap.scale(1.37, endCap.bounds.topLeft);
+  endCap.scale(1.36, endCap.bounds.topLeft);
   var bounds = endCap.bounds;
-  endCap.translate(translationPoint - new Point(bounds.width - 37, 0));
+  endCap.translate(translationPoint - new Point(bounds.width - 36.5, 0));
 
   return endCap;
 }
@@ -325,7 +325,6 @@ onMouseDown = function(event) {
       updateStartCap(path);
     }
   }
-/*
   hitResult = endCap.hitTest(event.point, {fill:true});
   if (hitResult) {
     endCapCount = (endCapCount + 1) % 3;
@@ -343,7 +342,6 @@ onMouseDown = function(event) {
 
     updateEndCap(myPath, drawCallback);
   }
-  */
 }
 
 onMouseMove = function(event) {
