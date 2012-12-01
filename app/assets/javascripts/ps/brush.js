@@ -4,7 +4,6 @@ myPath.add(new Point(100, 380));
 myPath.add(new Point(280, 100));
 myPath.add(new Point(250, 450));
 myPath.add(new Point(400, 200));
-//myPath.add(new Point(450, 200));
 myPath.add(new Point(500, 300));
 
 myPath.smooth();
@@ -12,54 +11,94 @@ myPath.smooth();
 myPath.strokeColor = '#ff0000';
 myPath.strokeWidth = 78;
 
+// Start of the brush code!
+// Using the butt stroke cap so it doesn't interfere with the brush cap
 myPath.strokeCap = 'butt';
 
+/**
+ * We want a round cap at the start of the path. This code controls the cap.
+ * It works similar to the end cap code.
+ */
+// keep the start cap around so we don't change it all the time.
 var startCap;
-var lastStart;
+// we need to remember the last position the cap was at
+var lastStartPoint;
+// Call this method all the time. Otherwise the circle will be abandoned somewhere.
 updateStartCap = function(thePath) {
+  // get the start position of the path
   point = thePath.getPointAt(0);
 
+  // if start cap doesn't exist create it
   if (!startCap) {
-    console.log("creating startCap", point);
     startCap = new Path.Circle(point, 40);
     startCap.fillColor = '#ff0000';
-    console.log(startCap);
   } else {
-    startCap.translate(point-lastStart);
+    // Translate takes a delta so we get the delta of the current position and the last position
+    startCap.translate(point-lastStartPoint);
   }
-  lastStart = point;
+  lastStartPoint = point;
 }
 
+
+/** 
+ * Start of the brush cap code.
+ *
+ * This is similar to the start cap code but it's more involved.
+ */
+// we need to keep the endcap around so that we can allow it to be clicked on.
 var endCap;
+// record the last angle the cap was oriented to
 var lastAngle = 0;
+// record the last position of the cap
 var lastPoint;
+// Call this method all the time. Otherwise the brush will get lost somewhere.
 updateEndCap = function(thePath, drawCallback) {
+  // drawCallback is what we use to pic which brush tip to draw. It defaults to brush1
   if (!drawCallback) {
     drawCallback = drawBrush1;
   }
   length = thePath.length;
+  // point is the current position of the end of the path.
   point = thePath.getPointAt(length);
-  //point = new Point(60, 180);
+  // tangent gives us the angle at which the end of the path is facing.
   tangent = thePath.getTangentAt(length);
   tangent.length = 30;
 
 
+  // Create the end cap if it doesn't exist.
+  // We delete the current endcap when the user clicks on it and then the new end cap gets created.
   if (!endCap) {
+    // drawCallback will create the cap
     endCap = drawCallback(point);
+    // rotate the cap so it faces the correct way. the -90 is to correct the initial orientation
+    // We rotate about the point, otherwise it would rotate around the center.
     endCap.rotate(tangent.angle - 90, point);
+    //record last positions.
     lastPoint = point;
     lastAngle = tangent.angle;
   } else {
+    // move the cap to it's new location. translate takes a delta so we get that by taking
+    // lastpoint away from point
     endCap.translate(point-lastPoint);
     lastPoint = point;
     angle = tangent.angle;
+    // the endCap will already have been rotated so we need a delta here again.
     endCap.rotate(angle - lastAngle, point);
     lastAngle = tangent.angle;
   }
 
 }
 
+/**
+ * The following 3 functions all behave the same way. I'm only going to comment the first one.
+ */
 var drawBrush1 = function(translationPoint) {
+  // This is the main part of the brush. We use the curveTo function because all lines are 
+  // slightly curved. This buils the object as a series of peaks and valleys. Peaks and valleys 
+  // have the 'tip' comment. All other lines connect the valleys. This will draw the brush 1.png
+  // image. It orientates it on a grid such that 0, 0 is the 'near side' (if you image the brush
+  // appearing on a circle, the near side is the closest to the center) of the brush where it 
+  // joins the line. 
   var bigBlob = new Path();
   bigBlob.add(new Point(12,0));
   bigBlob.curveTo(new Point(10, 81), new Point(0, 160));
@@ -78,10 +117,13 @@ var drawBrush1 = function(translationPoint) {
   bigBlob.curveTo(new Point(53, 161), new Point(58, 158)); //tip
   bigBlob.curveTo(new Point(68, 76), new Point(69, 0));
   bigBlob.closePath();
+  // set the colors for the path.
   bigBlob.strokeColor = '#ff0000';
   bigBlob.fillColor = '#ff0000';
   bigBlob.strokeWidth = 1;
 
+  // We will composite the path. This means that if there is an overlap nothing will be drawn.
+  // This draws a cylinder that's curved.
   var leftGap = new Path();
   leftGap.add(new Point(21, 19));
   leftGap.curveTo(new Point(21, 40), new Point(20, 57));
@@ -96,6 +138,8 @@ var drawBrush1 = function(translationPoint) {
   rightGap.curveTo(new Point(43, 81), new Point(44, 59));
   rightGap.curveTo(new Point(41, 54), new Point(37, 57)); //tip
 
+  // The blobs are the bits of the brush stroke not attached to anything else. Again these are
+  // just cylinders
   var leftBlob = new Path();
   leftBlob.add(new Point(19, 149));
   leftBlob.curveTo(new Point(13, 181), new Point(2, 209));
@@ -110,11 +154,16 @@ var drawBrush1 = function(translationPoint) {
   rightBlob.curveTo(new Point(40, 163), new Point(43, 148));
   rightBlob.curveTo(new Point(40, 144), new Point(35, 147)); //tip
 
+  // Here we composite the path together.
   var endCap = new CompoundPath([bigBlob, leftGap, rightGap, leftBlob, rightBlob]);
+  // The cap is drawn based on the original images and attempts to be pixel perfect.
+  // We scale it up to match the width of the stroke.
   endCap.scale(1.37, endCap.bounds.topLeft);
+  // We get the square the cap is stored in so we can position it correctly.
   var bounds = endCap.bounds;
   endCap.translate(translationPoint - new Point(bounds.width - 39, 0));
 
+  // Return the cap so it can be used again.
   return endCap;
 }
 
@@ -236,81 +285,82 @@ var drawBrush3 = function(translationPoint) {
   return endCap;
 }
 
+// create the intial end and start caps.
 updateEndCap(myPath);
 updateStartCap(myPath);
     
 
-  var hitOptions = {
-    segments: true,
-    stroke: true,
-    fill: true,
-    tolerance: 5
-  };
+var hitOptions = {
+  segments: true,
+  stroke: true,
+  fill: true,
+  tolerance: 5
+};
 
 var endCapCount = 0;
 
-  //tool = new Tool();
+onMouseDown = function(event) {
+  segment = path = null;
+  var hitResult = myPath.hitTest(event.point, hitOptions);
+  //var hitResult = project.hitTest(event.point, hitOptions);
 
-  //tool.onMouseDown = function(event) {
-  onMouseDown = function(event) {
-    segment = path = null;
-    var hitResult = myPath.hitTest(event.point, hitOptions);
-    //var hitResult = project.hitTest(event.point, hitOptions);
-
-    if (event.modifiers.shift) {
-      if (hitResult.type == 'segment') {
-        hitResult.segment.remove();
-      };
-      return;
-    }
-
-    if (hitResult) {
-      path = hitResult.item;
-      console.log("which path", path.name === 'endCap');
-      if (hitResult.type == 'segment') {
-        segment = hitResult.segment;
-      } else if (hitResult.type == 'stroke') {
-        var location = hitResult.location;
-        segment = path.insert(location.index + 1, event.point);
-        path.smooth();
-        updateEndCap(path);
-        updateStartCap(path);
-      }
-    }
-
-    hitResult = endCap.hitTest(event.point, {fill:true});
-    if (hitResult) {
-      endCapCount = (endCapCount + 1) % 3;
-      endCap.remove();
-      endCap = null;
-
-      var drawCallback;
-      if (endCapCount == 0) {
-        drawCallback = drawBrush1;
-      } else if (endCapCount == 1) {
-        drawCallback = drawBrush2;
-      } else if (endCapCount == 2) {
-        drawCallback = drawBrush3;
-      }
-
-      updateEndCap(myPath, drawCallback);
-    }
+  if (event.modifiers.shift) {
+    if (hitResult.type == 'segment') {
+      hitResult.segment.remove();
+    };
+    return;
   }
 
-  onMouseMove = function(event) {
-    //var hitResult = myPath.hitTest(event.point, hitOptions);
-    var hitResult = project.hitTest(event.point, hitOptions);
-    project.activeLayer.selected = false;
-    if (hitResult && hitResult.item){
-      hitResult.item.fullySelected = true;
-    }
-  }
-
-  onMouseDrag = function(event) {
-    if (segment) {
-      segment.point = event.point;
+  if (hitResult) {
+    path = hitResult.item;
+    console.log("which path", path.name === 'endCap');
+    if (hitResult.type == 'segment') {
+      segment = hitResult.segment;
+    } else if (hitResult.type == 'stroke') {
+      var location = hitResult.location;
+      segment = path.insert(location.index + 1, event.point);
       path.smooth();
+      // This changes the path so we need to update the caps.
       updateEndCap(path);
       updateStartCap(path);
     }
+  }
+/*
+  hitResult = endCap.hitTest(event.point, {fill:true});
+  if (hitResult) {
+    endCapCount = (endCapCount + 1) % 3;
+    endCap.remove();
+    endCap = null;
+
+    var drawCallback;
+    if (endCapCount == 0) {
+      drawCallback = drawBrush1;
+    } else if (endCapCount == 1) {
+      drawCallback = drawBrush2;
+    } else if (endCapCount == 2) {
+      drawCallback = drawBrush3;
+    }
+
+    updateEndCap(myPath, drawCallback);
+  }
+  */
+}
+
+onMouseMove = function(event) {
+  var hitResult = myPath.hitTest(event.point, hitOptions);
+  //var hitResult = project.hitTest(event.point, hitOptions);
+  project.activeLayer.selected = false;
+  if (hitResult && hitResult.item){
+    hitResult.item.fullySelected = true;
+  }
+}
+
+onMouseDrag = function(event) {
+  if (segment) {
+    segment.point = event.point;
+    path.smooth();
+    // This changes the path so we need to update the caps.
+    updateEndCap(path);
+    updateStartCap(path);
+  }
 }
