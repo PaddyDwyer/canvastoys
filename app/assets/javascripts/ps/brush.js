@@ -132,11 +132,11 @@ var drawBrush1 = function(translationPoint) {
   leftGap.arcTo(new Point(24.5, 16), new Point(21, 19)); //tip
 
   var rightGap = new Path();
-  rightGap.add(new Point(37, 57));
-  rightGap.curveTo(new Point(35, 81), new Point(33, 104));
+  rightGap.add(new Point(36, 57));
+  rightGap.curveTo(new Point(35.5, 81), new Point(33, 104));
   rightGap.arcTo(new Point(36, 108), new Point(40, 105)); //tip
-  rightGap.curveTo(new Point(43, 81), new Point(44, 59));
-  rightGap.arcTo(new Point(41, 54), new Point(37, 57)); //tip
+  rightGap.curveTo(new Point(43, 81), new Point(43.5, 59));
+  rightGap.arcTo(new Point(41, 54), new Point(36, 57)); //tip
 
   // The blobs are the bits of the brush stroke not attached to anything else. Again these are
   // just cylinders
