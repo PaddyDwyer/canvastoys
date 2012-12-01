@@ -55,7 +55,7 @@ var lastPoint;
 updateEndCap = function(thePath, drawCallback) {
   // drawCallback is what we use to pic which brush tip to draw. It defaults to brush1
   if (!drawCallback) {
-    drawCallback = drawBrush3;
+    drawCallback = drawBrush1;
   }
   length = thePath.length;
   // point is the current position of the end of the path.
@@ -102,19 +102,19 @@ var drawBrush1 = function(translationPoint) {
   var bigBlob = new Path();
   bigBlob.add(new Point(12,0));
   bigBlob.curveTo(new Point(10, 81), new Point(0, 160));
-  bigBlob.curveTo(new Point(2, 165), new Point(7, 163)); //tip
+  bigBlob.arcTo(new Point(2, 165), new Point(7, 163)); //tip
   bigBlob.curveTo(new Point(12.5, 123), new Point(18, 82));
-  bigBlob.curveTo(new Point(22.3, 79), new Point(26, 83)); //tip
+  bigBlob.arcTo(new Point(22.3, 79), new Point(26, 83)); //tip
   bigBlob.curveTo(new Point(25, 101), new Point(22, 126));
-  bigBlob.curveTo(new Point(25, 131), new Point(30, 128)); //tip
+  bigBlob.arcTo(new Point(25, 131), new Point(30, 128)); //tip
   bigBlob.curveTo(new Point(31, 122), new Point(32, 115));
-  bigBlob.curveTo(new Point(36, 112), new Point(39, 117)); //tip
+  bigBlob.arcTo(new Point(36, 112), new Point(39, 117)); //tip
   bigBlob.curveTo(new Point(38, 125), new Point(36, 138));
-  bigBlob.curveTo(new Point(40, 142), new Point(44, 139)); //tip
+  bigBlob.arcTo(new Point(40, 142), new Point(44, 139)); //tip
   bigBlob.curveTo(new Point(51, 73), new Point(52, 6));
-  bigBlob.curveTo(new Point(56, 2), new Point(60, 5)); //tip
+  bigBlob.arcTo(new Point(56, 2), new Point(60, 5)); //tip
   bigBlob.curveTo(new Point(59, 83), new Point(50, 156));
-  bigBlob.curveTo(new Point(53, 161), new Point(58, 158)); //tip
+  bigBlob.arcTo(new Point(53, 161), new Point(58, 158)); //tip
   bigBlob.curveTo(new Point(68, 76), new Point(69, 0));
   bigBlob.closePath();
   // set the colors for the path.
@@ -127,32 +127,32 @@ var drawBrush1 = function(translationPoint) {
   var leftGap = new Path();
   leftGap.add(new Point(21, 19));
   leftGap.curveTo(new Point(21, 40), new Point(20, 57));
-  leftGap.curveTo(new Point(23.3, 61), new Point(27, 59)); //tip
+  leftGap.arcTo(new Point(23.3, 61), new Point(27, 59)); //tip
   leftGap.curveTo(new Point(28, 41), new Point(28, 20));
-  leftGap.curveTo(new Point(24.5, 16), new Point(21, 19)); //tip
+  leftGap.arcTo(new Point(24.5, 16), new Point(21, 19)); //tip
 
   var rightGap = new Path();
   rightGap.add(new Point(37, 57));
   rightGap.curveTo(new Point(35, 81), new Point(33, 104));
-  rightGap.curveTo(new Point(36, 108), new Point(40, 105)); //tip
+  rightGap.arcTo(new Point(36, 108), new Point(40, 105)); //tip
   rightGap.curveTo(new Point(43, 81), new Point(44, 59));
-  rightGap.curveTo(new Point(41, 54), new Point(37, 57)); //tip
+  rightGap.arcTo(new Point(41, 54), new Point(37, 57)); //tip
 
   // The blobs are the bits of the brush stroke not attached to anything else. Again these are
   // just cylinders
   var leftBlob = new Path();
   leftBlob.add(new Point(19, 149));
   leftBlob.curveTo(new Point(13, 181), new Point(2, 209));
-  leftBlob.curveTo(new Point(2, 216), new Point(8, 215)); //tip
+  leftBlob.arcTo(new Point(2, 216), new Point(8, 215)); //tip
   leftBlob.curveTo(new Point(20, 183), new Point(26, 151));
-  leftBlob.curveTo(new Point(23.5, 145), new Point(19, 148)); //tip
+  leftBlob.arcTo(new Point(23.5, 145), new Point(19, 148)); //tip
 
   var rightBlob = new Path();
   rightBlob.add(new Point(35, 148));
   rightBlob.curveTo(new Point(33, 162), new Point(29, 178));
-  rightBlob.curveTo(new Point(32, 183), new Point(37, 180)); //tip
+  rightBlob.arcTo(new Point(32, 183), new Point(37, 180)); //tip
   rightBlob.curveTo(new Point(40, 163), new Point(43, 148));
-  rightBlob.curveTo(new Point(40, 144), new Point(35, 147)); //tip
+  rightBlob.arcTo(new Point(40, 144), new Point(35, 147)); //tip
 
   // Here we composite the path together.
   var endCap = new CompoundPath([bigBlob, leftGap, rightGap, leftBlob, rightBlob]);
