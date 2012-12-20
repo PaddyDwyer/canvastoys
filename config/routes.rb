@@ -1,9 +1,4 @@
 Canvas::Application.routes.draw do
-  get "forecast/canvas"
-
-  get "forecast/swell_data"
-
-  get "forecast/surf_data"
 
   scope ENV['RAILS_RELATIVE_URL_ROOT'] || '/' do
     get "canvas/paper" => "canvas#paper"
@@ -11,6 +6,11 @@ Canvas::Application.routes.draw do
     get "canvas/hsl" => "canvas#hsl"
     get "canvas/highlighter" => "canvas#highlighter"
 
+    get "forecast/canvas" => "forecast#canvas"
+
+    get "forecast/swell_data" => "forecast#canvas"
+
+    get "forecast/surf_data" => "forecast#canvas"
     # The priority is based upon order of creation:
     # first created -> highest priority.
 
