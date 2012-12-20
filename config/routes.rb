@@ -8,9 +8,9 @@ Canvas::Application.routes.draw do
 
     get "forecast/canvas" => "forecast#canvas"
 
-    get "forecast/swell_data" => "forecast#canvas"
+    get "forecast/swell_data" => "forecast#swell_data"
 
-    get "forecast/surf_data" => "forecast#canvas"
+    get "forecast/surf_data" => "forecast#surf_data"
     # The priority is based upon order of creation:
     # first created -> highest priority.
 
