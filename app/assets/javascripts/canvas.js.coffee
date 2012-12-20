@@ -136,49 +136,6 @@ class HslSelector
   getL: () ->
     $("#li").val()
 
-class Pappy
-  constructor: () ->
-    ###
-    # Create Paper object
-    can = $("canvas#paper")
-    p = paper
-    p.setup(can[0])
-    path = new p.Path()
-    path.strokeColor = "black"
-    path.strokeWidth = 10
-    path.strokeCap = 'round'
-    path.selected = true
-    path.add new p.Point(40, 90)
-    point = new p.Point(90,40)
-    handleIn = new p.Point(-30,0)
-    handleOut = new p.Point(30,0)
-    path.add new p.Segment(point, handleIn, handleOut)
-    point = new p.Point(140, 90)
-    path.add new p.Segment(point, handleIn, handleOut)
-    path.add new p.Point(190, 40)
-    
-    lastPoint = path.getPointAt(path.length)
-    tangent = path.getTangentAt(path.length)
-    tangent.length = 60
-    console.log(tangent.angle)
-
-    path = new p.Path.Rectangle(lastPoint.add([-5,-5]), new p.Size(10,10))
-    path.fillColor = 'black'
-
-    path.rotate(tangent.angle)
-
-
-    path = new p.Path()
-    path.strokeColor = 'red'
-    path.strokeWidth = 1
-
-    path.add lastPoint
-    path.add lastPoint.add tangent
-
-    p.view.draw()
-    ###
-
-
 $( document ).ready () ->
   if $("canvas#tron").length != 0
     new Tron()
