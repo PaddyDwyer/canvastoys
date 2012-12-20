@@ -6,5 +6,6 @@ class ForecastController < ApplicationController
   end
 
   def surf_data
+    render :file => 'forecast/surf_data.xml', :content_type => 'application/xml'
   end
 end
