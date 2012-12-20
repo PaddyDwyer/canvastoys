@@ -208,10 +208,11 @@ var SurfForecast = (function() {
 })();
 
 
+<% environment.context_class.instance_eval {include Rails.application.routes.url_helpers } %>
 $(document).ready(function() {
   if ($("#surf_forecast").length > 0) {
     new SurfForecast({
-      surfDataUrl: "/canvas/forecast/surf_data",
+      surfDataUrl: "<%= forecast_surf_data_path %>",
       sset: "4:42",
       srise: "7:14"
     });
