@@ -1,4 +1,10 @@
 Canvas::Application.routes.draw do
+  get "forecast/canvas"
+
+  get "forecast/swell_data"
+
+  get "forecast/surf_data"
+
   scope ENV['RAILS_RELATIVE_URL_ROOT'] || '/' do
     get "canvas/paper" => "canvas#paper"
     get "canvas/tron" => "canvas#tron"
