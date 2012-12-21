@@ -39,7 +39,8 @@ var SurfForecast = (function() {
 
   SurfForecast.prototype.fetchData = function() {
     $.ajax(this.surfDataUrl, {
-      success: $.proxy(this.bindData, this)
+      success: $.proxy(this.bindData, this),
+      cache: false
     });
   }
 
