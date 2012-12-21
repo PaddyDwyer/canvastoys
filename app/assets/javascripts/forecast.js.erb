@@ -21,15 +21,22 @@ var SurfForecast = (function() {
     // Surf Data url is where we get the surf forecast data from
     this.surfDataUrl = options.surfDataUrl;
 
+    // Beach Direction
+    this.beachDirection = options.beachDir;
+
     // Set up initial properties for Sunrise
     this.sunSetHour = options.sset.substring(0, 1) + "pm";
     this.sunRiseHour = options.srise.substring(0, 1) + "am";
     this.backgroundLayer = new Kinetic.Layer();
+    this.foregroundLayer = new Kinetic.Layer();
     this.graphWidth = 689;
     this.graphHeight = 119;
     this.graphOffsetX = 19.5;
+    this.graphTop = 24.5;
+    this.graphBottom = 141.5;
 
     this.stage.add(this.backgroundLayer);
+    this.stage.add(this.foregroundLayer);
     this.fetchData();
   }
 
@@ -46,6 +53,8 @@ var SurfForecast = (function() {
 
   SurfForecast.prototype.bindData = function(data, textStatus, xhr) {
     var dataPoints = data.getElementsByTagName("data");
+    //console.log(data.documentElement.getAttribute("update"));
+    this.surfDataUpdated = data.documentElement.getAttribute("update");
     var surfForecastDataArray = [];
     var firstDataPoint;
     for (var i = 0; i < dataPoints.length; i++) {
@@ -62,22 +71,39 @@ var SurfForecast = (function() {
 
     this.data = surfForecastDataArray;
     this.dataColumnWidth = this.graphWidth / this.data.length;
+
     this.generateSurfBackground();
+    this.generateSurfForeground();
   }
 
+  SurfForecast.prototype.generateSurfForeground = function() {
+    for (var i = 0; i < this.data.length; i++) {
+      var dataPoint = this.data[i];
+    }
+  }
 
-  SurfForecast.prototype.generateSurfBackground = function() {
+  SurfForecast.prototype.generateBackground = function() {
     // Build the background rectangle
     var rect = new Kinetic.Rect({
       x: 0,
       y: 0,
       width: 709,
-      height: 166,
+      height: 60,
       stroke: '#dfe3ed',
       fill: '#dfe3ed',
       strokeWidth: 1
     });
     rect.setCornerRadius(3);
+    this.backgroundLayer.add(rect);
+    rect = new Kinetic.Rect({
+      x: 0,
+      y: 50,
+      width: 709,
+      height: 116,
+      stroke: '#dfe3ed',
+      fill: '#dfe3ed',
+      strokeWidth: 1
+    });
     this.backgroundLayer.add(rect);
 
     // Build the surrounding rectangle
@@ -94,15 +120,15 @@ var SurfForecast = (function() {
 
 
     // Build the day seperators
-    var points, ytop = 24.5, ybottom = 141.5, sunSetIndex, days = 0;
+    var points, sunSetIndex, days = 0;
     for (var i = 0; i < this.data.length; i++) {
       if (this.data[i].hour === "12am") {
         points = []
         var x = this._getPointNear((i * this.dataColumnWidth) + this.graphOffsetX);
         points.push(x);
-        points.push(ytop);
+        points.push(this.graphTop);
         points.push(x);
-        points.push(ybottom);
+        points.push(this.graphBottom);
         var daySeperatorLine = new Kinetic.Line({
           points: points,
           stroke: '#d9d9d9',
@@ -147,9 +173,9 @@ var SurfForecast = (function() {
       if (this.data[i].hour == this.sunRiseHour) {
         rect = new Kinetic.Rect ({
           x: this._getPointNear((sunSetIndex * this.dataColumnWidth) + this.graphOffsetX),
-          y: ytop,
+          y: this.graphTop,
           width: Math.floor((i - sunSetIndex) * this.dataColumnWidth),
-          height: ybottom - ytop,
+          height: this.graphBottom - this.graphTop,
           stroke: "#eeeeee",
           fill: "#eeeeee",
           strokeWidth: 1
@@ -158,6 +184,122 @@ var SurfForecast = (function() {
         rect.setZIndex(rect.getZIndex() - 3);
       }
     }
+  }
+
+  SurfForecast.prototype.generateSurfBackground = function() {
+    this.generateBackground();
+
+    // Build the legend below the chart
+    var rect = new Kinetic.Rect({
+        x: 1,
+        y: 143,
+        width: 707, 
+        height: 22,
+        fill: "#ffffff"
+    });
+    this.backgroundLayer.add(rect);
+
+    var labelText = new Kinetic.Text({
+      x: 4.5,
+      y: this.graphBottom + 8,
+      textFill: "#0E4A75",
+      text: "Forecast Updated: " + this.surfDataUpdated,
+      fontFamily: 'Verdana',
+      fontSize: 8
+    });
+    this.backgroundLayer.add(labelText);
+
+    // Clean Rect
+    rect = new Kinetic.Rect({
+      x: 226,
+      y: 150,
+      width: 24,
+      height: 8,
+      fill: "#6ddc5d"
+    });
+    this.backgroundLayer.add(rect);
+
+    // Clean Label
+    labelText = new Kinetic.Text({
+      x: 255,
+      y: 150,
+      textFill: "#0E4A75",
+      text: "Clean",
+      fontFamily: 'Verdana',
+      fontSize: 8
+    });
+    this.backgroundLayer.add(labelText);
+
+    // Fair Rect
+    rect = new Kinetic.Rect({
+      x: 312,
+      y: 150,
+      width: 24,
+      height: 8,
+      fill: "#5d68ff"
+    });
+    this.backgroundLayer.add(rect);
+    
+    // Fair Label
+    labelText = new Kinetic.Text({
+      x: 341,
+      y: 150,
+      textFill: "#0E4A75",
+      text: "Fair",
+      fontFamily: 'Verdana',
+      fontSize: 8
+    });
+    this.backgroundLayer.add(labelText);
+
+    // Choppy Rect
+    rect = new Kinetic.Rect({
+      x: 387,
+      y: 150,
+      width: 24,
+      height: 8,
+      fill: "#fe6a63"
+    });
+    this.backgroundLayer.add(rect);
+    
+    // Choppy Label
+    labelText = new Kinetic.Text({
+      x: 416,
+      y: 150,
+      textFill: "#0E4A75",
+      text: "Choppy",
+      fontFamily: 'Verdana',
+      fontSize: 8
+    });
+    this.backgroundLayer.add(labelText);
+
+    // Beach Direction Label
+    labelText = new Kinetic.Text({
+      x: 479,
+      y: 150,
+      textFill: "#0E4A75",
+      text: "Beach Direction: ",
+      fontFamily: 'Verdana',
+      fontSize: 8
+    });
+    this.backgroundLayer.add(labelText);
+
+    // Beach Direction Button
+    labelText = new Kinetic.Text({
+      x: 577,
+              y: 147,
+              text: this.beachDirection,
+              fill: '#646464',
+              textFill: '#ffffff',
+              width: 29,
+              //lineHeight: 13,
+              padding: 2,
+              align: 'center',
+      fontFamily: 'Verdana',
+      fontSize: 8
+    });
+    this.backgroundLayer.add(labelText);
+
+
 
     // Build the Y Axis Labels and dashed lines
     var dashedDrawFunction = function(canvas) {
@@ -214,7 +356,7 @@ var SurfForecast = (function() {
     var labels = ["D-OH", "O-Head", "Head", "Shoulder", "Chest", "Waist", "Knee"];
     
     for (var i = 1; i < 8; i++) {
-      var y = this._getPointNear(ytop + (i * datapointHeight * 10));
+      var y = this._getPointNear(this.graphTop + (i * datapointHeight * 10));
       var dashedLine = new Kinetic.Line({
         drawFunc: dashedDrawFunction,
         stroke: '#d6d6d6',
@@ -276,7 +418,8 @@ $(document).ready(function() {
     new SurfForecast({
       surfDataUrl: "<%= forecast_surf_data_path %>",
       sset: "4:42",
-      srise: "7:14"
+      srise: "7:14",
+      beachDir: "E"
     });
   }
 });
