@@ -26,10 +26,15 @@ var SurfForecast = (function() {
     this.sunRiseHour = options.srise.substring(0, 1) + "am";
     this.backgroundLayer = new Kinetic.Layer();
     this.graphWidth = 689;
+    this.graphHeight = 119;
     this.graphOffsetX = 19.5;
 
     this.stage.add(this.backgroundLayer);
     this.fetchData();
+  }
+
+  SurfForecast.prototype._getPointNear = function(point) {
+    return Math.round(point + 0.5) - 0.5;
   }
 
   SurfForecast.prototype.fetchData = function() {
@@ -79,7 +84,7 @@ var SurfForecast = (function() {
         x: this.graphOffsetX,
         y: 23.5,
         width: this.graphWidth,
-        height: 119,
+        height: this.graphHeight,
         stroke: "#969696",
         fill: "#ffffff",
         strokeWidth: 1
@@ -92,7 +97,7 @@ var SurfForecast = (function() {
     for (var i = 0; i < this.data.length; i++) {
       if (this.data[i].hour === "12am") {
         points = []
-        var x = Math.round(((i * this.dataColumnWidth) + this.graphOffsetX) + 0.5) - 0.5;
+        var x = this._getPointNear((i * this.dataColumnWidth) + this.graphOffsetX);
         points.push(x);
         points.push(ytop);
         points.push(x);
@@ -123,7 +128,7 @@ var SurfForecast = (function() {
             y: 6,
             text: this.data[i].dayName + " " + this.data[i].month + "-" + this.data[i].day,
             textFill: "#064a77",
-            fontFamily: 'Arial',
+            fontFamily: 'Verdana',
             fontSize: 10
           });
           this.backgroundLayer.add(dayLabelText);
@@ -140,7 +145,7 @@ var SurfForecast = (function() {
 
       if (this.data[i].hour == this.sunRiseHour) {
         rect = new Kinetic.Rect ({
-          x: Math.round(((sunSetIndex * this.dataColumnWidth) + this.graphOffsetX) + 0.5) - 0.5,
+          x: this._getPointNear((sunSetIndex * this.dataColumnWidth) + this.graphOffsetX),
           y: ytop,
           width: Math.floor((i - sunSetIndex) * this.dataColumnWidth),
           height: ybottom - ytop,
@@ -176,7 +181,7 @@ var SurfForecast = (function() {
       context.beginPath();
       context.moveTo(x, y);
 
-      while (currentLength < length) {
+      while ((currentLength + dashLength + gapLength) < length) {
         context.lineTo(x + dashLength + currentLength, y);
         currentLength += dashLength;
 
@@ -184,20 +189,76 @@ var SurfForecast = (function() {
         currentLength += gapLength;
       }
 
-      context.stroke();
+      // end the line
+      context.lineTo(x + dashLength + currentLength, y);
+
+      //context.stroke();
       //context.closePath();
       //context.lineWidth = this.attrs.strokeWidth;
-      //canvas.fillStroke(this);
+      canvas.fillStroke(this);
     }
-    var dashedLine = new Kinetic.Line({
+    /*var dashedLine = new Kinetic.Line({
       drawFunc: dashedDrawFunction,
       stroke: 'black',
       strokeWidth: 1,
-      points: [100, 100, 500, 100],
+      points: [100.5, 100.5, 500.5, 100.5],
       dashArray: [10, 14]
     });
-    this.backgroundLayer.add(dashedLine);
-    for (var i = 0; i < 8; i++) {
+    this.backgroundLayer.add(dashedLine);*/
+
+    var yMaxValue = 80;
+    var yMinValue = 0;
+    var datapointHeight = this.graphHeight / (yMaxValue - yMinValue);
+
+    var labels = ["D-OH", "O-Head", "Head", "Shoulder", "Chest", "Waist", "Knee"];
+    
+    for (var i = 1; i < 8; i++) {
+      var y = this._getPointNear(ytop + (i * datapointHeight * 10));
+      var dashedLine = new Kinetic.Line({
+        drawFunc: dashedDrawFunction,
+        stroke: '#d6d6d6',
+        strokeWidth: 1,
+        points: [45.5, y, 684.5, y],
+        dashArray: [11, 14]
+      });
+      this.backgroundLayer.add(dashedLine);
+
+      // Draw the Major Tick
+      var majorTickLine = new Kinetic.Line({
+        stroke: '#003366',
+        strokeWidth: 1,
+        points: [20.5, y, 29.5, y]
+      });
+      this.backgroundLayer.add(majorTickLine);
+
+      var majorTickLine = new Kinetic.Line({
+        stroke: '#003366',
+        strokeWidth: 1,
+        points: [698.5, y, 708.5, y]
+      });
+      this.backgroundLayer.add(majorTickLine);
+
+      // Draw the Left Tick Labels
+      var labelText = new Kinetic.Text({
+        x: 33.5,
+        y: y - 4,
+        textFill: "#0E4A75",
+        text: labels[i - 1],
+        fontFamily: 'Verdana',
+        fontSize: 8
+      });
+      this.backgroundLayer.add(labelText);
+
+      // Draw the Right Tick Labels
+      labelText = new Kinetic.Text({
+        x: 640.5,
+        y: y - 4,
+        textFill: "#0E4A75",
+        text: labels[i - 1],
+        fontFamily: 'Verdana',
+        fontSize: 8
+      });
+      this.backgroundLayer.add(labelText);
     }
 
 
