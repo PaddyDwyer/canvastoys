@@ -16,6 +16,7 @@ var SurfForecastData = (function() {
 var SurfForecast = (function() {
   SurfForecast.name = "SurfForecast";
 
+  // Constructor. Takes an options object which sets up the Surf Forecast.
   function SurfForecast(options) {
     // Create the kinetic stage we'll use to draw everything
     this.stage = new Kinetic.Stage({container: "surf_forecast", width: 709, height: 166});
@@ -36,16 +37,20 @@ var SurfForecast = (function() {
     this.graphLeft = 19.5;
     this.graphTop = 24.5;
     this.graphBottom = 141.5;
+    this.surfVerticalDataPoints = 80;
 
     this.stage.add(this.backgroundLayer);
     this.stage.add(this.foregroundLayer);
     this.fetchData();
   }
 
+  // Private method used to get the point at the nearest 0.5. Canvas horizontal and vertical
+  // lines don't look well defined at 1px unless they have a .5 in them.
   SurfForecast.prototype._getPointNear = function(point) {
     return Math.round(point + 0.5) - 0.5;
   }
 
+  // Ajax call to get the surf forecast data
   SurfForecast.prototype.fetchData = function() {
     $.ajax(this.surfDataUrl, {
       success: $.proxy(this.bindData, this),
@@ -53,6 +58,7 @@ var SurfForecast = (function() {
     });
   }
 
+  // Binds data to the surf forecast and sets up various utility data points
   SurfForecast.prototype.bindData = function(data, textStatus, xhr) {
     var dataPoints = data.getElementsByTagName("data");
     //console.log(data.documentElement.getAttribute("update"));
@@ -73,7 +79,7 @@ var SurfForecast = (function() {
 
     this.data = surfForecastDataArray;
     this.dataColumnWidth = this.graphWidth / this.data.length;
-    this.surfDataHeight = this.graphHeight / 80;
+    this.surfDataHeight = this.graphHeight / this.surfVerticalDataPoints;
 
     this.generateSurfBackground();
     this.generateSurfForeground();
@@ -88,11 +94,8 @@ var SurfForecast = (function() {
       "1": "#00C800",
       "2": "#0000FF",
       "3": "#FF0000"};
+
     var lastCondition, lastPoint, fillPoints, fillColor, strokePoints, strokeColor, endLine;
-    //this.data = this.data.slice(0, 2);
-
-
-
     for (var i = 0; i < this.data.length;) {
       var dataPoint = this.data[i];
 
@@ -409,21 +412,10 @@ var SurfForecast = (function() {
       // end the line
       context.lineTo(x + dashLength + currentLength, y);
 
-      //context.stroke();
-      //context.closePath();
-      //context.lineWidth = this.attrs.strokeWidth;
       canvas.fillStroke(this);
     }
-    /*var dashedLine = new Kinetic.Line({
-      drawFunc: dashedDrawFunction,
-      stroke: 'black',
-      strokeWidth: 1,
-      points: [100.5, 100.5, 500.5, 100.5],
-      dashArray: [10, 14]
-    });
-    this.backgroundLayer.add(dashedLine);*/
 
-    var yMaxValue = 80;
+    var yMaxValue = this.surfVerticalDataPoints;
     var yMinValue = 0;
     var datapointHeight = this.graphHeight / (yMaxValue - yMinValue);
 
