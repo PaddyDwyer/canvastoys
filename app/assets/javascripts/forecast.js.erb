@@ -8,6 +8,9 @@ var SurfForecastData = (function() {
     this.month = dataElement.getAttribute("month");
     this.surf = parseInt(dataElement.getAttribute("surf"), 10);
     this.cond = dataElement.getAttribute("cond");
+    this.swell1 = dataElement.getAttribute("swell1");
+    this.swell2 = dataElement.getAttribute("swell2");
+    this.wind = dataElement.getAttribute("wind");
   }
 
   return SurfForecastData;
@@ -32,15 +35,31 @@ var SurfForecast = (function() {
     this.sunRiseHour = options.srise.substring(0, 1) + "am";
     this.backgroundLayer = new Kinetic.Layer();
     this.foregroundLayer = new Kinetic.Layer();
+    this.mouseOverLayer = new Kinetic.Layer();
+    var mouseOverTimeRect = new Kinetic.Rect({
+        x: 1,
+        y: 143,
+        width: 707, 
+        height: 22,
+        fill: "#ffffff"
+    });
+    this.mouseOverLayer.add(mouseOverTimeRect);
+    this.mouseOverLayer.hide();
     this.graphWidth = 689;
     this.graphHeight = 119;
     this.graphLeft = 19.5;
+    this.graphRight = this.graphLeft + this.graphWidth;
     this.graphTop = 24.5;
     this.graphBottom = 141.5;
     this.surfVerticalDataPoints = 80;
+    this.mouseOverGroup = new Kinetic.Group({
+      x: this.graphLeft,
+      y: this.graphTop
+    });
 
     this.stage.add(this.backgroundLayer);
     this.stage.add(this.foregroundLayer);
+    this.stage.add(this.mouseOverLayer);
     this.fetchData();
   }
 
@@ -61,7 +80,6 @@ var SurfForecast = (function() {
   // Binds data to the surf forecast and sets up various utility data points
   SurfForecast.prototype.bindData = function(data, textStatus, xhr) {
     var dataPoints = data.getElementsByTagName("data");
-    //console.log(data.documentElement.getAttribute("update"));
     this.surfDataUpdated = data.documentElement.getAttribute("update");
     var surfForecastDataArray = [];
     var firstDataPoint;
@@ -86,6 +104,7 @@ var SurfForecast = (function() {
   }
 
   SurfForecast.prototype.generateSurfForeground = function() {
+    var _this = this;
     var fillConditionColors = {"0": "rgba(204, 204, 204, 0.3)",
       "1": "rgba(0, 200, 0, 0.3)",
       "2": "rgba(0, 0, 256, 0.3)",
@@ -121,6 +140,21 @@ var SurfForecast = (function() {
         fillPoints.push(y);
         strokePoints.push(y);
         lastPoint = [x, y];
+
+        // Create the mouse over boxes
+        var rect = new Kinetic.Rect({
+          x: i * this.dataColumnWidth,
+          y: 0,
+          width: this.dataColumnWidth,
+          height: this.graphBottom - this.graphTop,
+        });
+        rect.on('mouseover', (function(value, pointX, pointY) {
+          return function() {
+            _this.surfMouseOverHandler(value, pointX, pointY);
+          }
+        })(dataPoint, x, y));
+        this.mouseOverGroup.add(rect);
+
         i++;
       }
 
@@ -156,7 +190,185 @@ var SurfForecast = (function() {
       });
       this.foregroundLayer.add(strokeLine);
     }
+
+    this.foregroundLayer.add(this.mouseOverGroup);
     this.foregroundLayer.draw();
+  }
+
+  SurfForecast.prototype.surfMouseOverHandler = function(dataPoint, x, y) {
+    this.mouseOverLayer.show();
+    // Draw the data Point circle
+    var circle = this.mouseOverLayer.get("#circle")[0];
+    if (!circle) {
+      circle = new Kinetic.Circle({
+        id: "circle",
+        x: x,
+        y: y,
+        radius: 2.5,
+        fill: 'white',
+        stroke: 'black',
+        strokeWidth: 1
+      });
+      this.mouseOverLayer.add(circle);
+    } else {
+      circle.show();
+      circle.setPosition(x, y);
+    }
+
+    // Draw the Horizontal Line
+    var horizontalLine = this.mouseOverLayer.get("#hline")[0];
+    if ((x - this.graphLeft) < (this.graphWidth / 2)) {
+      var points = [{x: this.graphLeft, y: y}, {x: x, y: y}];
+    } else {
+      var points = [{x: x, y: y}, {x: this.graphRight, y: y}];
+    }
+    if (!horizontalLine) {
+      horizontalLine = new Kinetic.Line({
+        id: "hline",
+        points: points,
+        stroke: "#000000",
+        strokeWidth: 1
+      });
+      this.mouseOverLayer.add(horizontalLine);
+    } else {
+      horizontalLine.setPoints(points);
+    }
+
+    // Draw the Vertical Line
+    var verticalLine = this.mouseOverLayer.get("#vline")[0];
+    var points = [{x: x, y: this.graphBottom}, {x: x, y: y}];
+    if (!verticalLine) {
+      verticalLine = new Kinetic.Line({
+        id: "vline",
+        points: points,
+        stroke: "#000000",
+        strokeWidth: 1
+      });
+      this.mouseOverLayer.add(verticalLine);
+    } else {
+      verticalLine.setPoints(points);
+    }
+
+    // Draw the time label
+    var timeLabel = this.mouseOverLayer.get("#timeLabel")[0];
+    if (!timeLabel) {
+      timeLabel = new Kinetic.Text({
+        id: "timeLabel",
+        x: x,
+        y: this.graphBottom + 8,
+        text: dataPoint.hour,
+        textFill: "#000",
+        fontFamily: 'Times',
+        fontSize: 9
+      });
+      this.mouseOverLayer.add(timeLabel);
+    } else {
+      timeLabel.setText(dataPoint.hour);
+      timeLabel.setPosition(x, this.graphBottom + 8);
+    }
+
+    // Draw the Info Box
+    var infoBox = this.mouseOverLayer.get("#infoBox")[0];
+    if ((x - this.graphLeft) < (this.graphWidth / 2)) {
+      var infoX = x + 25;
+    } else {
+      var infoX = x - 173;
+    }
+    if ((y - this.graphTop) > (this.graphHeight / 2)) {
+      var infoY = y - 47;
+    } else {
+      var infoY = y;
+    }
+    if (!infoBox) {
+      infoBox = new Kinetic.Group({
+        id: "infoBox",
+        x: infoX,
+        y: infoY,
+      });
+      var rect = new Kinetic.Rect({
+        width: 148,
+        height: 47,
+        fill: "#000"
+      });
+      rect.setCornerRadius(6);
+      infoBox.add(rect);
+
+      var swellsLabel = new Kinetic.Text({
+        x: 5,
+        y: 5,
+        text: "Swells:",
+        textFill: "#FFFFCC",
+        fontSize: 7,
+        fontFamily: "Verdana"
+      });
+      infoBox.add(swellsLabel);
+
+      var swells1Data = new Kinetic.Text({
+        id: "swell1Data",
+        x: 40,
+        y: 5,
+        textFill: "#FFFFFF",
+        fontSize: 7,
+        fontFamily: "Verdana",
+        text: dataPoint.swell1
+      });
+      infoBox.add(swells1Data);
+      var swells2Data = new Kinetic.Text({
+        id: "swell2Data",
+        x: 40,
+        y: 20,
+        textFill: "#FFFFFF",
+        fontSize: 7,
+        fontFamily: "Verdana",
+        text: dataPoint.swell2
+      });
+      infoBox.add(swells2Data);
+
+      var windLabel = new Kinetic.Text({
+        x: 5,
+        y: 34,
+        text: "Wind:",
+        textFill: "#FFFFCC",
+        fontSize: 7,
+        fontFamily: "Verdana"
+      });
+      infoBox.add(windLabel);
+
+      var windData = new Kinetic.Text({
+        id: "windData",
+        x: 40,
+        y: 34,
+        textFill: "#FFFFFF",
+        fontSize: 7,
+        fontFamily: "Verdana",
+        text: dataPoint.wind
+      });
+      infoBox.add(windData);
+      this.mouseOverLayer.add(infoBox);
+    } else {
+      infoBox.setPosition(infoX, infoY);
+      var swell1Data = infoBox.get("#swell1Data")[0];
+      swell1Data.setText(dataPoint.swell1);
+      var swell2Data = infoBox.get("#swell2Data")[0];
+      swell2Data.setText(dataPoint.swell2);
+      var windData = infoBox.get("#windData")[0];
+      windData.setText(dataPoint.wind);
+    }
+
+    this.mouseOverLayer.draw();
+  }
+
+  SurfForecast.prototype.surfMouseOutHandler = function() {
+    // hide circle on mouse out
+    /*
+    var circle = this.mouseOverLayer.get("#circle");
+    if (!circle) {
+      circle.hide();
+      this.mouseOverLayer.draw();
+    }
+    */
+    this.mouseOverLayer.hide();
+
   }
 
   SurfForecast.prototype.generateBackground = function() {
@@ -193,6 +405,7 @@ var SurfForecast = (function() {
         fill: "#ffffff",
         strokeWidth: 1
     });
+    rect.on('mouseout', $.proxy(this.surfMouseOutHandler, this));
     this.backgroundLayer.add(rect);
 
 
