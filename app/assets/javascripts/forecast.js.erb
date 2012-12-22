@@ -2,10 +2,12 @@ var SurfForecastData = (function() {
   SurfForecastData.name = "SurfForecastData";
 
   function SurfForecastData(dataElement) {
-    this.day = parseInt(dataElement.getAttribute("day"), 0);
+    this.day = parseInt(dataElement.getAttribute("day"), 10);
     this.hour = dataElement.getAttribute("hour");
     this.dayName = dataElement.getAttribute("day_name");
     this.month = dataElement.getAttribute("month");
+    this.surf = parseInt(dataElement.getAttribute("surf"), 10);
+    this.cond = dataElement.getAttribute("cond");
   }
 
   return SurfForecastData;
@@ -31,7 +33,7 @@ var SurfForecast = (function() {
     this.foregroundLayer = new Kinetic.Layer();
     this.graphWidth = 689;
     this.graphHeight = 119;
-    this.graphOffsetX = 19.5;
+    this.graphLeft = 19.5;
     this.graphTop = 24.5;
     this.graphBottom = 141.5;
 
@@ -71,15 +73,87 @@ var SurfForecast = (function() {
 
     this.data = surfForecastDataArray;
     this.dataColumnWidth = this.graphWidth / this.data.length;
+    this.surfDataHeight = this.graphHeight / 80;
 
     this.generateSurfBackground();
     this.generateSurfForeground();
   }
 
   SurfForecast.prototype.generateSurfForeground = function() {
-    for (var i = 0; i < this.data.length; i++) {
+    var fillConditionColors = {"0": "rgba(204, 204, 204, 0.3)",
+      "1": "rgba(0, 200, 0, 0.3)",
+      "2": "rgba(0, 0, 256, 0.3)",
+      "3": "rgba(256, 0, 0, 0.3)"};
+    var strokeConditionColors = {"0": "#CCCCCC",
+      "1": "#00C800",
+      "2": "#0000FF",
+      "3": "#FF0000"};
+    var lastCondition, lastPoint, fillPoints, fillColor, strokePoints, strokeColor, endLine;
+    //this.data = this.data.slice(0, 2);
+
+
+
+    for (var i = 0; i < this.data.length;) {
       var dataPoint = this.data[i];
+
+      // Start a new line
+      if (lastPoint) {
+        fillPoints = [((i - 1) * this.dataColumnWidth) + this.graphLeft, this.graphBottom];
+        fillPoints = fillPoints.concat(lastPoint);
+      } else {
+        fillPoints = [(i * this.dataColumnWidth) + this.graphLeft, this.graphBottom];
+      }
+      fillColor = fillConditionColors[dataPoint.cond];
+      strokePoints = lastPoint || [];
+      strokeColor = strokeConditionColors[dataPoint.cond];
+
+      // Add points of the same color to arrays
+      lastCondition = dataPoint.cond
+      while (dataPoint.cond == lastCondition && i < this.data.length) {
+        dataPoint = this.data[i];
+        x = (i * this.dataColumnWidth) + this.graphLeft;
+        fillPoints.push(x);
+        strokePoints.push(x);
+        y = this.graphBottom - (dataPoint.surf * this.surfDataHeight);
+        fillPoints.push(y);
+        strokePoints.push(y);
+        lastPoint = [x, y];
+        i++;
+      }
+
+      // Extend the last data point out so the graph looks full
+      if (i == this.data.length) {
+        x = (i * this.dataColumnWidth) + this.graphLeft;
+        fillPoints.push(x);
+        strokePoints.push(x);
+        y = this.graphBottom - (dataPoint.surf * this.surfDataHeight);
+        fillPoints.push(y);
+        strokePoints.push(y);
+
+        // Add the bottom of the fill Poly
+        fillPoints.push((i * this.dataColumnWidth) + this.graphLeft);
+        fillPoints.push(this.graphBottom);
+      } else {
+        // If it's not the end of the graph we still need to add the bottom point of the 
+        // fill poly
+        fillPoints.push(((i - 1) * this.dataColumnWidth) + this.graphLeft);
+        fillPoints.push(this.graphBottom);
+      }
+
+      // End the line
+      var fillPoly = new Kinetic.Polygon({
+        points: fillPoints,
+          fill: fillColor
+      });
+      this.foregroundLayer.add(fillPoly);
+      var strokeLine = new Kinetic.Line({
+        points: strokePoints,
+        stroke: strokeColor,
+        strokeWidth: 1
+      });
+      this.foregroundLayer.add(strokeLine);
     }
+    this.foregroundLayer.draw();
   }
 
   SurfForecast.prototype.generateBackground = function() {
@@ -108,7 +182,7 @@ var SurfForecast = (function() {
 
     // Build the surrounding rectangle
     rect = new Kinetic.Rect({
-        x: this.graphOffsetX,
+        x: this.graphLeft,
         y: 23.5,
         width: this.graphWidth,
         height: this.graphHeight,
@@ -124,7 +198,7 @@ var SurfForecast = (function() {
     for (var i = 0; i < this.data.length; i++) {
       if (this.data[i].hour === "12am") {
         points = []
-        var x = this._getPointNear((i * this.dataColumnWidth) + this.graphOffsetX);
+        var x = this._getPointNear((i * this.dataColumnWidth) + this.graphLeft);
         points.push(x);
         points.push(this.graphTop);
         points.push(x);
@@ -172,7 +246,7 @@ var SurfForecast = (function() {
 
       if (this.data[i].hour == this.sunRiseHour) {
         rect = new Kinetic.Rect ({
-          x: this._getPointNear((sunSetIndex * this.dataColumnWidth) + this.graphOffsetX),
+          x: this._getPointNear((sunSetIndex * this.dataColumnWidth) + this.graphLeft),
           y: this.graphTop,
           width: Math.floor((i - sunSetIndex) * this.dataColumnWidth),
           height: this.graphBottom - this.graphTop,
