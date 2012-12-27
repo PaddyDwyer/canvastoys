@@ -1,3 +1,4 @@
+<% environment.context_class.instance_eval {include Rails.application.routes.url_helpers } %>
 var SurfForecastData = (function() {
   SurfForecastData.name = "SurfForecastData";
 
@@ -25,7 +26,7 @@ var SurfForecast = (function() {
     this.stage = new Kinetic.Stage({container: "surf_forecast", width: 709, height: 166});
 
     // Surf Data url is where we get the surf forecast data from
-    this.surfDataUrl = options.surfDataUrl;
+    this.locationKey = options.locationKey;
 
     // Beach Direction
     this.beachDirection = options.beachDir;
@@ -73,7 +74,8 @@ var SurfForecast = (function() {
 
   // Ajax call to get the surf forecast data
   SurfForecast.prototype.fetchData = function() {
-    $.ajax(this.surfDataUrl, {
+    var basePath = "<%= data_timelines_path %>/";
+    $.ajax(basePath + this.locationKey + ".xml", {
       success: $.proxy(this.bindData, this),
       cache: false
     });
@@ -713,14 +715,14 @@ var SurfForecast = (function() {
 })();
 
 
-<% environment.context_class.instance_eval {include Rails.application.routes.url_helpers } %>
 $(document).ready(function() {
   if ($("#surf_forecast").length > 0) {
     new SurfForecast({
-      surfDataUrl: "<%= forecast_surf_data_path %>",
-      sset: "4:42",
-      srise: "7:14",
-      beachDir: "E"
+      locationDir: "E",
+      beachDir: "E",
+      locationKey: "wna_de_beaches",
+      srise: "7:17",
+      sset: "4:46",
     });
   }
 });

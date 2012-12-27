@@ -30,6 +30,9 @@ end
 
 gem 'jquery-rails'
 
+# Going to use HTTParty for managing some server calls
+gem 'httparty'
+
 # To use ActiveModel has_secure_password
 # gem 'bcrypt-ruby', '~> 3.0.0'
 
