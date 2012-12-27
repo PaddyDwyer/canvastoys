@@ -26,7 +26,15 @@ var SurfForecast = (function() {
     this.stage = new Kinetic.Stage({container: "surf_forecast", width: 709, height: 166});
 
     // Surf Data url is where we get the surf forecast data from
-    this.locationKey = options.locationKey;
+    this.locationDirs = options.locationDir.split("||");
+    var locationKey = options.locationKey;
+
+    this.filenames = {};
+    this.filenames[this.locationDirs[0]] = locationKey;
+
+    for (var i = 1; i < this.locationDirs.length; i++) {
+      this.filenames[this.locationDirs[i]] = locationKey + "_" + this.locationDirs[i].toLowerCase();
+    }
 
     // Beach Direction
     this.beachDirection = options.beachDir;
@@ -63,7 +71,7 @@ var SurfForecast = (function() {
     this.stage.add(this.foregroundLayer);
     this.stage.add(this.mouseOverLayer);
     this.stage.add(this.mouseOverControlLayer);
-    this.fetchData();
+    this.fetchData(this.beachDirection);
   }
 
   // Private method used to get the point at the nearest 0.5. Canvas horizontal and vertical
@@ -73,16 +81,19 @@ var SurfForecast = (function() {
   }
 
   // Ajax call to get the surf forecast data
-  SurfForecast.prototype.fetchData = function() {
+  SurfForecast.prototype.fetchData = function(direction) {
+    _this = this;
     var basePath = "<%= data_timelines_path %>/";
-    $.ajax(basePath + this.locationKey + ".xml", {
-      success: $.proxy(this.bindData, this),
+    $.ajax(basePath + this.filenames[direction] + ".xml", {
+      success: function(data, textStatus, xhr) {
+        _this.bindData(data, textStatus, xhr, direction);
+      },
       cache: false
     });
   }
 
   // Binds data to the surf forecast and sets up various utility data points
-  SurfForecast.prototype.bindData = function(data, textStatus, xhr) {
+  SurfForecast.prototype.bindData = function(data, textStatus, xhr, direction) {
     var dataPoints = data.getElementsByTagName("data");
     this.surfDataUpdated = data.documentElement.getAttribute("update");
     var surfForecastDataArray = [];
@@ -103,7 +114,7 @@ var SurfForecast = (function() {
     this.dataColumnWidth = this.graphWidth / this.data.length;
     this.surfDataHeight = this.graphHeight / this.surfVerticalDataPoints;
 
-    this.generateSurfBackground();
+    this.generateSurfBackground(direction);
     this.generateSurfForeground();
   }
 
@@ -492,7 +503,7 @@ var SurfForecast = (function() {
     }
   }
 
-  SurfForecast.prototype.generateSurfBackground = function() {
+  SurfForecast.prototype.generateSurfBackground = function(direction) {
     this.generateBackground();
 
     // Build the legend below the chart
@@ -589,29 +600,56 @@ var SurfForecast = (function() {
     });
     this.backgroundLayer.add(labelText);
 
-    // Beach Direction Button
-    rect = new Kinetic.Rect({
-      x: 577,
-      y: 147,
-      fill: "#646464",
-      width: 29,
-      height: 13
-    });
-    this.backgroundLayer.add(rect);
-    // Beach Direction Button Text
-    labelText = new Kinetic.Text({
-      x: 577,
-      y: 150,
-      text: this.beachDirection,
-      textFill: '#ffffff',
-      width: 29,
-      //height: 12,
-      //lineHeight: 12,
-      align: 'center',
-      fontFamily: 'Verdana',
-      fontSize: 7
-    });
-    this.backgroundLayer.add(labelText);
+    // Beach Directions
+    for (var i = 0; i < this.locationDirs.length; i++) {
+      if (this.locationDirs[i] == direction) {
+        // Beach Direction Button
+        rect = new Kinetic.Rect({
+          x: 577 + (i * 39),
+          y: 147,
+          fill: "#646464",
+          width: 29,
+          height: 13
+        });
+        // Beach Direction Button Text
+        labelText = new Kinetic.Text({
+          x: 577 + (i * 39),
+          y: 150,
+          text: this.locationDirs[i],
+          textFill: '#ffffff',
+          width: 29,
+          //height: 12,
+          //lineHeight: 12,
+          align: 'center',
+          fontFamily: 'Verdana',
+          fontSize: 7
+        });
+      } else {
+        rect = new Kinetic.Rect({
+          x: 576.5 + (i * 39),
+          y: 146.5,
+          fill: "#FFFFFF",
+          stroke: "#646464",
+          strokeWidth: 1,
+          width: 29,
+          height: 14
+        });
+        labelText = new Kinetic.Text({
+          x: 576.5 + (i * 39),
+          y: 149.5,
+          text: this.locationDirs[i],
+          textFill: '#646464',
+          width: 29,
+          //height: 12,
+          //lineHeight: 12,
+          align: 'center',
+          fontFamily: 'Verdana',
+          fontSize: 7
+        });
+      }
+      this.backgroundLayer.add(rect);
+      this.backgroundLayer.add(labelText);
+    }
 
 
 
@@ -718,11 +756,11 @@ var SurfForecast = (function() {
 $(document).ready(function() {
   if ($("#surf_forecast").length > 0) {
     new SurfForecast({
-      locationDir: "E",
-      beachDir: "E",
-      locationKey: "wna_de_beaches",
+      locationDir: "SSE||SE",
+      beachDir: "SE",
+      locationKey: "wna_nj_oceancity",
       srise: "7:17",
-      sset: "4:46",
+      sset: "4:42",
     });
   }
 });
