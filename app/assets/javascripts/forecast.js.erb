@@ -71,7 +71,7 @@ var SurfForecast = (function() {
     this.stage.add(this.foregroundLayer);
     this.stage.add(this.mouseOverLayer);
     this.stage.add(this.mouseOverControlLayer);
-    this.fetchData(this.beachDirection);
+    this.fetchData();
   }
 
   // Private method used to get the point at the nearest 0.5. Canvas horizontal and vertical
@@ -82,6 +82,7 @@ var SurfForecast = (function() {
 
   // Ajax call to get the surf forecast data
   SurfForecast.prototype.fetchData = function(direction) {
+    direction = direction || this.beachDirection;
     _this = this;
     var basePath = "<%= data_timelines_path %>/";
     $.ajax(basePath + this.filenames[direction] + ".xml", {
@@ -114,11 +115,16 @@ var SurfForecast = (function() {
     this.dataColumnWidth = this.graphWidth / this.data.length;
     this.surfDataHeight = this.graphHeight / this.surfVerticalDataPoints;
 
-    this.generateSurfBackground(direction);
+    if (this.backgroundLayer.get("#beachDirectionLabel").length > 0) {
+      this.selectBackgroundButton(direction);
+    } else {
+      this.generateSurfBackground(direction);
+    }
     this.generateSurfForeground();
   }
 
   SurfForecast.prototype.generateSurfForeground = function() {
+    this.foregroundLayer.removeChildren();
     var _this = this;
     var fillConditionColors = {"0": "rgba(204, 204, 204, 0.3)",
       "1": "rgba(0, 200, 0, 0.3)",
@@ -591,6 +597,7 @@ var SurfForecast = (function() {
 
     // Beach Direction Label
     labelText = new Kinetic.Text({
+      id: "beachDirectionLabel",
       x: 479,
       y: 150,
       textFill: "#0E4A75",
@@ -602,32 +609,38 @@ var SurfForecast = (function() {
 
     // Beach Directions
     for (var i = 0; i < this.locationDirs.length; i++) {
+      var buttonGroup = new Kinetic.Group({
+        id: this.locationDirs[i],
+        name: "directionButtonGroup",
+        x: 576.5 + (i * 39),
+        y: 146.5,
+        width: 29,
+        height: 14
+      });
       if (this.locationDirs[i] == direction) {
         // Beach Direction Button
         rect = new Kinetic.Rect({
-          x: 577 + (i * 39),
-          y: 147,
+          name: this.locationDirs[i],
           fill: "#646464",
+          stroke: "#FFFFFF",
+          strokeWidth: 1,
           width: 29,
-          height: 13
+          height: 14
         });
         // Beach Direction Button Text
         labelText = new Kinetic.Text({
-          x: 577 + (i * 39),
-          y: 150,
+          name: this.locationDirs[i],
+          y: 3,
           text: this.locationDirs[i],
           textFill: '#ffffff',
           width: 29,
-          //height: 12,
-          //lineHeight: 12,
           align: 'center',
           fontFamily: 'Verdana',
           fontSize: 7
         });
       } else {
         rect = new Kinetic.Rect({
-          x: 576.5 + (i * 39),
-          y: 146.5,
+          name: this.locationDirs[i],
           fill: "#FFFFFF",
           stroke: "#646464",
           strokeWidth: 1,
@@ -635,8 +648,8 @@ var SurfForecast = (function() {
           height: 14
         });
         labelText = new Kinetic.Text({
-          x: 576.5 + (i * 39),
-          y: 149.5,
+          name: this.locationDirs[i],
+          y: 3,
           text: this.locationDirs[i],
           textFill: '#646464',
           width: 29,
@@ -647,8 +660,12 @@ var SurfForecast = (function() {
           fontSize: 7
         });
       }
-      this.backgroundLayer.add(rect);
-      this.backgroundLayer.add(labelText);
+      buttonGroup.add(rect);
+      buttonGroup.add(labelText);
+      buttonGroup.on("mouseover", $.proxy(this.directionButtonMouseOverHandler, this));
+      buttonGroup.on("mouseout", $.proxy(this.directionButtonMouseOutHandler, this));
+      buttonGroup.on("click", $.proxy(this.directionButtonClickHandler, this));
+      this.backgroundLayer.add(buttonGroup);
     }
 
 
@@ -747,6 +764,71 @@ var SurfForecast = (function() {
 
 
     this.backgroundLayer.draw();
+  }
+
+  SurfForecast.prototype.selectBackgroundButton = function(direction) {
+    var buttonGroups = this.backgroundLayer.get(".directionButtonGroup");
+
+    for (var i = 0; i < buttonGroups.length; i++) {
+      if (buttonGroups[i].getId() == direction) {
+        this.selectedDirectionButton(buttonGroups[i]);
+      } else {
+        this.unselectedDirectionButton(buttonGroups[i]);
+      }
+    }
+  }
+
+  SurfForecast.prototype.directionButtonMouseOverHandler = function(evt) {
+    var shape = evt.shape;
+
+    // get button text and background
+    this.selectedDirectionButton(this.backgroundLayer.get("#" + shape.getName())[0]);
+  }
+
+  SurfForecast.prototype.selectedDirectionButton = function(group) {
+    var buttons = group.getChildren();
+    for (var i = 0; i < buttons.length; i++) {
+      if (buttons[i].shapeType == "Rect") {
+        buttons[i].setStroke("#FFFFFF");
+        buttons[i].setFill("#646464");
+      } else {
+        buttons[i].setTextFill("#FFFFFF");
+      }
+    }
+
+    this.backgroundLayer.draw();
+  }
+
+  SurfForecast.prototype.unselectedDirectionButton = function(group) {
+    var buttons = group.getChildren();
+    for (var i = 0; i < buttons.length; i++) {
+      if (buttons[i].shapeType == "Rect") {
+        buttons[i].setStroke("#646464");
+        buttons[i].setFill("#FFFFFF");
+      } else {
+        buttons[i].setTextFill("#646464");
+      }
+    }
+
+    this.backgroundLayer.draw();
+  }
+
+  SurfForecast.prototype.directionButtonMouseOutHandler = function(evt) {
+    var shape = evt.shape;
+    var direction = shape.getName();
+
+    // get button text and background
+    if (this.beachDirection != direction) {
+      this.unselectedDirectionButton(this.backgroundLayer.get("#" + shape.getName())[0]);
+    }
+  }
+
+  SurfForecast.prototype.directionButtonClickHandler = function(evt) {
+    var shape = evt.shape;
+    var direction = shape.getName();
+
+    this.beachDirection = direction;
+    this.fetchData(direction);
   }
 
   return SurfForecast;

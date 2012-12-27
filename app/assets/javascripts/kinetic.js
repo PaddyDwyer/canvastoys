@@ -48,7 +48,7 @@ var Kinetic = {};
              * if we don't use window.console in the conditional
              */
             if(window.console && console.warn) {
-                console.warn('Kinetic warning: ' + str);
+                //console.warn('Kinetic warning: ' + str);
             }
         },
         extend: function(c1, c2) {
