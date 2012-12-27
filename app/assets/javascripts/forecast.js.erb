@@ -383,7 +383,7 @@ var SurfForecast = (function() {
       fill: '#dfe3ed',
       strokeWidth: 1
     });
-    rect.setCornerRadius(3);
+    rect.setCornerRadius(7);
     this.backgroundLayer.add(rect);
     rect = new Kinetic.Rect({
       x: 0,
@@ -454,12 +454,13 @@ var SurfForecast = (function() {
           this.backgroundLayer.add(labelSeperatorLine);
 
           var dayLabelText = new Kinetic.Text({
-            x: x + 16,
+            x: x + 12,
             y: 6,
             text: this.data[i].dayName + " " + this.data[i].month + "-" + this.data[i].day,
             textFill: "#064a77",
             fontFamily: 'Verdana',
-            fontSize: 10
+            fontStyle: 'bold',
+            fontSize: 9
           });
           this.backgroundLayer.add(dayLabelText);
 
@@ -473,7 +474,7 @@ var SurfForecast = (function() {
         sunSetIndex = i;
       }
 
-      if (this.data[i].hour == this.sunRiseHour) {
+      if (this.data[i].hour == this.sunRiseHour && sunSetIndex) {
         rect = new Kinetic.Rect ({
           x: this._getPointNear((sunSetIndex * this.dataColumnWidth) + this.graphLeft),
           y: this.graphTop,
@@ -587,18 +588,26 @@ var SurfForecast = (function() {
     this.backgroundLayer.add(labelText);
 
     // Beach Direction Button
+    rect = new Kinetic.Rect({
+      x: 577,
+      y: 147,
+      fill: "#646464",
+      width: 29,
+      height: 13
+    });
+    this.backgroundLayer.add(rect);
+    // Beach Direction Button Text
     labelText = new Kinetic.Text({
       x: 577,
-              y: 147,
-              text: this.beachDirection,
-              fill: '#646464',
-              textFill: '#ffffff',
-              width: 29,
-              //lineHeight: 13,
-              padding: 2,
-              align: 'center',
+      y: 150,
+      text: this.beachDirection,
+      textFill: '#ffffff',
+      width: 29,
+      //height: 12,
+      //lineHeight: 12,
+      align: 'center',
       fontFamily: 'Verdana',
-      fontSize: 8
+      fontSize: 7
     });
     this.backgroundLayer.add(labelText);
 
