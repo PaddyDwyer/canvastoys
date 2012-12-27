@@ -36,15 +36,16 @@ var SurfForecast = (function() {
     this.backgroundLayer = new Kinetic.Layer();
     this.foregroundLayer = new Kinetic.Layer();
     this.mouseOverLayer = new Kinetic.Layer();
-    var mouseOverTimeRect = new Kinetic.Rect({
+    var mouseOverTimeWhiteBackground = new Kinetic.Rect({
         x: 1,
         y: 143,
         width: 707, 
         height: 22,
         fill: "#ffffff"
     });
-    this.mouseOverLayer.add(mouseOverTimeRect);
+    this.mouseOverLayer.add(mouseOverTimeWhiteBackground);
     this.mouseOverLayer.hide();
+    this.mouseOverControlLayer = new Kinetic.Layer();
     this.graphWidth = 689;
     this.graphHeight = 119;
     this.graphLeft = 19.5;
@@ -60,6 +61,7 @@ var SurfForecast = (function() {
     this.stage.add(this.backgroundLayer);
     this.stage.add(this.foregroundLayer);
     this.stage.add(this.mouseOverLayer);
+    this.stage.add(this.mouseOverControlLayer);
     this.fetchData();
   }
 
@@ -141,19 +143,6 @@ var SurfForecast = (function() {
         strokePoints.push(y);
         lastPoint = [x, y];
 
-        // Create the mouse over boxes
-        var rect = new Kinetic.Rect({
-          x: i * this.dataColumnWidth,
-          y: 0,
-          width: this.dataColumnWidth,
-          height: this.graphBottom - this.graphTop,
-        });
-        rect.on('mouseover', (function(value, pointX, pointY) {
-          return function() {
-            _this.surfMouseOverHandler(value, pointX, pointY);
-          }
-        })(dataPoint, x, y));
-        this.mouseOverGroup.add(rect);
 
         i++;
       }
@@ -191,11 +180,23 @@ var SurfForecast = (function() {
       this.foregroundLayer.add(strokeLine);
     }
 
-    this.foregroundLayer.add(this.mouseOverGroup);
     this.foregroundLayer.draw();
   }
 
-  SurfForecast.prototype.surfMouseOverHandler = function(dataPoint, x, y) {
+  SurfForecast.prototype.surfMouseOverHandler = function() {
+    var mousePosition = this.stage.getMousePosition();
+
+    var mouseX = mousePosition.x;
+
+    // get the data point
+    var index = Math.round((mouseX - this.graphLeft) / this.dataColumnWidth);
+
+    var dataPoint = this.data[index];
+
+    var x = (index * this.dataColumnWidth) + this.graphLeft;
+    var y = y = this.graphBottom - (dataPoint.surf * this.surfDataHeight);
+
+
     this.mouseOverLayer.show();
     // Draw the data Point circle
     var circle = this.mouseOverLayer.get("#circle")[0];
@@ -405,8 +406,20 @@ var SurfForecast = (function() {
         fill: "#ffffff",
         strokeWidth: 1
     });
-    rect.on('mouseout', $.proxy(this.surfMouseOutHandler, this));
     this.backgroundLayer.add(rect);
+
+    // Create the mouse over box
+    var rect = new Kinetic.Rect({
+      x: 0,
+      y: 0,
+      width: this.graphWidth,
+      height: this.graphHeight,
+    });
+    rect.on('mouseout', $.proxy(this.surfMouseOutHandler, this));
+    rect.on('mousemove', $.proxy(this.surfMouseOverHandler, this));
+    this.mouseOverGroup.add(rect);
+    this.mouseOverControlLayer.add(this.mouseOverGroup);
+    this.mouseOverControlLayer.draw();
 
 
     // Build the day seperators
