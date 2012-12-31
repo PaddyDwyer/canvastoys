@@ -1,8 +1,32 @@
 <% environment.context_class.instance_eval {include Rails.application.routes.url_helpers } %>
-var SurfForecastData = (function() {
+var SurfForecastData= (function() {
   SurfForecastData.name = "SurfForecastData";
 
-  function SurfForecastData(dataElement) {
+  function SurfForecastData(data) {
+    var dataPoints = data.getElementsByTagName("data");
+    this.surfDataUpdated = data.documentElement.getAttribute("update");
+    this.dataPoints = [];
+    var firstDataPoint;
+    for (var i = 0; i < dataPoints.length; i++) {
+      var dataPoint = new SurfForecastDataPoint(dataPoints[i]);
+      if (!firstDataPoint) {
+        firstDataPoint = dataPoint;
+      }
+      if (dataPoint.day == firstDataPoint.day + 7 && dataPoint.hour == firstDataPoint.hour ) {
+        break;
+      } else {
+        this.dataPoints.push(dataPoint);
+      }
+    }
+  }
+
+  return SurfForecastData;
+})();
+
+var SurfForecastDataPoint = (function() {
+  SurfForecastDataPoint.name = "SurfForecastDataPoint";
+
+  function SurfForecastDataPoint(dataElement) {
     this.day = ("0" + dataElement.getAttribute("day")).substr(-2);
     this.hour = dataElement.getAttribute("hour");
     this.dayName = dataElement.getAttribute("day_name");
@@ -14,16 +38,52 @@ var SurfForecastData = (function() {
     this.wind = dataElement.getAttribute("wind");
   }
 
-  return SurfForecastData;
+  return SurfForecastDataPoint;
 })();
 
 var SwellForecastData = (function() {
   SwellForecastData.name = "SwellForecastData";
 
-  function SwellForecastData(dataElement) {
+  function SwellForecastData(data) {
+    var dataPoints = data.getElementsByTagName("data");
+    this.dataPoints = [];
+    for (var i = 0; i < dataPoints.length; i++) {
+      var dataPoint = new SwellForecastDataPoint(dataPoints[i]);
+      this.dataPoints.push(dataPoint);
+    }
+  }
+
+  SwellForecastData.prototype.getMaxHeight = function() {
+    var maxHeight = 0;
+    for (var i = 0; i < this.dataPoints.length; i++) {
+      var dataPoint = this.dataPoints[i];
+      for (var j = 0; j < dataPoint.heights.length; j++) {
+        if (dataPoint.heights[j] > maxHeight) {
+          maxHeight = dataPoint.heights[j];
+        }
+      }
+    }
+    return maxHeight;
   }
 
   return SwellForecastData;
+})();
+
+var SwellForecastDataPoint = (function() {
+  SwellForecastDataPoint.name = "SwellForecastDataPoint";
+
+  function SwellForecastDataPoint(dataElement) {
+    this.day = ("0" + dataElement.getAttribute("day")).substr(-2);
+    this.hour = dataElement.getAttribute("hour");
+    this.dayName = dataElement.getAttribute("day_name");
+    this.month = dataElement.getAttribute("month");
+    this.heights = [];
+    for (var i = 0; i < 6; i++) {
+      this.heights.push(parseFloat(dataElement.getAttribute("ht" + i)));
+    }
+  }
+
+  return SwellForecastDataPoint;
 })();
 
 var SurfForecast = (function() {
@@ -51,6 +111,7 @@ var SurfForecast = (function() {
     // Set up initial properties for Sunrise
     this.sunSetHour = options.sset.substring(0, 1) + "pm";
     this.sunRiseHour = options.srise.substring(0, 1) + "am";
+    this.baseLayer = new Kinetic.Layer();
     this.backgroundLayer = new Kinetic.Layer();
     this.foregroundLayer = new Kinetic.Layer();
     this.mouseOverLayer = new Kinetic.Layer();
@@ -76,6 +137,7 @@ var SurfForecast = (function() {
       y: this.graphTop
     });
 
+    this.stage.add(this.baseLayer);
     this.stage.add(this.backgroundLayer);
     this.stage.add(this.foregroundLayer);
     this.stage.add(this.mouseOverLayer);
@@ -115,28 +177,14 @@ var SurfForecast = (function() {
 
   // Binds data to the surf forecast and sets up various utility data points
   SurfForecast.prototype.bindSurfData = function(data, textStatus, xhr, direction) {
-    var dataPoints = data.getElementsByTagName("data");
-    this.surfDataUpdated = data.documentElement.getAttribute("update");
-    var surfForecastDataArray = [];
-    var firstDataPoint;
-    for (var i = 0; i < dataPoints.length; i++) {
-      var dataPoint = new SurfForecastData(dataPoints[i]);
-      if (!firstDataPoint) {
-        firstDataPoint = dataPoint;
-      }
-      if (dataPoint.day == firstDataPoint.day + 7 && dataPoint.hour == firstDataPoint.hour ) {
-        break;
-      } else {
-        surfForecastDataArray.push(dataPoint);
-      }
-    }
+    this.data = new SurfForecastData(data);
 
-    this.data = surfForecastDataArray;
-    this.dataColumnWidth = this.graphWidth / this.data.length;
+    //this.data = surfForecastDataArray;
+    this.dataColumnWidth = this.graphWidth / this.data.dataPoints.length;
     this.surfDataHeight = this.graphHeight / this.surfVerticalDataPoints;
 
     if (this.backgroundLayer.get("#beachDirectionLabel").length > 0) {
-      this.selectBackgroundButton(direction);
+      this.updateSurfBackground(direction);
     } else {
       this.generateSurfBackground(direction);
     }
@@ -144,14 +192,12 @@ var SurfForecast = (function() {
   }
 
   SurfForecast.prototype.bindSwellData = function(data, textStatus, xhr) {
-    var dataPoints = data.getElementsByTagName("data");
-    var swellForecastDataArray = [];
-    for (var i = 0; i < dataPoints.length; i++) {
-      var dataPoint = new SwellForecastData(dataPoints[i]);
-      swellForecastDataArray.push(dataPoint);
-    }
+    this.selectedForecast = "swellButton";
 
-    //this.data = swellForecastDataArray;
+    this.data = new SwellForecastData(data);
+
+    /*
+    */
     //this.dataColumnWidth = this.graphWidth / this.data.length;
     //this.surfDataHeight = this.graphHeight / this.surfVerticalDataPoints;
 
@@ -160,12 +206,269 @@ var SurfForecast = (function() {
   }
 
   SurfForecast.prototype.generateSwellBackground = function() {
+    this.updateBaseLayer();
     this.backgroundLayer.removeChildren();
+
+    // Build the legend below the chart
+    var labelText = new Kinetic.Text({
+      x: 4.5,
+      y: this.graphBottom + 8,
+      textFill: "#383838",
+      text: "Click swell color for roll over details",
+      fontFamily: 'Verdana',
+      fontSize: 8
+    });
+    this.backgroundLayer.add(labelText);
+    
+    // Swell 1 Rect
+    var rect = new Kinetic.Rect({
+      x: 220,
+      y: 149,
+      width: 24,
+      height: 8,
+      fill: "#fe1d00"
+    });
+    this.backgroundLayer.add(rect);
+
+    // Swell 1 Label
+    labelText = new Kinetic.Text({
+      x: 250,
+      y: 150,
+      textFill: "#383838",
+      text: "Swell 1",
+      fontFamily: 'Verdana',
+      fontSize: 8
+    });
+    this.backgroundLayer.add(labelText);
+
+    // Swell 2 Rect
+    var rect = new Kinetic.Rect({
+      x: 301,
+      y: 149,
+      width: 24,
+      height: 8,
+      fill: "#0016FF"
+    });
+    this.backgroundLayer.add(rect);
+
+    // Swell 2 Label
+    labelText = new Kinetic.Text({
+      x: 331,
+      y: 150,
+      textFill: "#383838",
+      text: "Swell 2",
+      fontFamily: 'Verdana',
+      fontSize: 8
+    });
+    this.backgroundLayer.add(labelText);
+
+    // Swell 3 Rect
+    var rect = new Kinetic.Rect({
+      x: 382,
+      y: 149,
+      width: 24,
+      height: 8,
+      fill: "#2B8A13"
+    });
+    this.backgroundLayer.add(rect);
+
+    // Swell 3 Label
+    labelText = new Kinetic.Text({
+      x: 412,
+      y: 150,
+      textFill: "#383838",
+      text: "Swell 3",
+      fontFamily: 'Verdana',
+      fontSize: 8
+    });
+    this.backgroundLayer.add(labelText);
+
+    // Swell 4 Rect
+    var rect = new Kinetic.Rect({
+      x: 463,
+      y: 149,
+      width: 24,
+      height: 8,
+      fill: "#DA7393"
+    });
+    this.backgroundLayer.add(rect);
+
+    // Swell 4 Label
+    labelText = new Kinetic.Text({
+      x: 493,
+      y: 150,
+      textFill: "#383838",
+      text: "Swell 4",
+      fontFamily: 'Verdana',
+      fontSize: 8
+    });
+    this.backgroundLayer.add(labelText);
+
+    // Swell 5 Rect
+    var rect = new Kinetic.Rect({
+      x: 544,
+      y: 149,
+      width: 24,
+      height: 8,
+      fill: "#15FEFF"
+    });
+    this.backgroundLayer.add(rect);
+
+    // Swell 5 Label
+    labelText = new Kinetic.Text({
+      x: 574,
+      y: 150,
+      textFill: "#383838",
+      text: "Swell 5",
+      fontFamily: 'Verdana',
+      fontSize: 8
+    });
+    this.backgroundLayer.add(labelText);
+
+
+    // Swell 6 Rect
+    var rect = new Kinetic.Rect({
+      x: 625,
+      y: 149,
+      width: 24,
+      height: 8,
+      fill: "#FFA600"
+    });
+    this.backgroundLayer.add(rect);
+
+    // Swell 6 Label
+    labelText = new Kinetic.Text({
+      x: 655,
+      y: 150,
+      textFill: "#383838",
+      text: "Swell 6",
+      fontFamily: 'Verdana',
+      fontSize: 8
+    });
+    this.backgroundLayer.add(labelText);
+
+
+    // Build the Y Axis Labels and dashed lines
+    // Get the Max Height
+    var maxHeight = Math.ceil(this.data.getMaxHeight()) + 1;
+    var scale = false;
+    var tickOptions = [3, 4, 5];
+    var ticks;
+    while (scale == false) {
+      for (var i = 0; i < tickOptions.length; i++) {
+        if (maxHeight % tickOptions[i] == 0) {
+          ticks = tickOptions[i];
+          scale = true;
+        }
+      }
+      maxHeight++;
+    }
+    if (scale) {
+      var tickInt = (maxHeight - 1) / ticks;
+      this.swellDataHeight = this.graphHeight / (maxHeight - 1);
+      var tickLabels = [];
+      for (var i = ticks - 1; i > 0; i--) {
+        tickLabels.push((i * tickInt) + " ft");
+      }
+      for (var i = 1; i < ticks; i++) {
+        var y = this._getPointNear(this.graphTop + (i * tickInt * this.swellDataHeight));
+        // Draw the dashed line
+        var dashedLine = new Kinetic.Line({
+          drawFunc: dashedDrawFunction,
+          stroke: '#d6d6d6',
+          strokeWidth: 1,
+          points: [45.5, y, 684.5, y],
+          dashArray: [11, 14]
+        });
+        this.backgroundLayer.add(dashedLine);
+
+        // Draw the left labels
+        var labelText = new Kinetic.Text({
+          x: 33.5,
+          y: y - 4,
+          textFill: "#0E4A75",
+          text: tickLabels[i - 1],
+          fontFamily: 'Verdana',
+          fontSize: 8
+        });
+        this.backgroundLayer.add(labelText);
+
+        // Draw the right labels
+        labelText = new Kinetic.Text({
+          x: 640.5,
+          y: y - 4,
+          textFill: "#6d87a6",
+          text: tickLabels[i - 1],
+          fontFamily: 'Verdana',
+          fontSize: 8
+        });
+        this.backgroundLayer.add(labelText);
+
+        // Draw the major ticks
+        var majorTickLine = new Kinetic.Line({
+          stroke: '#003366',
+          strokeWidth: 1,
+          points: [20.5, y, 29.5, y]
+        });
+        this.backgroundLayer.add(majorTickLine);
+
+        var majorTickLine = new Kinetic.Line({
+          stroke: '#003366',
+          strokeWidth: 1,
+          points: [698.5, y, 708.5, y]
+        });
+        this.backgroundLayer.add(majorTickLine);
+      }
+    }
+
     this.backgroundLayer.draw();
   }
 
   SurfForecast.prototype.generateSwellForeground = function() {
     this.foregroundLayer.removeChildren();
+
+    // do the red line
+    var colors = ["#FE1D00", "#0016FF", "#2B8A13", "#DA7393", "#15FEFF", "#FFA600"];
+    var points = [ [], [], [], [], [], [] ], x, y;
+    for (var i = 0; i < this.data.dataPoints.length; i++) {
+      var dataPoint = this.data.dataPoints[i];
+      console.log(dataPoint.dayName, dataPoint.hour, dataPoint.heights[2]);
+      for (var j = 0; j < dataPoint.heights.length; j++) {
+        x = (i * this.dataColumnWidth) + this.graphLeft;
+        y = this.graphBottom - (dataPoint.heights[j] * this.swellDataHeight);
+
+        // Only add points to a line if they have a high enough height
+        if (dataPoint.heights[j] > 0.7) {
+          // Start a new line
+          if (!points[j]) {
+            points[j] = [{x: x, y: y}];
+          } else { // continue line
+            points[j].push({x: x, y: y});
+          }
+        }
+
+        // Check to see if we need to end a line
+        if (dataPoint.heights[j] < 0.7 || i == this.data.dataPoints.length - 1)  { 
+          // Need 2 points to make a line
+          if (points[j] && points[j].length > 1) {
+            var redLine = new Kinetic.Line({
+              points: points[j],
+              stroke: colors[j],
+              strokeWidth: 1
+            });
+            this.foregroundLayer.add(redLine);
+          }
+          // Reset redPoints whenever there is no valid value because there 
+          // may be 1 point in the array
+          points[j] = null;
+          if (j == 2) {
+            console.log("resetting");
+          }
+        }
+      }
+    }
+
+
     this.foregroundLayer.draw();
   }
 
@@ -182,8 +485,8 @@ var SurfForecast = (function() {
       "3": "#FF0000"};
 
     var lastCondition, lastPoint, fillPoints, fillColor, strokePoints, strokeColor, endLine;
-    for (var i = 0; i < this.data.length;) {
-      var dataPoint = this.data[i];
+    for (var i = 0; i < this.data.dataPoints.length;) {
+      var dataPoint = this.data.dataPoints[i];
 
       // Start a new line
       if (lastPoint) {
@@ -198,8 +501,8 @@ var SurfForecast = (function() {
 
       // Add points of the same color to arrays
       lastCondition = dataPoint.cond
-      while (dataPoint.cond == lastCondition && i < this.data.length) {
-        dataPoint = this.data[i];
+      while (dataPoint.cond == lastCondition && i < this.data.dataPoints.length) {
+        dataPoint = this.data.dataPoints[i];
         x = (i * this.dataColumnWidth) + this.graphLeft;
         fillPoints.push(x);
         strokePoints.push(x);
@@ -213,7 +516,7 @@ var SurfForecast = (function() {
       }
 
       // Extend the last data point out so the graph looks full
-      if (i == this.data.length) {
+      if (i == this.data.dataPoints.length) {
         x = (i * this.dataColumnWidth) + this.graphLeft;
         fillPoints.push(x);
         strokePoints.push(x);
@@ -256,7 +559,7 @@ var SurfForecast = (function() {
     // get the data point
     var index = Math.round((mouseX - this.graphLeft) / this.dataColumnWidth);
 
-    var dataPoint = this.data[index];
+    var dataPoint = this.data.dataPoints[index];
 
     var x = (index * this.dataColumnWidth) + this.graphLeft;
     var y = y = this.graphBottom - (dataPoint.surf * this.surfDataHeight);
@@ -449,7 +752,7 @@ var SurfForecast = (function() {
       strokeWidth: 1
     });
     rect.setCornerRadius(7);
-    this.backgroundLayer.add(rect);
+    this.baseLayer.add(rect);
     rect = new Kinetic.Rect({
       x: 0,
       y: 50,
@@ -459,7 +762,7 @@ var SurfForecast = (function() {
       fill: '#dfe3ed',
       strokeWidth: 1
     });
-    this.backgroundLayer.add(rect);
+    this.baseLayer.add(rect);
 
     // Build the surrounding rectangle
     rect = new Kinetic.Rect({
@@ -471,7 +774,7 @@ var SurfForecast = (function() {
         fill: "#ffffff",
         strokeWidth: 1
     });
-    this.backgroundLayer.add(rect);
+    this.baseLayer.add(rect);
 
     // Create the mouse over box
     var rect = new Kinetic.Rect({
@@ -486,79 +789,24 @@ var SurfForecast = (function() {
     this.mouseOverControlLayer.add(this.mouseOverGroup);
     this.mouseOverControlLayer.draw();
 
+    this.generateDaySeperators();
 
-    // Build the day seperators
-    var points, sunSetIndex, days = 0;
-    for (var i = 0; i < this.data.length; i++) {
-      if (this.data[i].hour === "12am") {
-        points = []
-        var x = this._getPointNear((i * this.dataColumnWidth) + this.graphLeft);
-        points.push(x);
-        points.push(this.graphTop);
-        points.push(x);
-        points.push(this.graphBottom);
-        var daySeperatorLine = new Kinetic.Line({
-          points: points,
-          stroke: '#d9d9d9',
-          strokeWidth: 1
-        });
-        this.backgroundLayer.add(daySeperatorLine);
-
-        // Create the Day labels
-        if (days < 6) {
-          points = [];
-          points.push(x);
-          points.push(1);
-          points.push(x);
-          points.push(21);
-          var labelSeperatorLine = new Kinetic.Line({
-            points: points,
-            stroke: '#ffffff',
-            strokeWidth: 1
-          });
-          this.backgroundLayer.add(labelSeperatorLine);
-
-          var dayLabelText = new Kinetic.Text({
-            x: x,
-            y: 8,
-            text: this.data[i].dayName + " " + this.data[i].month + "-" + this.data[i].day,
-            textFill: "#064a77",
-            fontFamily: 'Verdana',
-            fontStyle: 'bold',
-            fontSize: 8,
-            align: 'center',
-            width: this.dataColumnWidth * 24,
-          });
-          this.backgroundLayer.add(dayLabelText);
-
-          days++;
-        }
-      }
+    // White Box for the legend
+    var rect = new Kinetic.Rect({
+        x: 1,
+        y: 143,
+        width: 707, 
+        height: 22,
+        fill: "#ffffff"
+    });
+    this.baseLayer.add(rect);
 
 
-      // Build the dark rectangles
-      if (this.data[i].hour == this.sunSetHour) {
-        sunSetIndex = i;
-      }
-
-      if (this.data[i].hour == this.sunRiseHour && sunSetIndex) {
-        rect = new Kinetic.Rect ({
-          x: this._getPointNear((sunSetIndex * this.dataColumnWidth) + this.graphLeft),
-          y: this.graphTop,
-          width: Math.floor((i - sunSetIndex) * this.dataColumnWidth),
-          height: this.graphBottom - this.graphTop,
-          stroke: "#eeeeee",
-          fill: "#eeeeee",
-          strokeWidth: 1
-        });
-        this.backgroundLayer.add(rect);
-        rect.setZIndex(rect.getZIndex() - 3);
-      }
-    }
 
     // Build Surf Button Group
     var buttonGroup = new Kinetic.Group({
       id: "surfButton",
+      name: "forecastButtonGroup",
       x: 2.5,
       y: 81.5,
       rotationDeg: -90
@@ -588,11 +836,12 @@ var SurfForecast = (function() {
     buttonGroup.add(text);
     buttonGroup.on("mouseover", $.proxy(this.forecastButtonMouseOverHandler, this));
     buttonGroup.on("mouseout", $.proxy(this.forecastButtonMouseOutHandler, this));
-    this.backgroundLayer.add(buttonGroup);
+    this.baseLayer.add(buttonGroup);
 
     // Build Swell Button Group
     buttonGroup = new Kinetic.Group({
       id: "swellButton",
+      name: "forecastButtonGroup",
       x: 2.5,
       y: 141.5,
       rotationDeg: -90
@@ -623,22 +872,95 @@ var SurfForecast = (function() {
     buttonGroup.on("mouseover", $.proxy(this.forecastButtonMouseOverHandler, this));
     buttonGroup.on("mouseout", $.proxy(this.forecastButtonMouseOutHandler, this));
     buttonGroup.on("click", $.proxy(this.forecastButtonClickHandler, this));
-    this.backgroundLayer.add(buttonGroup);
+    this.baseLayer.add(buttonGroup);
+    this.baseLayer.draw();
+  }
+
+  SurfForecast.prototype.generateDaySeperators = function() {
+    var daySeperatorGroup = this.baseLayer.get("#daySeperatorGroup")[0];
+
+    if (!daySeperatorGroup) {
+      var daySeperatorGroup = new Kinetic.Group({
+        id: "daySeperatorGroup"
+      });
+    }
+    daySeperatorGroup.removeChildren();
+    // Build the day seperators
+    var points, sunSetIndex, days = 0;
+    for (var i = 0; i < this.data.dataPoints.length; i++) {
+      if (this.data.dataPoints[i].hour === "12am") {
+        points = []
+        var x = this._getPointNear((i * this.dataColumnWidth) + this.graphLeft);
+        points.push(x);
+        points.push(this.graphTop);
+        points.push(x);
+        points.push(this.graphBottom);
+        var daySeperatorLine = new Kinetic.Line({
+          points: points,
+          stroke: '#d9d9d9',
+          strokeWidth: 1
+        });
+        daySeperatorGroup.add(daySeperatorLine);
+
+        // Create the Day labels
+        if (days < 6) {
+          points = [];
+          points.push(x);
+          points.push(1);
+          points.push(x);
+          points.push(21);
+          var labelSeperatorLine = new Kinetic.Line({
+            points: points,
+            stroke: '#ffffff',
+            strokeWidth: 1
+          });
+          daySeperatorGroup.add(labelSeperatorLine);
+
+          var dayLabelText = new Kinetic.Text({
+            x: x,
+            y: 8,
+            text: this.data.dataPoints[i].dayName + " " + this.data.dataPoints[i].month + "-" + this.data.dataPoints[i].day,
+            textFill: "#064a77",
+            fontFamily: 'Verdana',
+            fontStyle: 'bold',
+            fontSize: 8,
+            align: 'center',
+            width: this.dataColumnWidth * 24,
+          });
+          daySeperatorGroup.add(dayLabelText);
+
+          days++;
+        }
+      }
+
+
+      // Build the dark rectangles
+      if (this.data.dataPoints[i].hour == this.sunSetHour) {
+        sunSetIndex = i;
+      }
+
+      if (this.data.dataPoints[i].hour == this.sunRiseHour && sunSetIndex) {
+        rect = new Kinetic.Rect ({
+          x: this._getPointNear((sunSetIndex * this.dataColumnWidth) + this.graphLeft),
+          y: this.graphTop,
+          width: Math.floor((i - sunSetIndex) * this.dataColumnWidth),
+          height: this.graphBottom - this.graphTop,
+          stroke: "#eeeeee",
+          fill: "#eeeeee",
+          strokeWidth: 1
+        });
+        daySeperatorGroup.add(rect);
+        rect.setZIndex(rect.getZIndex() - 3);
+      }
+    }
+    this.baseLayer.add(daySeperatorGroup);
+
   }
 
   SurfForecast.prototype.generateSurfBackground = function(direction) {
     this.generateBackground();
 
     // Build the legend below the chart
-    var rect = new Kinetic.Rect({
-        x: 1,
-        y: 143,
-        width: 707, 
-        height: 22,
-        fill: "#ffffff"
-    });
-    this.backgroundLayer.add(rect);
-
     var labelText = new Kinetic.Text({
       x: 4.5,
       y: this.graphBottom + 8,
@@ -650,7 +972,7 @@ var SurfForecast = (function() {
     this.backgroundLayer.add(labelText);
 
     // Clean Rect
-    rect = new Kinetic.Rect({
+    var rect = new Kinetic.Rect({
       x: 226,
       y: 150,
       width: 24,
@@ -788,42 +1110,6 @@ var SurfForecast = (function() {
 
 
     // Build the Y Axis Labels and dashed lines
-    var dashedDrawFunction = function(canvas) {
-      // This function draws a horizontal dashed line so it cheats
-      var points = this.attrs.points;
-      var dashArray = this.attrs.dashArray;
-
-      // Initial points are the first two entries. y won't change on a horizontal line
-      var x = points[0].x;
-      var y = points[0].y;
-
-      var dashLength = dashArray[0];
-      var gapLength = dashArray[1];
-
-      // Cheating here. The length of the line is the difference in the x axis
-      var length = points[1].x - points[0].x;
-      var currentLength = 0;
-
-
-      // Start drawing the line
-      var context = canvas.getContext();
-      context.beginPath();
-      context.moveTo(x, y);
-
-      while ((currentLength + dashLength + gapLength) < length) {
-        context.lineTo(x + dashLength + currentLength, y);
-        currentLength += dashLength;
-
-        context.moveTo(x + gapLength + currentLength, y);
-        currentLength += gapLength;
-      }
-
-      // end the line
-      context.lineTo(x + dashLength + currentLength, y);
-
-      canvas.fillStroke(this);
-    }
-
     var yMaxValue = this.surfVerticalDataPoints;
     var yMinValue = 0;
     var datapointHeight = this.graphHeight / (yMaxValue - yMinValue);
@@ -883,7 +1169,11 @@ var SurfForecast = (function() {
     this.backgroundLayer.draw();
   }
 
-  SurfForecast.prototype.selectBackgroundButton = function(direction) {
+  SurfForecast.prototype.updateSurfBackground = function(direction) {
+    this.updateBaseLayer();
+
+
+    // Update the surf direction buttons
     var buttonGroups = this.backgroundLayer.get(".directionButtonGroup");
 
     for (var i = 0; i < buttonGroups.length; i++) {
@@ -895,40 +1185,39 @@ var SurfForecast = (function() {
     }
   }
 
-  SurfForecast.prototype.forecastButtonMouseOverHandler = function(evt) {
-    var shape = evt.shape;
-    var group = this.backgroundLayer.get("#" + shape.getName())[0];
+  SurfForecast.prototype.updateBaseLayer = function() {
+    // Redraw the timeline
+    this.generateDaySeperators();
 
-    var buttons = group.getChildren();
-    for (var i = 0; i < buttons.length; i++) {
-      if (buttons[i].shapeType == "Rect") {
-        buttons[i].setStroke("#FFFFFF");
-        buttons[i].setFill("#064a77");
+    var buttonGroups = this.baseLayer.get(".forecastButtonGroup");
+    for (var i = 0; i < buttonGroups.length; i++) {
+      if (buttonGroups[i].getId() == this.selectedForecast) {
+        this.selectedForecastbutton(buttonGroups[i]);
       } else {
-        buttons[i].setTextFill("#FFFFFF");
+        this.unselectedForecastButton(buttonGroups[i]);
       }
     }
 
-    this.backgroundLayer.draw();
+    this.baseLayer.draw();
+  }
+
+  SurfForecast.prototype.forecastButtonMouseOverHandler = function(evt) {
+    var shape = evt.shape;
+    var group = this.baseLayer.get("#" + shape.getName())[0];
+
+    this.selectedForecastbutton(group);
+
+    this.baseLayer.draw();
   }
 
   SurfForecast.prototype.forecastButtonMouseOutHandler = function(evt) {
     var shape = evt.shape;
     if (this.selectedForecast != shape.getName()) {
-      var group = this.backgroundLayer.get("#" + shape.getName())[0];
-
-      var buttons = group.getChildren();
-      for (var i = 0; i < buttons.length; i++) {
-        if (buttons[i].shapeType == "Rect") {
-          buttons[i].setStroke("#064a77");
-          buttons[i].setFill("#FFFFFF");
-        } else {
-          buttons[i].setTextFill("#064a77");
-        }
-      }
+      var group = this.baseLayer.get("#" + shape.getName())[0];
+      this.unselectedForecastButton(group);
     }
 
-    this.backgroundLayer.draw();
+    this.baseLayer.draw();
   }
 
   SurfForecast.prototype.forecastButtonClickHandler = function(evt) {
@@ -938,6 +1227,30 @@ var SurfForecast = (function() {
     //this.foregroundLayer.draw();
 
     this.fetchSwellData();
+  }
+
+  SurfForecast.prototype.selectedForecastbutton = function(group) {
+    var buttons = group.getChildren();
+    for (var i = 0; i < buttons.length; i++) {
+      if (buttons[i].shapeType == "Rect") {
+        buttons[i].setStroke("#FFFFFF");
+        buttons[i].setFill("#064a77");
+      } else {
+        buttons[i].setTextFill("#FFFFFF");
+      }
+    }
+  }
+
+  SurfForecast.prototype.unselectedForecastButton = function(group) {
+      var buttons = group.getChildren();
+      for (var i = 0; i < buttons.length; i++) {
+        if (buttons[i].shapeType == "Rect") {
+          buttons[i].setStroke("#064a77");
+          buttons[i].setFill("#FFFFFF");
+        } else {
+          buttons[i].setTextFill("#064a77");
+        }
+      }
   }
 
   SurfForecast.prototype.directionButtonMouseOverHandler = function(evt) {
@@ -992,6 +1305,43 @@ var SurfForecast = (function() {
     this.beachDirection = direction;
     this.fetchSurfData(direction);
   }
+
+  var dashedDrawFunction = function(canvas) {
+    // This function draws a horizontal dashed line so it cheats
+    var points = this.attrs.points;
+    var dashArray = this.attrs.dashArray;
+
+    // Initial points are the first two entries. y won't change on a horizontal line
+    var x = points[0].x;
+    var y = points[0].y;
+
+    var dashLength = dashArray[0];
+    var gapLength = dashArray[1];
+
+    // Cheating here. The length of the line is the difference in the x axis
+    var length = points[1].x - points[0].x;
+    var currentLength = 0;
+
+
+    // Start drawing the line
+    var context = canvas.getContext();
+    context.beginPath();
+    context.moveTo(x, y);
+
+    while ((currentLength + dashLength + gapLength) < length) {
+      context.lineTo(x + dashLength + currentLength, y);
+      currentLength += dashLength;
+
+      context.moveTo(x + gapLength + currentLength, y);
+      currentLength += gapLength;
+    }
+
+    // end the line
+    context.lineTo(x + dashLength + currentLength, y);
+
+    canvas.fillStroke(this);
+  }
+
 
   return SurfForecast;
 })();
