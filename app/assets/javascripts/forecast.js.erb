@@ -3,7 +3,7 @@ var SurfForecastData = (function() {
   SurfForecastData.name = "SurfForecastData";
 
   function SurfForecastData(dataElement) {
-    this.day = parseInt(dataElement.getAttribute("day"), 10);
+    this.day = ("0" + dataElement.getAttribute("day")).substr(-2);
     this.hour = dataElement.getAttribute("hour");
     this.dayName = dataElement.getAttribute("day_name");
     this.month = dataElement.getAttribute("month");
@@ -15,6 +15,15 @@ var SurfForecastData = (function() {
   }
 
   return SurfForecastData;
+})();
+
+var SwellForecastData = (function() {
+  SwellForecastData.name = "SwellForecastData";
+
+  function SwellForecastData(dataElement) {
+  }
+
+  return SwellForecastData;
 })();
 
 var SurfForecast = (function() {
@@ -71,7 +80,9 @@ var SurfForecast = (function() {
     this.stage.add(this.foregroundLayer);
     this.stage.add(this.mouseOverLayer);
     this.stage.add(this.mouseOverControlLayer);
-    this.fetchData();
+
+    this.selectedForecast = "surfButton";
+    this.fetchSurfData();
   }
 
   // Private method used to get the point at the nearest 0.5. Canvas horizontal and vertical
@@ -81,20 +92,29 @@ var SurfForecast = (function() {
   }
 
   // Ajax call to get the surf forecast data
-  SurfForecast.prototype.fetchData = function(direction) {
+  SurfForecast.prototype.fetchSurfData = function(direction) {
     direction = direction || this.beachDirection;
     _this = this;
     var basePath = "<%= data_timelines_path %>/";
     $.ajax(basePath + this.filenames[direction] + ".xml", {
       success: function(data, textStatus, xhr) {
-        _this.bindData(data, textStatus, xhr, direction);
+        _this.bindSurfData(data, textStatus, xhr, direction);
       },
       cache: false
     });
   }
 
+  SurfForecast.prototype.fetchSwellData = function() {
+    _this = this;
+    var basePath = "<%= data_bull_xmls_path %>/";
+    $.ajax(basePath + this.filenames[this.locationDirs[0]] + ".xml", {
+      success: $.proxy(this.bindSwellData, this),
+      cache: false
+    });
+  }
+
   // Binds data to the surf forecast and sets up various utility data points
-  SurfForecast.prototype.bindData = function(data, textStatus, xhr, direction) {
+  SurfForecast.prototype.bindSurfData = function(data, textStatus, xhr, direction) {
     var dataPoints = data.getElementsByTagName("data");
     this.surfDataUpdated = data.documentElement.getAttribute("update");
     var surfForecastDataArray = [];
@@ -121,6 +141,32 @@ var SurfForecast = (function() {
       this.generateSurfBackground(direction);
     }
     this.generateSurfForeground();
+  }
+
+  SurfForecast.prototype.bindSwellData = function(data, textStatus, xhr) {
+    var dataPoints = data.getElementsByTagName("data");
+    var swellForecastDataArray = [];
+    for (var i = 0; i < dataPoints.length; i++) {
+      var dataPoint = new SwellForecastData(dataPoints[i]);
+      swellForecastDataArray.push(dataPoint);
+    }
+
+    //this.data = swellForecastDataArray;
+    //this.dataColumnWidth = this.graphWidth / this.data.length;
+    //this.surfDataHeight = this.graphHeight / this.surfVerticalDataPoints;
+
+    this.generateSwellBackground();
+    this.generateSwellForeground();
+  }
+
+  SurfForecast.prototype.generateSwellBackground = function() {
+    this.backgroundLayer.removeChildren();
+    this.backgroundLayer.draw();
+  }
+
+  SurfForecast.prototype.generateSwellForeground = function() {
+    this.foregroundLayer.removeChildren();
+    this.foregroundLayer.draw();
   }
 
   SurfForecast.prototype.generateSurfForeground = function() {
@@ -318,27 +364,27 @@ var SurfForecast = (function() {
         y: 5,
         text: "Swells:",
         textFill: "#FFFFCC",
-        fontSize: 7,
+        fontSize: 8,
         fontFamily: "Verdana"
       });
       infoBox.add(swellsLabel);
 
       var swells1Data = new Kinetic.Text({
         id: "swell1Data",
-        x: 40,
+        x: 44,
         y: 5,
         textFill: "#FFFFFF",
-        fontSize: 7,
+        fontSize: 8,
         fontFamily: "Verdana",
         text: dataPoint.swell1
       });
       infoBox.add(swells1Data);
       var swells2Data = new Kinetic.Text({
         id: "swell2Data",
-        x: 40,
+        x: 44,
         y: 20,
         textFill: "#FFFFFF",
-        fontSize: 7,
+        fontSize: 8,
         fontFamily: "Verdana",
         text: dataPoint.swell2
       });
@@ -349,17 +395,17 @@ var SurfForecast = (function() {
         y: 34,
         text: "Wind:",
         textFill: "#FFFFCC",
-        fontSize: 7,
+        fontSize: 8,
         fontFamily: "Verdana"
       });
       infoBox.add(windLabel);
 
       var windData = new Kinetic.Text({
         id: "windData",
-        x: 40,
+        x: 44,
         y: 34,
         textFill: "#FFFFFF",
-        fontSize: 7,
+        fontSize: 8,
         fontFamily: "Verdana",
         text: dataPoint.wind
       });
@@ -473,13 +519,15 @@ var SurfForecast = (function() {
           this.backgroundLayer.add(labelSeperatorLine);
 
           var dayLabelText = new Kinetic.Text({
-            x: x + 12,
-            y: 6,
+            x: x,
+            y: 8,
             text: this.data[i].dayName + " " + this.data[i].month + "-" + this.data[i].day,
             textFill: "#064a77",
             fontFamily: 'Verdana',
             fontStyle: 'bold',
-            fontSize: 9
+            fontSize: 8,
+            align: 'center',
+            width: this.dataColumnWidth * 24,
           });
           this.backgroundLayer.add(dayLabelText);
 
@@ -507,6 +555,75 @@ var SurfForecast = (function() {
         rect.setZIndex(rect.getZIndex() - 3);
       }
     }
+
+    // Build Surf Button Group
+    var buttonGroup = new Kinetic.Group({
+      id: "surfButton",
+      x: 2.5,
+      y: 81.5,
+      rotationDeg: -90
+    });
+
+    rect = new Kinetic.Rect({
+      name: "surfButton",
+      width: 57,
+      height: 15,
+      fill: "#064a77",
+      stroke: "#FFFFFF",
+      strokeWidth: 1
+    });
+    buttonGroup.add(rect);
+
+    var text = new Kinetic.Text({
+      name: "surfButton",
+      y: 4,
+      width: 60,
+      text: "SURF",
+      textFill: "#FFFFFF",
+      fontSize: 8,
+      fontStyle: 'bold',
+      fontFamily: 'Verdana',
+      align: 'center'
+    });
+    buttonGroup.add(text);
+    buttonGroup.on("mouseover", $.proxy(this.forecastButtonMouseOverHandler, this));
+    buttonGroup.on("mouseout", $.proxy(this.forecastButtonMouseOutHandler, this));
+    this.backgroundLayer.add(buttonGroup);
+
+    // Build Swell Button Group
+    buttonGroup = new Kinetic.Group({
+      id: "swellButton",
+      x: 2.5,
+      y: 141.5,
+      rotationDeg: -90
+    });
+
+    rect = new Kinetic.Rect({
+      name: "swellButton",
+      width: 58,
+      height: 15,
+      stroke: "#064a77",
+      fill: "#FFFFFF",
+      strokeWidth: 1
+    });
+    buttonGroup.add(rect);
+
+    var text = new Kinetic.Text({
+      name: "swellButton",
+      y: 4,
+      width: 60,
+      text: "SWELLS",
+      textFill: "#064a77",
+      fontSize: 8,
+      fontStyle: 'bold',
+      fontFamily: 'Verdana',
+      align: 'center'
+    });
+    buttonGroup.add(text);
+    buttonGroup.on("mouseover", $.proxy(this.forecastButtonMouseOverHandler, this));
+    buttonGroup.on("mouseout", $.proxy(this.forecastButtonMouseOutHandler, this));
+    buttonGroup.on("click", $.proxy(this.forecastButtonClickHandler, this));
+    this.backgroundLayer.add(buttonGroup);
   }
 
   SurfForecast.prototype.generateSurfBackground = function(direction) {
@@ -525,7 +642,7 @@ var SurfForecast = (function() {
     var labelText = new Kinetic.Text({
       x: 4.5,
       y: this.graphBottom + 8,
-      textFill: "#0E4A75",
+      textFill: "#383838",
       text: "Forecast Updated: " + this.surfDataUpdated,
       fontFamily: 'Verdana',
       fontSize: 8
@@ -546,7 +663,7 @@ var SurfForecast = (function() {
     labelText = new Kinetic.Text({
       x: 255,
       y: 150,
-      textFill: "#0E4A75",
+      textFill: "#383838",
       text: "Clean",
       fontFamily: 'Verdana',
       fontSize: 8
@@ -567,7 +684,7 @@ var SurfForecast = (function() {
     labelText = new Kinetic.Text({
       x: 341,
       y: 150,
-      textFill: "#0E4A75",
+      textFill: "#383838",
       text: "Fair",
       fontFamily: 'Verdana',
       fontSize: 8
@@ -588,7 +705,7 @@ var SurfForecast = (function() {
     labelText = new Kinetic.Text({
       x: 416,
       y: 150,
-      textFill: "#0E4A75",
+      textFill: "#383838",
       text: "Choppy",
       fontFamily: 'Verdana',
       fontSize: 8
@@ -600,7 +717,7 @@ var SurfForecast = (function() {
       id: "beachDirectionLabel",
       x: 479,
       y: 150,
-      textFill: "#0E4A75",
+      textFill: "#383838",
       text: "Beach Direction: ",
       fontFamily: 'Verdana',
       fontSize: 8
@@ -778,6 +895,51 @@ var SurfForecast = (function() {
     }
   }
 
+  SurfForecast.prototype.forecastButtonMouseOverHandler = function(evt) {
+    var shape = evt.shape;
+    var group = this.backgroundLayer.get("#" + shape.getName())[0];
+
+    var buttons = group.getChildren();
+    for (var i = 0; i < buttons.length; i++) {
+      if (buttons[i].shapeType == "Rect") {
+        buttons[i].setStroke("#FFFFFF");
+        buttons[i].setFill("#064a77");
+      } else {
+        buttons[i].setTextFill("#FFFFFF");
+      }
+    }
+
+    this.backgroundLayer.draw();
+  }
+
+  SurfForecast.prototype.forecastButtonMouseOutHandler = function(evt) {
+    var shape = evt.shape;
+    if (this.selectedForecast != shape.getName()) {
+      var group = this.backgroundLayer.get("#" + shape.getName())[0];
+
+      var buttons = group.getChildren();
+      for (var i = 0; i < buttons.length; i++) {
+        if (buttons[i].shapeType == "Rect") {
+          buttons[i].setStroke("#064a77");
+          buttons[i].setFill("#FFFFFF");
+        } else {
+          buttons[i].setTextFill("#064a77");
+        }
+      }
+    }
+
+    this.backgroundLayer.draw();
+  }
+
+  SurfForecast.prototype.forecastButtonClickHandler = function(evt) {
+    var shape = evt.shape;
+
+    //this.foregroundLayer.removeChildren();
+    //this.foregroundLayer.draw();
+
+    this.fetchSwellData();
+  }
+
   SurfForecast.prototype.directionButtonMouseOverHandler = function(evt) {
     var shape = evt.shape;
 
@@ -828,7 +990,7 @@ var SurfForecast = (function() {
     var direction = shape.getName();
 
     this.beachDirection = direction;
-    this.fetchData(direction);
+    this.fetchSurfData(direction);
   }
 
   return SurfForecast;

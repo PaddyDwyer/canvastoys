@@ -1,6 +1,4 @@
 Canvas::Application.routes.draw do
-
-
   scope ENV['RAILS_RELATIVE_URL_ROOT'] || '/' do
     get "canvas/paper" => "canvas#paper"
     get "canvas/tron" => "canvas#tron"
@@ -15,6 +13,7 @@ Canvas::Application.routes.draw do
 
     namespace :data do
       resources :timelines, :path => 'timeline'
+      resources :bull_xmls, :path => 'bull_xml'
     end
     # The priority is based upon order of creation:
     # first created -> highest priority.
