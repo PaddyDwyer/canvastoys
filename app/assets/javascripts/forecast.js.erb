@@ -180,7 +180,7 @@ var SurfForecast = (function() {
     this.data = new SurfForecastData(data);
 
     //this.data = surfForecastDataArray;
-    this.dataColumnWidth = this.graphWidth / this.data.dataPoints.length;
+    this.dataColumnWidth = this.graphWidth / (this.data.dataPoints.length - 1);
     this.surfDataHeight = this.graphHeight / this.surfVerticalDataPoints;
 
     if (this.backgroundLayer.get("#beachDirectionLabel").length > 0) {
@@ -196,10 +196,7 @@ var SurfForecast = (function() {
 
     this.data = new SwellForecastData(data);
 
-    /*
-    */
-    //this.dataColumnWidth = this.graphWidth / this.data.length;
-    //this.surfDataHeight = this.graphHeight / this.surfVerticalDataPoints;
+    this.dataColumnWidth = this.graphWidth / (this.data.dataPoints.length - 1);
 
     this.generateSwellBackground();
     this.generateSwellForeground();
@@ -432,7 +429,7 @@ var SurfForecast = (function() {
     var points = [ [], [], [], [], [], [] ], x, y;
     for (var i = 0; i < this.data.dataPoints.length; i++) {
       var dataPoint = this.data.dataPoints[i];
-      console.log(dataPoint.dayName, dataPoint.hour, dataPoint.heights[2]);
+      //console.log(dataPoint.dayName, dataPoint.hour, dataPoint.heights[2]);
       for (var j = 0; j < dataPoint.heights.length; j++) {
         x = (i * this.dataColumnWidth) + this.graphLeft;
         y = this.graphBottom - (dataPoint.heights[j] * this.swellDataHeight);
@@ -462,7 +459,7 @@ var SurfForecast = (function() {
           // may be 1 point in the array
           points[j] = null;
           if (j == 2) {
-            console.log("resetting");
+            //console.log("resetting");
           }
         }
       }
@@ -887,6 +884,7 @@ var SurfForecast = (function() {
     daySeperatorGroup.removeChildren();
     // Build the day seperators
     var points, sunSetIndex, days = 0;
+    console.log("dpl", this.data.dataPoints.length);
     for (var i = 0; i < this.data.dataPoints.length; i++) {
       if (this.data.dataPoints[i].hour === "12am") {
         points = []
@@ -1208,6 +1206,7 @@ var SurfForecast = (function() {
     this.selectedForecastbutton(group);
 
     this.baseLayer.draw();
+    $("#surf_forecast").css('cursor', 'pointer');
   }
 
   SurfForecast.prototype.forecastButtonMouseOutHandler = function(evt) {
@@ -1218,6 +1217,7 @@ var SurfForecast = (function() {
     }
 
     this.baseLayer.draw();
+    $("#surf_forecast").css('cursor', 'auto');
   }
 
   SurfForecast.prototype.forecastButtonClickHandler = function(evt) {

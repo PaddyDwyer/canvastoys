@@ -3,3 +3,18 @@
 
 #surf_forecast
 
+-#
+  %div{ :style => "width:709px;height:166px;" }
+    %object{:width => "709", :height => "166", :classid => "clsid:D27CDB6E-AE6D-11cf-96B8-444553540000", :style => "visibility:visible", :id => "timeline"}
+      %param{:value => "/surf_timeline.swf", :name => "movie"}
+      %param{ :value => "location_dir=SSE||SE&beach_dir=SE&loc_key=wna_nj_oceancity&srise=7:17&sset=4:45", :name => "FlashVars"}
+      %param{:value => "opaque", :name => "wmode"}
+      %object(width="709" height="166" data="/surf_timeline.swf" type="application/x-shockwave-flash")
+        %param(value="location_dir=SSE||SE&beach_dir=SE&loc_key=wna_nj_oceancity&srise=7:17&sset=4:45" name="FlashVars")
+        %param(value="opaque" name="wmode")
+      %div
+        %h2 Surf and Swell Timeline (requires flash)
+        %p
+          %a(href="http://www.adobe.com/go/getflashplayer")
+            %img(alt="Get Adobe Flash player" src="http://www.adobe.com/images/shared/download_buttons/get_flash_player.gif")
+
