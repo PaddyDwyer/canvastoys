@@ -104,7 +104,7 @@ var SurfForecast = (function() {
     // Create the kinetic stage we'll use to draw everything
     var scale = {
       x:709 / 709,
-      y:1
+      y:166 / 166
     };
     this.stage = new Kinetic.Stage({container: "surf_forecast", width: 709, height: 166, scale: scale});
 
@@ -336,7 +336,7 @@ var SurfForecast = (function() {
           drawFunc: dashedDrawFunction,
           stroke: '#d6d6d6',
           strokeWidth: 1,
-          points: [45.5, y, 684.5, y],
+          points: [65.5, y, 644.5, y],
           dashArray: [11, 14]
         });
         this.backgroundLayer.add(dashedLine);
@@ -356,7 +356,7 @@ var SurfForecast = (function() {
         labelText = new Kinetic.Text({
           x: 670.5,
           y: y - 4,
-          textFill: "#6d87a6",
+          textFill: "#0E4A75",
           text: tickLabels[i - 1],
           fontFamily: 'Verdana',
           fontSize: 8
@@ -522,11 +522,18 @@ var SurfForecast = (function() {
 
   // the forecase mouse over handler handles drawing the mouseover stuff
   // for both swells and surfs
-  SurfForecast.prototype.forecastMouseOverHandler = function() {
+  SurfForecast.prototype.forecastMouseOverHandler = function(evt) {
     var mousePosition = this.stage.getMousePosition();
     var touchPosition = this.stage.getTouchPosition();
 
     var mouseX = mousePosition.x || touchPosition.x;
+
+    var eventType = null;
+    if (mousePosition.x) {
+      eventType = "mouse";
+    } else if (touchPosition.x) {
+      eventType = "touch";
+    }
 
     // get the data point nearest to the x point
     var index = Math.round((mouseX - this.graphLeft) / this.dataColumnWidth);
@@ -616,10 +623,14 @@ var SurfForecast = (function() {
     }
 
     // Get the position for the infoBoxes
+    var infoBoxDelta = 0;
+    if (eventType == "touch") {
+      infoBoxDelta = 50;
+    }
     if ((x - this.graphLeft) < (this.graphWidth / 2)) {
-      var infoX = x + 25;
+      var infoX = x + (25 + infoBoxDelta);
     } else {
-      var infoX = x - 173;
+      var infoX = x - (173 + infoBoxDelta);
     }
     if ((y - this.graphTop) > (this.graphHeight / 2)) {
       var infoY = y - 47;
@@ -860,6 +871,14 @@ var SurfForecast = (function() {
         strokeWidth: 1
     });
     this.baseLayer.add(rect);
+
+    // make the right side line a little brighter
+    var line = new Kinetic.Line({
+      points: [this.graphRight, this.graphTop, this.graphRight, this.graphBottom],
+      stroke: '#d9d9d9',
+      strokeWidth: 1
+    });
+    this.baseLayer.add(line);
 
     var mouseOverGroup = new Kinetic.Group({
       x: this.graphLeft,
@@ -1224,7 +1243,7 @@ var SurfForecast = (function() {
         drawFunc: dashedDrawFunction,
         stroke: '#d6d6d6',
         strokeWidth: 1,
-        points: [45.5, y, 684.5, y],
+        points: [85.5, y, 634.5, y],
         dashArray: [11, 14]
       });
       this.backgroundLayer.add(dashedLine);
