@@ -78,8 +78,12 @@ var SwellForecastDataPoint = (function() {
     this.dayName = dataElement.getAttribute("day_name");
     this.month = dataElement.getAttribute("month");
     this.heights = [];
+    this.periods = [];
+    this.directions = [];
     for (var i = 0; i < 6; i++) {
       this.heights.push(parseFloat(dataElement.getAttribute("ht" + i)));
+      this.periods.push(dataElement.getAttribute("per" + i));
+      this.directions.push(dataElement.getAttribute("dir" + i));
     }
   }
 
@@ -200,6 +204,8 @@ var SurfForecast = (function() {
 
     this.generateSwellBackground();
     this.generateSwellForeground();
+
+    this.mouseOverControlLayer.hide();
   }
 
   SurfForecast.prototype.generateSwellBackground = function() {
@@ -216,134 +222,41 @@ var SurfForecast = (function() {
       fontSize: 8
     });
     this.backgroundLayer.add(labelText);
+
+    var swellButtonColors = [ "#FF0000", "#0000FF", "#228B22", "#DB7093", "#00FFFF", "#FFA500" ];
+
+    for (var i = 0; i < swellButtonColors.length; i++) {
+      // Swell Button Rect
+      var swellButtonGroup = new Kinetic.Group({
+        id: "Swell" + (i + 1),
+        name: "swellButtonGroup",
+        x: 220 + (i * 81),
+        y: 149,
+      });
+      var rect = new Kinetic.Rect({
+        name: "Swell" + (i + 1),
+        width: 24,
+        height: 8,
+        fill: swellButtonColors[i]
+      });
+      swellButtonGroup.add(rect);
+
+      // Swell Button Label
+      labelText = new Kinetic.Text({
+        name: "Swell" + (i + 1),
+        x: 30,
+        y: 1,
+        textFill: "#383838",
+        text: "Swell " + (i + 1),
+        fontFamily: 'Verdana',
+        fontSize: 8
+      });
+      swellButtonGroup.add(labelText);
+
+      swellButtonGroup.on("click", $.proxy(this.swellButtonClickHandler, this));
+      this.backgroundLayer.add(swellButtonGroup);
+    }
     
-    // Swell 1 Rect
-    var rect = new Kinetic.Rect({
-      x: 220,
-      y: 149,
-      width: 24,
-      height: 8,
-      fill: "#fe1d00"
-    });
-    this.backgroundLayer.add(rect);
-
-    // Swell 1 Label
-    labelText = new Kinetic.Text({
-      x: 250,
-      y: 150,
-      textFill: "#383838",
-      text: "Swell 1",
-      fontFamily: 'Verdana',
-      fontSize: 8
-    });
-    this.backgroundLayer.add(labelText);
-
-    // Swell 2 Rect
-    var rect = new Kinetic.Rect({
-      x: 301,
-      y: 149,
-      width: 24,
-      height: 8,
-      fill: "#0016FF"
-    });
-    this.backgroundLayer.add(rect);
-
-    // Swell 2 Label
-    labelText = new Kinetic.Text({
-      x: 331,
-      y: 150,
-      textFill: "#383838",
-      text: "Swell 2",
-      fontFamily: 'Verdana',
-      fontSize: 8
-    });
-    this.backgroundLayer.add(labelText);
-
-    // Swell 3 Rect
-    var rect = new Kinetic.Rect({
-      x: 382,
-      y: 149,
-      width: 24,
-      height: 8,
-      fill: "#2B8A13"
-    });
-    this.backgroundLayer.add(rect);
-
-    // Swell 3 Label
-    labelText = new Kinetic.Text({
-      x: 412,
-      y: 150,
-      textFill: "#383838",
-      text: "Swell 3",
-      fontFamily: 'Verdana',
-      fontSize: 8
-    });
-    this.backgroundLayer.add(labelText);
-
-    // Swell 4 Rect
-    var rect = new Kinetic.Rect({
-      x: 463,
-      y: 149,
-      width: 24,
-      height: 8,
-      fill: "#DA7393"
-    });
-    this.backgroundLayer.add(rect);
-
-    // Swell 4 Label
-    labelText = new Kinetic.Text({
-      x: 493,
-      y: 150,
-      textFill: "#383838",
-      text: "Swell 4",
-      fontFamily: 'Verdana',
-      fontSize: 8
-    });
-    this.backgroundLayer.add(labelText);
-
-    // Swell 5 Rect
-    var rect = new Kinetic.Rect({
-      x: 544,
-      y: 149,
-      width: 24,
-      height: 8,
-      fill: "#15FEFF"
-    });
-    this.backgroundLayer.add(rect);
-
-    // Swell 5 Label
-    labelText = new Kinetic.Text({
-      x: 574,
-      y: 150,
-      textFill: "#383838",
-      text: "Swell 5",
-      fontFamily: 'Verdana',
-      fontSize: 8
-    });
-    this.backgroundLayer.add(labelText);
-
-
-    // Swell 6 Rect
-    var rect = new Kinetic.Rect({
-      x: 625,
-      y: 149,
-      width: 24,
-      height: 8,
-      fill: "#FFA600"
-    });
-    this.backgroundLayer.add(rect);
-
-    // Swell 6 Label
-    labelText = new Kinetic.Text({
-      x: 655,
-      y: 150,
-      textFill: "#383838",
-      text: "Swell 6",
-      fontFamily: 'Verdana',
-      fontSize: 8
-    });
-    this.backgroundLayer.add(labelText);
-
 
     // Build the Y Axis Labels and dashed lines
     // Get the Max Height
@@ -427,9 +340,17 @@ var SurfForecast = (function() {
     // do the red line
     var colors = ["#FE1D00", "#0016FF", "#2B8A13", "#DA7393", "#15FEFF", "#FFA600"];
     var points = [ [], [], [], [], [], [] ], x, y;
+    var groups = [];
+    for (var i = 1; i <= 6; i++) {
+      var group = new Kinetic.Group({
+        id: "Swell" + i + "Group",
+        name: "swellLineGroup",
+      });
+      groups.push(group);
+      this.foregroundLayer.add(group);
+    }
     for (var i = 0; i < this.data.dataPoints.length; i++) {
       var dataPoint = this.data.dataPoints[i];
-      //console.log(dataPoint.dayName, dataPoint.hour, dataPoint.heights[2]);
       for (var j = 0; j < dataPoint.heights.length; j++) {
         x = (i * this.dataColumnWidth) + this.graphLeft;
         y = this.graphBottom - (dataPoint.heights[j] * this.swellDataHeight);
@@ -453,14 +374,11 @@ var SurfForecast = (function() {
               stroke: colors[j],
               strokeWidth: 1
             });
-            this.foregroundLayer.add(redLine);
+            groups[j].add(redLine);
           }
           // Reset redPoints whenever there is no valid value because there 
           // may be 1 point in the array
           points[j] = null;
-          if (j == 2) {
-            //console.log("resetting");
-          }
         }
       }
     }
@@ -559,7 +477,13 @@ var SurfForecast = (function() {
     var dataPoint = this.data.dataPoints[index];
 
     var x = (index * this.dataColumnWidth) + this.graphLeft;
-    var y = y = this.graphBottom - (dataPoint.surf * this.surfDataHeight);
+
+    if (this.selectedForecast == "surfButton") {
+      var y = this.graphBottom - (dataPoint.surf * this.surfDataHeight);
+    } else if (this.selectedForecast == "swellButton") {
+      var swellIndex = this.selectedSwell.substr(-1) - 1;
+      var y = this.graphBottom - (dataPoint.heights[swellIndex] * this.swellDataHeight);
+    }
 
 
     this.mouseOverLayer.show();
@@ -633,8 +557,7 @@ var SurfForecast = (function() {
       timeLabel.setPosition(x, this.graphBottom + 8);
     }
 
-    // Draw the Info Box
-    var infoBox = this.mouseOverLayer.get("#infoBox")[0];
+    // Get the position for the infoBoxes
     if ((x - this.graphLeft) < (this.graphWidth / 2)) {
       var infoX = x + 25;
     } else {
@@ -645,80 +568,183 @@ var SurfForecast = (function() {
     } else {
       var infoY = y;
     }
-    if (!infoBox) {
-      infoBox = new Kinetic.Group({
-        id: "infoBox",
-        x: infoX,
-        y: infoY,
-      });
-      var rect = new Kinetic.Rect({
-        width: 148,
-        height: 47,
-        fill: "#000"
-      });
-      rect.setCornerRadius(6);
-      infoBox.add(rect);
+    // Draw the Surf Info Box
+    if (this.selectedForecast == "surfButton") {
+      var surfInfoBox = this.mouseOverLayer.get("#surfInfoBox")[0];
+      if (!surfInfoBox) {
+        surfInfoBox = new Kinetic.Group({
+          id: "surfInfoBox",
+          x: infoX,
+          y: infoY,
+        });
+        var rect = new Kinetic.Rect({
+          width: 148,
+          height: 47,
+          fill: "#000"
+        });
+        rect.setCornerRadius(6);
+        surfInfoBox.add(rect);
 
-      var swellsLabel = new Kinetic.Text({
-        x: 5,
-        y: 5,
-        text: "Swells:",
-        textFill: "#FFFFCC",
-        fontSize: 8,
-        fontFamily: "Verdana"
-      });
-      infoBox.add(swellsLabel);
+        var swellsLabel = new Kinetic.Text({
+          x: 5,
+          y: 5,
+          text: "Swells:",
+          textFill: "#FFFFCC",
+          fontSize: 8,
+          fontFamily: "Verdana"
+        });
+        surfInfoBox.add(swellsLabel);
 
-      var swells1Data = new Kinetic.Text({
-        id: "swell1Data",
-        x: 44,
-        y: 5,
-        textFill: "#FFFFFF",
-        fontSize: 8,
-        fontFamily: "Verdana",
-        text: dataPoint.swell1
-      });
-      infoBox.add(swells1Data);
-      var swells2Data = new Kinetic.Text({
-        id: "swell2Data",
-        x: 44,
-        y: 20,
-        textFill: "#FFFFFF",
-        fontSize: 8,
-        fontFamily: "Verdana",
-        text: dataPoint.swell2
-      });
-      infoBox.add(swells2Data);
+        var swells1Data = new Kinetic.Text({
+          id: "swell1Data",
+          x: 44,
+          y: 5,
+          textFill: "#FFFFFF",
+          fontSize: 8,
+          fontFamily: "Verdana",
+          text: dataPoint.swell1
+        });
+        surfInfoBox.add(swells1Data);
+        var swells2Data = new Kinetic.Text({
+          id: "swell2Data",
+          x: 44,
+          y: 20,
+          textFill: "#FFFFFF",
+          fontSize: 8,
+          fontFamily: "Verdana",
+          text: dataPoint.swell2
+        });
+        surfInfoBox.add(swells2Data);
 
-      var windLabel = new Kinetic.Text({
-        x: 5,
-        y: 34,
-        text: "Wind:",
-        textFill: "#FFFFCC",
-        fontSize: 8,
-        fontFamily: "Verdana"
-      });
-      infoBox.add(windLabel);
+        var windLabel = new Kinetic.Text({
+          x: 5,
+          y: 34,
+          text: "Wind:",
+          textFill: "#FFFFCC",
+          fontSize: 8,
+          fontFamily: "Verdana"
+        });
+        surfInfoBox.add(windLabel);
 
-      var windData = new Kinetic.Text({
-        id: "windData",
-        x: 44,
-        y: 34,
-        textFill: "#FFFFFF",
-        fontSize: 8,
-        fontFamily: "Verdana",
-        text: dataPoint.wind
-      });
-      infoBox.add(windData);
-      this.mouseOverLayer.add(infoBox);
-    } else {
-      infoBox.setPosition(infoX, infoY);
-      var swell1Data = infoBox.get("#swell1Data")[0];
-      swell1Data.setText(dataPoint.swell1);
-      var swell2Data = infoBox.get("#swell2Data")[0];
-      swell2Data.setText(dataPoint.swell2);
-      var windData = infoBox.get("#windData")[0];
-      windData.setText(dataPoint.wind);
+        var windData = new Kinetic.Text({
+          id: "windData",
+          x: 44,
+          y: 34,
+          textFill: "#FFFFFF",
+          fontSize: 8,
+          fontFamily: "Verdana",
+          text: dataPoint.wind
+        });
+        surfInfoBox.add(windData);
+        this.mouseOverLayer.add(surfInfoBox);
+      } else {
+        surfInfoBox.show();
+        surfInfoBox.setPosition(infoX, infoY);
+        var swell1Data = surfInfoBox.get("#swell1Data")[0];
+        swell1Data.setText(dataPoint.swell1);
+        var swell2Data = surfInfoBox.get("#swell2Data")[0];
+        swell2Data.setText(dataPoint.swell2);
+        var windData = surfInfoBox.get("#windData")[0];
+        windData.setText(dataPoint.wind);
+      }
+    } else if (this.selectedForecast == "swellButton") {
+      var surfInfoBox = this.mouseOverLayer.get("#surfInfoBox")[0];
+      if (surfInfoBox) {
+        surfInfoBox.hide();
+      }
+
+      var swellInfoBox = this.mouseOverLayer.get("#swellInfoBox")[0];
+      if (!swellInfoBox) {
+        swellInfoBox = new Kinetic.Group({
+          id: "swellInfoBox",
+          x: infoX,
+          y: infoY,
+        });
+        var rect = new Kinetic.Rect({
+          width: 148,
+          height: 47,
+          fill: "#000"
+        });
+        rect.setCornerRadius(6);
+        swellInfoBox.add(rect);
+
+        var heightLabel = new Kinetic.Text({
+          x: 5,
+          y: 5,
+          text: "Height:",
+          textFill: "#FFFFCC",
+          fontSize: 8,
+          fontFamily: "Verdana"
+        });
+        swellInfoBox.add(heightLabel);
+
+        var heightData = new Kinetic.Text({
+          id: "heightData",
+          x: 74,
+          y: 5,
+          textFill: "#FFFFFF",
+          fontSize: 8,
+          fontFamily: "Verdana",
+          text: dataPoint.heights[swellIndex] + " ft"
+        });
+        swellInfoBox.add(heightData);
+
+        var periodLabel = new Kinetic.Text({
+          x: 5,
+          y: 20,
+          text: "Period:",
+          textFill: "#FFFFCC",
+          fontSize: 8,
+          fontFamily: "Verdana"
+        });
+        swellInfoBox.add(periodLabel);
+
+        var periodData = new Kinetic.Text({
+          id: "periodData",
+          x: 74,
+          y: 20,
+          textFill: "#FFFFFF",
+          fontSize: 8,
+          fontFamily: "Verdana",
+          text: dataPoint.periods[swellIndex] + " sec"
+        });
+        swellInfoBox.add(periodData);
+
+        var directionLabel = new Kinetic.Text({
+          x: 5,
+          y: 34,
+          text: "Direction:",
+          textFill: "#FFFFCC",
+          fontSize: 8,
+          fontFamily: "Verdana"
+        });
+        swellInfoBox.add(directionLabel);
+
+        var directionData = new Kinetic.Text({
+          id: "directionData",
+          x: 74,
+          y: 34,
+          textFill: "#FFFFFF",
+          fontSize: 8,
+          fontFamily: "Verdana",
+          text: dataPoint.directions[swellIndex] + " deg"
+        });
+        swellInfoBox.add(directionData);
+        this.mouseOverLayer.add(swellInfoBox);
+      } else {
+        if (dataPoint.heights[swellIndex] > 0) {
+          swellInfoBox.show();
+          swellInfoBox.setPosition(infoX, infoY);
+          var heightData = swellInfoBox.get("#heightData")[0];
+          heightData.setText(dataPoint.heights[swellIndex] + " ft");
+          var periodData = swellInfoBox.get("#periodData")[0];
+          periodData.setText(dataPoint.periods[swellIndex] + " sec");
+          var directionData = swellInfoBox.get("#directionData")[0];
+          directionData.setText(dataPoint.directions[swellIndex] + " deg");
+        } else {
+          swellInfoBox.hide();
+        }
+      }
     }
 
     this.mouseOverLayer.draw();
@@ -884,7 +910,6 @@ var SurfForecast = (function() {
     daySeperatorGroup.removeChildren();
     // Build the day seperators
     var points, sunSetIndex, days = 0;
-    console.log("dpl", this.data.dataPoints.length);
     for (var i = 0; i < this.data.dataPoints.length; i++) {
       if (this.data.dataPoints[i].hour === "12am") {
         points = []
@@ -1304,6 +1329,57 @@ var SurfForecast = (function() {
 
     this.beachDirection = direction;
     this.fetchSurfData(direction);
+  }
+
+  SurfForecast.prototype.swellButtonClickHandler = function(evt) {
+    var shape = evt.shape;
+    var swell = shape.getName();
+
+    if (swell == this.selectedSwell) {
+      this.showAllSwells();
+      this.selectedSwell = "";
+      this.mouseOverControlLayer.hide();
+    } else {
+      this.showSwell(swell);
+      this.selectedSwell = swell;
+      this.mouseOverControlLayer.show();
+    }
+  }
+
+  SurfForecast.prototype.showSwell = function(swellName) {
+    var swellLineGroups = this.foregroundLayer.get(".swellLineGroup");
+    for (var i = 0; i < swellLineGroups.length; i++) {
+      if (swellLineGroups[i].getId() != swellName + "Group") {
+        swellLineGroups[i].hide();
+      } else {
+        swellLineGroups[i].show();
+      }
+    }
+    this.foregroundLayer.draw();
+
+    var swellButtonGroups = this.backgroundLayer.get(".swellButtonGroup");
+    for (var i = 0; i < swellButtonGroups.length; i++) {
+      if (swellButtonGroups[i].getId() != swellName) {
+        swellButtonGroups[i].setOpacity(0.35);
+      } else {
+        swellButtonGroups[i].setOpacity(1);
+      }
+    }
+    this.backgroundLayer.draw();
+  }
+
+  SurfForecast.prototype.showAllSwells = function() {
+    var swellLineGroups = this.foregroundLayer.get(".swellLineGroup");
+    for (var i = 0; i < swellLineGroups.length; i++) {
+      swellLineGroups[i].show();
+    }
+    this.foregroundLayer.draw();
+
+    var swellButtonGroups = this.backgroundLayer.get(".swellButtonGroup");
+    for (var i = 0; i < swellButtonGroups.length; i++) {
+      swellButtonGroups[i].setOpacity(1);
+    }
+    this.backgroundLayer.draw();
   }
 
   var dashedDrawFunction = function(canvas) {
