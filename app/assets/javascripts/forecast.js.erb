@@ -9,17 +9,9 @@ var SurfForecastData= (function() {
     var dataPoints = data.getElementsByTagName("data");
     this.surfDataUpdated = data.documentElement.getAttribute("update");
     this.dataPoints = [];
-    var firstDataPoint;
     for (var i = 0; i < dataPoints.length; i++) {
       var dataPoint = new SurfForecastDataPoint(dataPoints[i]);
-      if (!firstDataPoint) {
-        firstDataPoint = dataPoint;
-      }
-      if (dataPoint.day == firstDataPoint.day + 7 && dataPoint.hour == firstDataPoint.hour ) {
-        break;
-      } else {
-        this.dataPoints.push(dataPoint);
-      }
+      this.dataPoints.push(dataPoint);
     }
   }
 
@@ -32,6 +24,7 @@ var SurfForecastDataPoint = (function() {
 
   function SurfForecastDataPoint(dataElement) {
     this.day = ("0" + dataElement.getAttribute("day")).substr(-2);
+    this.dayNum = parseInt(this.day, 10);
     this.hour = dataElement.getAttribute("hour");
     this.dayName = dataElement.getAttribute("day_name");
     this.month = dataElement.getAttribute("month");
@@ -80,6 +73,7 @@ var SwellForecastDataPoint = (function() {
 
   function SwellForecastDataPoint(dataElement) {
     this.day = ("0" + dataElement.getAttribute("day")).substr(-2);
+    this.dayNum = parseInt(this.day, 10);
     this.hour = dataElement.getAttribute("hour");
     this.dayName = dataElement.getAttribute("day_name");
     this.month = dataElement.getAttribute("month");
@@ -336,8 +330,8 @@ var SurfForecast = (function() {
           drawFunc: dashedDrawFunction,
           stroke: '#d6d6d6',
           strokeWidth: 1,
-          points: [65.5, y, 644.5, y],
-          dashArray: [11, 14]
+          points: [68.5, y, 674.5, y],
+          dashArray: [11, 13]
         });
         this.backgroundLayer.add(dashedLine);
 
@@ -1062,6 +1056,22 @@ var SurfForecast = (function() {
         });
         daySeperatorGroup.add(rect);
         rect.setZIndex(rect.getZIndex() - 3);
+        sunSetIndex = false;
+      }
+
+      // we want to create a shorter dark rectangle at the end
+      if (i == this.data.dataPoints.length - 1 && sunSetIndex) {
+        rect = new Kinetic.Rect ({
+          x: this._getPointNear(((sunSetIndex + this.sunSetFraction) * this.dataColumnWidth) + this.graphLeft),
+          y: this.graphTop,
+          width: Math.floor((i - (sunSetIndex + this.sunSetFraction)) * this.dataColumnWidth),
+          height: this.graphBottom - this.graphTop,
+          stroke: "#eeeeee",
+          fill: "#eeeeee",
+          strokeWidth: 1
+        });
+        daySeperatorGroup.add(rect);
+        rect.setZIndex(rect.getZIndex() - 3);
       }
     }
   }
@@ -1243,8 +1253,8 @@ var SurfForecast = (function() {
         drawFunc: dashedDrawFunction,
         stroke: '#d6d6d6',
         strokeWidth: 1,
-        points: [85.5, y, 634.5, y],
-        dashArray: [11, 14]
+        points: [93.5, y, 634.5, y],
+        dashArray: [11, 13]
       });
       this.backgroundLayer.add(dashedLine);
 
