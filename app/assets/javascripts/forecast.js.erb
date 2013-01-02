@@ -1319,6 +1319,8 @@ var SurfForecast = (function() {
     }
 
     this.baseLayer.draw();
+
+    $("#surf_forecast").css('cursor', 'auto');
   }
 
   SurfForecast.prototype.forecastButtonClickHandler = function(evt) {
