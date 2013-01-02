@@ -287,6 +287,8 @@ var SurfForecast = (function() {
       });
       swellButtonGroup.add(labelText);
 
+      swellButtonGroup.on("mouseover", $.proxy(this.swellButtonMouseOverHandler, this));
+      swellButtonGroup.on("mouseout", $.proxy(this.swellButtonMouseOutHandler, this));
       swellButtonGroup.on("click", $.proxy(this.swellButtonClickHandler, this));
       this.backgroundLayer.add(swellButtonGroup);
     }
@@ -1302,7 +1304,10 @@ var SurfForecast = (function() {
     this.selectedForecastbutton(group);
 
     this.baseLayer.draw();
-    $("#surf_forecast").css('cursor', 'pointer');
+
+    if (this.selectedForecast != shape.getName()) {
+      $("#surf_forecast").css('cursor', 'pointer');
+    }
   }
 
   SurfForecast.prototype.forecastButtonMouseOutHandler = function(evt) {
@@ -1310,10 +1315,10 @@ var SurfForecast = (function() {
     if (this.selectedForecast != shape.getName()) {
       var group = this.baseLayer.get("#" + shape.getName())[0];
       this.unselectedForecastButton(group);
+      $("#surf_forecast").css('cursor', 'auto');
     }
 
     this.baseLayer.draw();
-    $("#surf_forecast").css('cursor', 'auto');
   }
 
   SurfForecast.prototype.forecastButtonClickHandler = function(evt) {
@@ -1359,6 +1364,10 @@ var SurfForecast = (function() {
 
     // get button text and background
     this.selectedDirectionButton(this.backgroundLayer.get("#" + shape.getName())[0]);
+
+    if (this.beachDirection != shape.getName()) {
+      $("#surf_forecast").css('cursor', 'pointer');
+    }
   }
 
   SurfForecast.prototype.selectedDirectionButton = function(group) {
@@ -1397,6 +1406,7 @@ var SurfForecast = (function() {
     if (this.beachDirection != direction) {
       this.unselectedDirectionButton(this.backgroundLayer.get("#" + shape.getName())[0]);
     }
+    $("#surf_forecast").css('cursor', 'auto');
   }
 
   SurfForecast.prototype.directionButtonClickHandler = function(evt) {
@@ -1405,6 +1415,14 @@ var SurfForecast = (function() {
 
     this.beachDirection = direction;
     this.fetchSurfData(direction);
+  }
+
+  SurfForecast.prototype.swellButtonMouseOverHandler = function(evt) {
+    $("#surf_forecast").css('cursor', 'pointer');
+  }
+
+  SurfForecast.prototype.swellButtonMouseOutHandler = function(evt) {
+    $("#surf_forecast").css('cursor', 'auto');
   }
 
   SurfForecast.prototype.swellButtonClickHandler = function(evt) {
