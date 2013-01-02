@@ -1,4 +1,7 @@
+// This is used to set up the routes. it can be deleted
 <% environment.context_class.instance_eval {include Rails.application.routes.url_helpers } %>
+
+// This is data object that the surf forecast xml is bound too
 var SurfForecastData= (function() {
   SurfForecastData.name = "SurfForecastData";
 
@@ -23,6 +26,7 @@ var SurfForecastData= (function() {
   return SurfForecastData;
 })();
 
+// This is data object that the surf forecast xml is bound too
 var SurfForecastDataPoint = (function() {
   SurfForecastDataPoint.name = "SurfForecastDataPoint";
 
@@ -41,6 +45,7 @@ var SurfForecastDataPoint = (function() {
   return SurfForecastDataPoint;
 })();
 
+// This is data object that the swell forecast xml is bound too
 var SwellForecastData = (function() {
   SwellForecastData.name = "SwellForecastData";
 
@@ -69,6 +74,7 @@ var SwellForecastData = (function() {
   return SwellForecastData;
 })();
 
+// This is data object that the swell forecast xml is bound too
 var SwellForecastDataPoint = (function() {
   SwellForecastDataPoint.name = "SwellForecastDataPoint";
 
@@ -98,10 +104,14 @@ var SurfForecast = (function() {
     // Create the kinetic stage we'll use to draw everything
     this.stage = new Kinetic.Stage({container: "surf_forecast", width: 709, height: 166});
 
-    // Surf Data url is where we get the surf forecast data from
+    // The location Dirs are used to set up the beach directions. Also used for fetching
+    // beach direction surf info.
     this.locationDirs = options.locationDir.split("||");
     var locationKey = options.locationKey;
 
+    // The filenames are stored in an object which is keyed off location dir because we want to
+    // be able to easily determine where to get data from. The beach direction buttons have a 
+    // property on them with the location dir so it's easy to determine.
     this.filenames = {};
     this.filenames[this.locationDirs[0]] = locationKey;
 
@@ -112,13 +122,23 @@ var SurfForecast = (function() {
     // Beach Direction
     this.beachDirection = options.beachDir;
 
-    // Set up initial properties for Sunrise
+    // Set up initial properties for Sunrise & Sunset
     this.sunSetHour = options.sset.substring(0, 1) + "pm";
     this.sunRiseHour = options.srise.substring(0, 1) + "am";
+
+
+    // The base layer is where we keep stuff common to both charts
     this.baseLayer = new Kinetic.Layer();
+
+    // The background layer is where we keep the y axis info and any legend details
     this.backgroundLayer = new Kinetic.Layer();
+
+    // The foreground layer is where we keep the chart data itself
     this.foregroundLayer = new Kinetic.Layer();
+
+    // The mouse over layer is where the mouse over elements are displayed
     this.mouseOverLayer = new Kinetic.Layer();
+    // This is for the white background that goes over the legend
     var mouseOverTimeWhiteBackground = new Kinetic.Rect({
         x: 1,
         y: 143,
@@ -127,8 +147,13 @@ var SurfForecast = (function() {
         fill: "#ffffff"
     });
     this.mouseOverLayer.add(mouseOverTimeWhiteBackground);
+    // The mouse over layer is only displayed when the user mouses over the chart.
     this.mouseOverLayer.hide();
+
+    // The mouse over control layer sits at the top and listens for mouse over events.
+    // It can get hidden when the user first views the swell forecast
     this.mouseOverControlLayer = new Kinetic.Layer();
+    // Set up graph dimensions
     this.graphWidth = 689;
     this.graphHeight = 119;
     this.graphLeft = 19.5;
@@ -136,18 +161,15 @@ var SurfForecast = (function() {
     this.graphTop = 24.5;
     this.graphBottom = 141.5;
     this.surfVerticalDataPoints = 80;
-    this.mouseOverGroup = new Kinetic.Group({
-      x: this.graphLeft,
-      y: this.graphTop
-    });
 
+    // Add the layers to the kinetic stage
     this.stage.add(this.baseLayer);
     this.stage.add(this.backgroundLayer);
     this.stage.add(this.foregroundLayer);
     this.stage.add(this.mouseOverLayer);
     this.stage.add(this.mouseOverControlLayer);
 
-    this.selectedForecast = "surfButton";
+    // Surf data is displayed first by default
     this.fetchSurfData();
   }
 
@@ -158,20 +180,24 @@ var SurfForecast = (function() {
   }
 
   // Ajax call to get the surf forecast data
+  // It can be provided with a beach direction to get the beach surf data
   SurfForecast.prototype.fetchSurfData = function(direction) {
     direction = direction || this.beachDirection;
     _this = this;
+    // change the base path to the actual data timeline path
     var basePath = "<%= data_timelines_path %>/";
     $.ajax(basePath + this.filenames[direction] + ".xml", {
       success: function(data, textStatus, xhr) {
         _this.bindSurfData(data, textStatus, xhr, direction);
       },
-      cache: false
+      cache: false 
     });
   }
 
+  // Ajax call to get the swell data
   SurfForecast.prototype.fetchSwellData = function() {
     _this = this;
+    // change the base path to the actual data bull xmls path
     var basePath = "<%= data_bull_xmls_path %>/";
     $.ajax(basePath + this.filenames[this.locationDirs[0]] + ".xml", {
       success: $.proxy(this.bindSwellData, this),
@@ -188,6 +214,7 @@ var SurfForecast = (function() {
     this.dataColumnWidth = this.graphWidth / (this.data.dataPoints.length - 1);
     this.surfDataHeight = this.graphHeight / this.surfVerticalDataPoints;
 
+    // If we've already created the surf background we don't want to do it again.
     if (this.backgroundLayer.get("#beachDirectionLabel").length > 0) {
       this.updateSurfBackground(direction);
     } else {
@@ -198,6 +225,7 @@ var SurfForecast = (function() {
     this.mouseOverControlLayer.show();
   }
 
+  // Binds data for the swell forecast and draws the background and foreground
   SurfForecast.prototype.bindSwellData = function(data, textStatus, xhr) {
     this.selectedForecast = "swellButton";
 
@@ -211,7 +239,9 @@ var SurfForecast = (function() {
     this.mouseOverControlLayer.hide();
   }
 
+  // Draws the swell background y axis labels and legend below the graph
   SurfForecast.prototype.generateSwellBackground = function() {
+    // Swell background is never called first so we just update the base layer
     this.updateBaseLayer();
     this.backgroundLayer.removeChildren();
 
@@ -226,6 +256,7 @@ var SurfForecast = (function() {
     });
     this.backgroundLayer.add(labelText);
 
+    // Swell buttons follow a fairly standard pattern so we build all 6 programmatically
     var swellButtonColors = [ "#FF0000", "#0000FF", "#228B22", "#DB7093", "#00FFFF", "#FFA500" ];
 
     for (var i = 0; i < swellButtonColors.length; i++) {
@@ -263,29 +294,36 @@ var SurfForecast = (function() {
 
     // Build the Y Axis Labels and dashed lines
     // Get the Max Height
-    var maxHeight = Math.ceil(this.data.getMaxHeight()) + 1;
+    // The algorithm for this is based off the flash algo
+    // The adding of 1 to the max height is done in the while loop below
+    var maxHeight = Math.ceil(this.data.getMaxHeight());
     var scale = false;
+    // We put tick options into an array as the whole thing is done programmatically
     var tickOptions = [3, 4, 5];
     var ticks;
+    // Get the correct scale
     while (scale == false) {
+      maxHeight++;
       for (var i = 0; i < tickOptions.length; i++) {
         if (maxHeight % tickOptions[i] == 0) {
           ticks = tickOptions[i];
           scale = true;
         }
       }
-      maxHeight++;
     }
+    // Once we have the scale draw the y axis labels
     if (scale) {
-      var tickInt = (maxHeight - 1) / ticks;
-      this.swellDataHeight = this.graphHeight / (maxHeight - 1);
+      var tickInt = maxHeight / ticks;
+      this.swellDataHeight = this.graphHeight / maxHeight;
       var tickLabels = [];
+      // Tick labels are all of a common format. We create an array containing the ticklabels
+      // in reverse order as that is how they will be drawn.
       for (var i = ticks - 1; i > 0; i--) {
         tickLabels.push((i * tickInt) + " ft");
       }
       for (var i = 1; i < ticks; i++) {
         var y = this._getPointNear(this.graphTop + (i * tickInt * this.swellDataHeight));
-        // Draw the dashed line
+        // Draw the dashed line. Use the custom functions again
         var dashedLine = new Kinetic.Line({
           drawFunc: dashedDrawFunction,
           stroke: '#d6d6d6',
@@ -337,14 +375,16 @@ var SurfForecast = (function() {
     this.backgroundLayer.draw();
   }
 
+  // Generate the graph for the swell forecast
   SurfForecast.prototype.generateSwellForeground = function() {
     this.foregroundLayer.removeChildren();
 
-    // do the red line
+    // Do everything for the swell forecast in groups of 6
     var colors = ["#FE1D00", "#0016FF", "#2B8A13", "#DA7393", "#15FEFF", "#FFA600"];
     var points = [ [], [], [], [], [], [] ], x, y;
     var groups = [];
     for (var i = 1; i <= 6; i++) {
+      // We'll store the lines in groups for easy showing and hiding
       var group = new Kinetic.Group({
         id: "Swell" + i + "Group",
         name: "swellLineGroup",
@@ -372,14 +412,14 @@ var SurfForecast = (function() {
         if (dataPoint.heights[j] < 0.7 || i == this.data.dataPoints.length - 1)  { 
           // Need 2 points to make a line
           if (points[j] && points[j].length > 1) {
-            var redLine = new Kinetic.Line({
+            var line = new Kinetic.Line({
               points: points[j],
               stroke: colors[j],
               strokeWidth: 1
             });
-            groups[j].add(redLine);
+            groups[j].add(line);
           }
-          // Reset redPoints whenever there is no valid value because there 
+          // Reset points whenever there is no valid value because there 
           // may be 1 point in the array
           points[j] = null;
         }
@@ -393,6 +433,7 @@ var SurfForecast = (function() {
   SurfForecast.prototype.generateSurfForeground = function() {
     this.foregroundLayer.removeChildren();
     var _this = this;
+    // Use RGBA for the fills so we can get an alpha fill
     var fillConditionColors = {"0": "rgba(204, 204, 204, 0.3)",
       "1": "rgba(0, 200, 0, 0.3)",
       "2": "rgba(0, 0, 256, 0.3)",
@@ -402,6 +443,9 @@ var SurfForecast = (function() {
       "2": "#0000FF",
       "3": "#FF0000"};
 
+    // To draw the surf graph we draw it in two parts. The dark line is a line and the alpha fill 
+    // is a polygon with no stroke. This was required because other wise you'd have a stroke all
+    // the way around the fills.
     var lastCondition, lastPoint, fillPoints, fillColor, strokePoints, strokeColor, endLine;
     for (var i = 0; i < this.data.dataPoints.length;) {
       var dataPoint = this.data.dataPoints[i];
@@ -428,7 +472,6 @@ var SurfForecast = (function() {
         fillPoints.push(y);
         strokePoints.push(y);
         lastPoint = [x, y];
-
 
         i++;
       }
@@ -469,12 +512,14 @@ var SurfForecast = (function() {
     this.foregroundLayer.draw();
   }
 
-  SurfForecast.prototype.surfMouseOverHandler = function() {
+  // the forecase mouse over handler handles drawing the mouseover stuff
+  // for both swells and surfs
+  SurfForecast.prototype.forecastMouseOverHandler = function() {
     var mousePosition = this.stage.getMousePosition();
 
     var mouseX = mousePosition.x;
 
-    // get the data point
+    // get the data point nearest to the x point
     var index = Math.round((mouseX - this.graphLeft) / this.dataColumnWidth);
 
     var dataPoint = this.data.dataPoints[index];
@@ -491,6 +536,7 @@ var SurfForecast = (function() {
 
     this.mouseOverLayer.show();
     // Draw the data Point circle
+    // We only draw stuff once. Otherwise we update it
     var circle = this.mouseOverLayer.get("#circle")[0];
     if (!circle) {
       circle = new Kinetic.Circle({
@@ -573,6 +619,13 @@ var SurfForecast = (function() {
     }
     // Draw the Surf Info Box
     if (this.selectedForecast == "surfButton") {
+      // hide the swell info box if it exists
+      var swellInfoBox = this.mouseOverLayer.get("#swellInfoBox")[0];
+      if (swellInfoBox) {
+        swellInfoBox.hide();
+      }
+
+      // create the surf info box if it doesn't exist
       var surfInfoBox = this.mouseOverLayer.get("#surfInfoBox")[0];
       if (!surfInfoBox) {
         surfInfoBox = new Kinetic.Group({
@@ -641,6 +694,7 @@ var SurfForecast = (function() {
         surfInfoBox.add(windData);
         this.mouseOverLayer.add(surfInfoBox);
       } else {
+        // update the surf info box if it exists already
         surfInfoBox.show();
         surfInfoBox.setPosition(infoX, infoY);
         var swell1Data = surfInfoBox.get("#swell1Data")[0];
@@ -651,12 +705,14 @@ var SurfForecast = (function() {
         windData.setText(dataPoint.wind);
       }
     } else if (this.selectedForecast == "swellButton") {
+      // Hide the surf info box if we're displaying the swell info box
       var surfInfoBox = this.mouseOverLayer.get("#surfInfoBox")[0];
       if (surfInfoBox) {
         surfInfoBox.hide();
       }
 
       var swellInfoBox = this.mouseOverLayer.get("#swellInfoBox")[0];
+      // create the swell info box if it doesn't exist yet
       if (!swellInfoBox) {
         swellInfoBox = new Kinetic.Group({
           id: "swellInfoBox",
@@ -735,6 +791,7 @@ var SurfForecast = (function() {
         swellInfoBox.add(directionData);
         this.mouseOverLayer.add(swellInfoBox);
       } else {
+        // Only show the swell info box if there is a height
         if (dataPoint.heights[swellIndex] > 0) {
           swellInfoBox.show();
           swellInfoBox.setPosition(infoX, infoY);
@@ -753,19 +810,12 @@ var SurfForecast = (function() {
     this.mouseOverLayer.draw();
   }
 
+  // Hide the entire mouse over layer on mouse out over the graph
   SurfForecast.prototype.surfMouseOutHandler = function() {
-    // hide circle on mouse out
-    /*
-    var circle = this.mouseOverLayer.get("#circle");
-    if (!circle) {
-      circle.hide();
-      this.mouseOverLayer.draw();
-    }
-    */
     this.mouseOverLayer.hide();
-
   }
 
+  // Generate the general background of the chart and stuff
   SurfForecast.prototype.generateBackground = function() {
     // Build the background rectangle
     var rect = new Kinetic.Rect({
@@ -802,6 +852,10 @@ var SurfForecast = (function() {
     });
     this.baseLayer.add(rect);
 
+    var mouseOverGroup = new Kinetic.Group({
+      x: this.graphLeft,
+      y: this.graphTop
+    });
     // Create the mouse over box
     var rect = new Kinetic.Rect({
       x: 0,
@@ -810,9 +864,9 @@ var SurfForecast = (function() {
       height: this.graphHeight,
     });
     rect.on('mouseout', $.proxy(this.surfMouseOutHandler, this));
-    rect.on('mousemove', $.proxy(this.surfMouseOverHandler, this));
-    this.mouseOverGroup.add(rect);
-    this.mouseOverControlLayer.add(this.mouseOverGroup);
+    rect.on('mousemove', $.proxy(this.forecastMouseOverHandler, this));
+    mouseOverGroup.add(rect);
+    this.mouseOverControlLayer.add(mouseOverGroup);
     this.mouseOverControlLayer.draw();
 
     this.generateDaySeperators();
@@ -910,8 +964,10 @@ var SurfForecast = (function() {
       var daySeperatorGroup = new Kinetic.Group({
         id: "daySeperatorGroup"
       });
+      this.baseLayer.add(daySeperatorGroup);
     }
     daySeperatorGroup.removeChildren();
+
     // Build the day seperators
     var points, sunSetIndex, days = 0;
     for (var i = 0; i < this.data.dataPoints.length; i++) {
@@ -980,16 +1036,21 @@ var SurfForecast = (function() {
         rect.setZIndex(rect.getZIndex() - 3);
       }
     }
-    this.baseLayer.add(daySeperatorGroup);
-
   }
 
+
+  // This method is responsible for setting up the y axis labels and dashed line
+  // and any legend info that appears below the chart
   SurfForecast.prototype.generateSurfBackground = function(direction) {
+    // It's possible for generate Surf background to get called multiple times
+    // and the first time it's called it has to create a bunch of stuff. Otherwise
+    // only a few things need to be updated.
     if (this.baseLayer.get(".forecastButtonGroup").length > 0) {
       this.updateBaseLayer();
     } else {
       this.generateBackground();
     }
+    // Remove everything from the background layer before we get started
     this.backgroundLayer.removeChildren();
 
     // Build the legend below the chart
@@ -1088,6 +1149,7 @@ var SurfForecast = (function() {
         width: 29,
         height: 14
       });
+      // Make sure the selected beach direction is a selected style
       if (this.locationDirs[i] == direction) {
         // Beach Direction Button
         rect = new Kinetic.Rect({
@@ -1124,8 +1186,6 @@ var SurfForecast = (function() {
           text: this.locationDirs[i],
           textFill: '#646464',
           width: 29,
-          //height: 12,
-          //lineHeight: 12,
           align: 'center',
           fontFamily: 'Verdana',
           fontSize: 7
@@ -1150,6 +1210,7 @@ var SurfForecast = (function() {
     
     for (var i = 1; i < 8; i++) {
       var y = this._getPointNear(this.graphTop + (i * datapointHeight * 10));
+      // The dashes line uses a custom draw function to get the dashed appearance.
       var dashedLine = new Kinetic.Line({
         drawFunc: dashedDrawFunction,
         stroke: '#d6d6d6',
@@ -1218,6 +1279,7 @@ var SurfForecast = (function() {
   }
 
   SurfForecast.prototype.updateBaseLayer = function() {
+    this.baseLayer.clear();
     // Redraw the timeline
     this.generateDaySeperators();
 
