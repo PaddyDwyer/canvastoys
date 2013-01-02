@@ -181,6 +181,7 @@ var SurfForecast = (function() {
 
   // Binds data to the surf forecast and sets up various utility data points
   SurfForecast.prototype.bindSurfData = function(data, textStatus, xhr, direction) {
+    this.selectedForecast = "surfButton";
     this.data = new SurfForecastData(data);
 
     //this.data = surfForecastDataArray;
@@ -193,6 +194,8 @@ var SurfForecast = (function() {
       this.generateSurfBackground(direction);
     }
     this.generateSurfForeground();
+
+    this.mouseOverControlLayer.show();
   }
 
   SurfForecast.prototype.bindSwellData = function(data, textStatus, xhr) {
@@ -859,6 +862,7 @@ var SurfForecast = (function() {
     buttonGroup.add(text);
     buttonGroup.on("mouseover", $.proxy(this.forecastButtonMouseOverHandler, this));
     buttonGroup.on("mouseout", $.proxy(this.forecastButtonMouseOutHandler, this));
+    buttonGroup.on("click", $.proxy(this.forecastButtonClickHandler, this));
     this.baseLayer.add(buttonGroup);
 
     // Build Swell Button Group
@@ -981,7 +985,12 @@ var SurfForecast = (function() {
   }
 
   SurfForecast.prototype.generateSurfBackground = function(direction) {
-    this.generateBackground();
+    if (this.baseLayer.get(".forecastButtonGroup").length > 0) {
+      this.updateBaseLayer();
+    } else {
+      this.generateBackground();
+    }
+    this.backgroundLayer.removeChildren();
 
     // Build the legend below the chart
     var labelText = new Kinetic.Text({
@@ -1247,11 +1256,16 @@ var SurfForecast = (function() {
 
   SurfForecast.prototype.forecastButtonClickHandler = function(evt) {
     var shape = evt.shape;
+    var name = shape.getName();
 
     //this.foregroundLayer.removeChildren();
     //this.foregroundLayer.draw();
 
-    this.fetchSwellData();
+    if (name == "swellButton") {
+      this.fetchSwellData();
+    } else if (name == 'surfButton') {
+      this.fetchSurfData();
+    }
   }
 
   SurfForecast.prototype.selectedForecastbutton = function(group) {
