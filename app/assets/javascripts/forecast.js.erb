@@ -102,7 +102,11 @@ var SurfForecast = (function() {
   // Constructor. Takes an options object which sets up the Surf Forecast.
   function SurfForecast(options) {
     // Create the kinetic stage we'll use to draw everything
-    this.stage = new Kinetic.Stage({container: "surf_forecast", width: 709, height: 166});
+    var scale = {
+      x:709 / 709,
+      y:1
+    };
+    this.stage = new Kinetic.Stage({container: "surf_forecast", width: 709, height: 166, scale: scale});
 
     // The location Dirs are used to set up the beach directions. Also used for fetching
     // beach direction surf info.
@@ -289,7 +293,7 @@ var SurfForecast = (function() {
 
       swellButtonGroup.on("mouseover", $.proxy(this.swellButtonMouseOverHandler, this));
       swellButtonGroup.on("mouseout", $.proxy(this.swellButtonMouseOutHandler, this));
-      swellButtonGroup.on("click", $.proxy(this.swellButtonClickHandler, this));
+      swellButtonGroup.on("click tap", $.proxy(this.swellButtonClickHandler, this));
       this.backgroundLayer.add(swellButtonGroup);
     }
     
@@ -518,8 +522,9 @@ var SurfForecast = (function() {
   // for both swells and surfs
   SurfForecast.prototype.forecastMouseOverHandler = function() {
     var mousePosition = this.stage.getMousePosition();
+    var touchPosition = this.stage.getTouchPosition();
 
-    var mouseX = mousePosition.x;
+    var mouseX = mousePosition.x || touchPosition.x;
 
     // get the data point nearest to the x point
     var index = Math.round((mouseX - this.graphLeft) / this.dataColumnWidth);
@@ -865,8 +870,8 @@ var SurfForecast = (function() {
       width: this.graphWidth,
       height: this.graphHeight,
     });
-    rect.on('mouseout', $.proxy(this.surfMouseOutHandler, this));
-    rect.on('mousemove', $.proxy(this.forecastMouseOverHandler, this));
+    rect.on('mouseout touchend', $.proxy(this.surfMouseOutHandler, this));
+    rect.on('mousemove touchmove', $.proxy(this.forecastMouseOverHandler, this));
     mouseOverGroup.add(rect);
     this.mouseOverControlLayer.add(mouseOverGroup);
     this.mouseOverControlLayer.draw();
@@ -918,7 +923,7 @@ var SurfForecast = (function() {
     buttonGroup.add(text);
     buttonGroup.on("mouseover", $.proxy(this.forecastButtonMouseOverHandler, this));
     buttonGroup.on("mouseout", $.proxy(this.forecastButtonMouseOutHandler, this));
-    buttonGroup.on("click", $.proxy(this.forecastButtonClickHandler, this));
+    buttonGroup.on("click tap", $.proxy(this.forecastButtonClickHandler, this));
     this.baseLayer.add(buttonGroup);
 
     // Build Swell Button Group
@@ -954,7 +959,7 @@ var SurfForecast = (function() {
     buttonGroup.add(text);
     buttonGroup.on("mouseover", $.proxy(this.forecastButtonMouseOverHandler, this));
     buttonGroup.on("mouseout", $.proxy(this.forecastButtonMouseOutHandler, this));
-    buttonGroup.on("click", $.proxy(this.forecastButtonClickHandler, this));
+    buttonGroup.on("click tap", $.proxy(this.forecastButtonClickHandler, this));
     this.baseLayer.add(buttonGroup);
     this.baseLayer.draw();
   }
@@ -1197,7 +1202,7 @@ var SurfForecast = (function() {
       buttonGroup.add(labelText);
       buttonGroup.on("mouseover", $.proxy(this.directionButtonMouseOverHandler, this));
       buttonGroup.on("mouseout", $.proxy(this.directionButtonMouseOutHandler, this));
-      buttonGroup.on("click", $.proxy(this.directionButtonClickHandler, this));
+      buttonGroup.on("click tap", $.proxy(this.directionButtonClickHandler, this));
       this.backgroundLayer.add(buttonGroup);
     }
 
