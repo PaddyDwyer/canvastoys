@@ -348,7 +348,7 @@ var SurfForecast = (function() {
 
         // Draw the right labels
         labelText = new Kinetic.Text({
-          x: 640.5,
+          x: 670.5,
           y: y - 4,
           textFill: "#6d87a6",
           text: tickLabels[i - 1],
@@ -648,7 +648,7 @@ var SurfForecast = (function() {
           y: 5,
           text: "Swells:",
           textFill: "#FFFFCC",
-          fontSize: 8,
+          fontSize: 7,
           fontFamily: "Verdana"
         });
         surfInfoBox.add(swellsLabel);
@@ -658,7 +658,7 @@ var SurfForecast = (function() {
           x: 44,
           y: 5,
           textFill: "#FFFFFF",
-          fontSize: 8,
+          fontSize: 7,
           fontFamily: "Verdana",
           text: dataPoint.swell1
         });
@@ -668,7 +668,7 @@ var SurfForecast = (function() {
           x: 44,
           y: 20,
           textFill: "#FFFFFF",
-          fontSize: 8,
+          fontSize: 7,
           fontFamily: "Verdana",
           text: dataPoint.swell2
         });
@@ -679,7 +679,7 @@ var SurfForecast = (function() {
           y: 34,
           text: "Wind:",
           textFill: "#FFFFCC",
-          fontSize: 8,
+          fontSize: 7,
           fontFamily: "Verdana"
         });
         surfInfoBox.add(windLabel);
@@ -689,7 +689,7 @@ var SurfForecast = (function() {
           x: 44,
           y: 34,
           textFill: "#FFFFFF",
-          fontSize: 8,
+          fontSize: 7,
           fontFamily: "Verdana",
           text: dataPoint.wind
         });
@@ -744,7 +744,7 @@ var SurfForecast = (function() {
           x: 74,
           y: 5,
           textFill: "#FFFFFF",
-          fontSize: 8,
+          fontSize: 7,
           fontFamily: "Verdana",
           text: dataPoint.heights[swellIndex] + " ft"
         });
@@ -765,7 +765,7 @@ var SurfForecast = (function() {
           x: 74,
           y: 20,
           textFill: "#FFFFFF",
-          fontSize: 8,
+          fontSize: 7,
           fontFamily: "Verdana",
           text: dataPoint.periods[swellIndex] + " sec"
         });
@@ -786,7 +786,7 @@ var SurfForecast = (function() {
           x: 74,
           y: 34,
           textFill: "#FFFFFF",
-          fontSize: 8,
+          fontSize: 7,
           fontFamily: "Verdana",
           text: dataPoint.directions[swellIndex] + " deg"
         });
@@ -973,7 +973,7 @@ var SurfForecast = (function() {
     // Build the day seperators
     var points, sunSetIndex, days = 0;
     for (var i = 0; i < this.data.dataPoints.length; i++) {
-      if (this.data.dataPoints[i].hour === "12am") {
+      if (this.data.dataPoints[i].hour === "12am" && i != this.data.dataPoints.length - 1) {
         points = []
         var x = this._getPointNear((i * this.dataColumnWidth) + this.graphLeft);
         points.push(x);
