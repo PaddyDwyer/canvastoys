@@ -1096,7 +1096,7 @@ var SurfForecast = (function() {
       x: 4.5,
       y: this.graphBottom + 8,
       textFill: "#383838",
-      text: "Forecast Updated: " + this.surfDataUpdated,
+      text: "Forecast Updated: " + this.data.surfDataUpdated,
       fontFamily: 'Verdana',
       fontSize: 8
     });
@@ -1556,7 +1556,8 @@ var SurfForecast = (function() {
 
 
 $(document).ready(function() {
-  if ($("#surf_forecast").length > 0) {
+  var canvas2DSupported = !!window.CanvasRenderingContext2D;
+  if ($("#surf_forecast").length > 0 && canvas2DSupported) {
     new SurfForecast({
       locationDir: "SSE||SE",
       beachDir: "SE",
