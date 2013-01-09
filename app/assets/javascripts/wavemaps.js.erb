@@ -1,0 +1,116 @@
+// Create image loader class
+// Create Base Wave maps class
+// Create Button class?
+// Create tabs
+// Create image animation in kinetic js
+
+
+
+var ImageLoader= (function() {
+  ImageLoader.name = "ImageLoader";
+
+  function ImageLoader(options) {
+    this.imgurls = options.images;
+    this.images = [];
+    this.allImagesLoadedCallback = options.imagesLoadedCallback;
+    this.count = 0;
+
+    // Fetch one image for testing
+    for (var i = 0; i < this.imgurls.length; i++) {
+      var imgurl = this.imgurls[i];
+      // Add cachebuster
+      imgurl += ("?_=") + (new Date()).getTime();
+      $("<img/>")
+          .load({id: i}, $.proxy(this.imageLoadHandler, this))
+          .error({id: i}, $.proxy(this.imageLoadErrorHandler, this))
+          .attr("src", imgurl)
+    }
+  }
+
+  ImageLoader.prototype.imageLoadHandler = function(evt) {
+    this.count++;
+    console.log("image loaded correctly, id:", evt.data.id);
+    this.images.push(evt.target);
+
+    if (this.count == this.imgurls.length) {
+      this.allImagesLoaded();
+    }
+    // debugging code
+    //$("#wavemaps").append(evt.target); 
+  }
+
+  ImageLoader.prototype.imageLoadErrorHandler = function(evt) {
+    this.count++;
+    console.log("error loading image, id:", evt.data.id);
+
+    if (this.count == this.imgurls.length) {
+      this.allImagesLoaded();
+    }
+  }
+
+  ImageLoader.prototype.allImagesLoaded = function() {
+    if (this.allImagesLoadedCallback) {
+      this.allImagesLoadedCallback.call();
+    }
+  };
+
+  return ImageLoader;
+})();
+
+var WaveMap = (function() {
+  WaveMap.name = "WaveMap";
+
+  function WaveMap() {
+    this.stage = new Kinetic.Stage({container: "wavemaps", width: 543, height: 415});
+
+    this.mapLayer = new Kinetic.Layer();
+
+    this.stage.add(this.mapLayer);
+
+    var imgurls = [];
+    for (var i = 0; i < 25; i += 3) {
+      var number = ("0" + i).substr(-2);
+      imgurls.push("http://www.swellinfo.com/imgs/wave_maps/wna_midat/wna_midat" + number + ".png");
+    }
+    this.deepWaterWaves = new ImageLoader({
+      images: imgurls,
+      imagesLoadedCallback: $.proxy(this.loadMap, this),
+    });
+
+  }
+
+  WaveMap.prototype.loadMap = function(evt) {
+    var image = new Kinetic.Image({
+      id: "mapimage",
+      image: this.deepWaterWaves.images[0],
+      x: 0,
+      y: 0
+    });
+    image.on("click", $.proxy(this.animateMap, this));
+    this.mapLayer.add(image);
+    this.mapLayer.draw();
+  };
+
+  WaveMap.prototype.animateMap = function() {
+    var image = this.mapLayer.get("#mapimage")[0];
+
+    var fps = 4;
+    var frameNum = 0;
+    var animImages = this.deepWaterWaves.images;
+    var anim = new Kinetic.Animation(function(frame) {
+      frameNum = Math.floor(frame.time / (1000 / fps)) % animImages.length;
+      image.setImage(animImages[frameNum]);
+    }, this.mapLayer);
+
+    anim.start();
+  };
+
+  return WaveMap;
+})();
+
+$(function() {
+  var canvas2DSupported = !!window.CanvasRenderingContext2D;
+  if ($("#wavemaps").length > 0 && canvas2DSupported) {
+    new WaveMap();
+  }
+});

@@ -2,6 +2,9 @@ class ForecastController < ApplicationController
   def canvas
   end
 
+  def wavemaps
+  end
+
   def swell_data
   end
 

@@ -6,10 +6,7 @@ Canvas::Application.routes.draw do
     get "canvas/highlighter" => "canvas#highlighter"
 
     get "forecast/canvas" => "forecast#canvas"
-
-    get "forecast/swell_data" => "forecast#swell_data"
-
-    get "forecast/surf_data" => "forecast#surf_data"
+    get "forecast/wavemaps" => "forecast#wavemaps"
 
     namespace :data do
       resources :timelines, :path => 'timeline'
