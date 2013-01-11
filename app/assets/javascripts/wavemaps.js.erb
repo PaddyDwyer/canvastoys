@@ -79,6 +79,7 @@ var Images= (function() {
 
   Images.prototype.imageLoadHandler = function(evt) {
     this.count++;
+    evt.data.count = this.count;
     console.log("image loaded correctly, id:", evt.data.id);
     this.images[evt.data.id] = evt.target;
 
@@ -172,6 +173,99 @@ var TimeBar = (function() {
   return TimeBar;
 })();
 
+var ProgressBar = (function() {
+  ProgressBar.name = "ProgressBar";
+
+  function ProgressBar(options) {
+    this.layer = options.layer;
+    this.id = options.id;
+    this.numberOfImages = options.numberOfImages;
+    this.imageLoader = options.imageLoader;
+
+    this.drawInitial();
+
+    $("#" + this.id).on("images:success", $.proxy(this.update, this));
+  }
+
+  ProgressBar.prototype.update = function(event, data, target) {
+    var count = data.count;
+
+    var lengthRatio = count / this.numberOfImages;
+
+    var basePoints = this.baseLine.getPoints();
+    var maxLength = basePoints[1].x - basePoints[0].x;
+
+    var progressPoints = this.progressLine.getPoints();
+    var progressX = progressPoints[0].x;
+
+    var length = maxLength * lengthRatio;
+
+    progressPoints[1].x = progressX + length;
+
+    this.updateText.setText("MAP " + count + " OF " + this.numberOfImages + " LOADED");
+
+    this.layer.draw();
+  };
+
+  ProgressBar.prototype.drawInitial = function() {
+    this.barGroup = new Kinetic.Group();
+    this.baseLine = new Kinetic.Line({
+      points: [401.5, 33.5, 496.5, 33.5],
+      strokeWidth: 5,
+      stroke: "#000",
+      lineCap: 'round',
+    });
+    this.barGroup.add(this.baseLine);
+
+    this.progressLine = new Kinetic.Line({
+      points: [401.5, 33.5, 402.5, 33.5],
+      strokeWidth: 3,
+      stroke: "#00FF33",
+      lineCap: 'round',
+    });
+    this.barGroup.add(this.progressLine);
+
+    this.updateText = new Kinetic.Text({
+      x: 391,
+      y: 41,
+      text: "MAP 0 OF " + this.numberOfImages + " LOADED",
+      textFill: "#000000",
+      fontFamily: "Arial",
+      fontSize: 8,
+      fontStyle: "bold",
+      width: 120,
+      align: "center",
+    });
+    this.barGroup.add(this.updateText);
+    this.layer.add(this.barGroup);
+    this.layer.draw();
+  };
+
+  ProgressBar.prototype.hide = function() {
+    this.barGroup.hide();
+    this.layer.draw();
+  };
+
+  return ProgressBar;
+})();
+
+var PlayControls = (function() {
+  PlayControls.name = "PlayControls";
+
+  function PlayControls(options) {
+    this.id = options.id;
+    this.layer = options.layer;
+
+    this.drawInitial();
+  }
+
+  PlayControls.prototype.drawInitial = function() {
+    
+  };
+
+  return PlayControls;
+})();
+
 var WaveMap = (function() {
   WaveMap.name = "WaveMap";
 
@@ -234,11 +328,18 @@ var WaveMap = (function() {
       imgurls.push("http://www.swellinfo.com/imgs" + this.mapImages + number + ".png");
     }
     $("#" + this.id).on("images:success", $.proxy(this.loadMap, this));
+    $("#" + this.id).on("images:allLoaded", $.proxy(this.showControlButtons, this));
     this.deepWaterWaves = new Images({
       id: this.id,
       images: imgurls
     });
 
+    this.progressBar = new ProgressBar({
+      id: this.id,
+      layer: this.infoLayer,
+      imageLoader: this.deepWaterWaves,
+      numberOfImages: imgurls.length
+    });
   };
 
   WaveMap.prototype.loadMap = function(event, data, target) {
@@ -253,6 +354,10 @@ var WaveMap = (function() {
       this.mapLayer.add(image);
       this.mapLayer.draw();
     }
+  };
+
+  WaveMap.prototype.showControlButtons = function() {
+    this.progressBar.hide();
   };
 
   WaveMap.prototype.animateMap = function() {
