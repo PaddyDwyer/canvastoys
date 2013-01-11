@@ -11,6 +11,9 @@ Canvas::Application.routes.draw do
     namespace :data do
       resources :timelines, :path => 'timeline'
       resources :bull_xmls, :path => 'bull_xml'
+      resources :wave_map_times
+      resources :wind_map_times
+      resources :pressure_map_times
     end
     # The priority is based upon order of creation:
     # first created -> highest priority.

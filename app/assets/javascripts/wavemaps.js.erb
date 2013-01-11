@@ -1,18 +1,68 @@
+// This is used to set up the routes. it can be deleted
+<% environment.context_class.instance_eval {include Rails.application.routes.url_helpers } %>
+
 // Create image loader class
 // Create Base Wave maps class
 // Create Button class?
 // Create tabs
 // Create image animation in kinetic js
 
+var Times = (function() {
+  Times.name = "Times";
 
+  function Times(options) {
+    this.id = options.id;
+    var timezone = options.timezone;
+    var map = options.map;
+    var maptype = options.maptype;
 
-var ImageLoader= (function() {
-  ImageLoader.name = "ImageLoader";
+    var url = "";
+    var params = {timezone: timezone, map: map};
+    switch (maptype) {
+      case "wavemaps":
+      case "periodmaps":
+        url = "<%= data_wave_map_times_path :format => :xml %>";
+        params.maptype = options.maptype;
+        break;
+      case "windmaps":
+        url = "<%= data_wind_map_times_path :format => :xml %>";
+        break;
+      case "pressurewindmap":
+        url = "<%= data_pressure_map_times_path :format => :xml %>";
+        params.maptype = options.maptype;
+        break;
+    }
+    $.get(url, params, $.proxy(this.storeMapTimes, this));
+  }
 
-  function ImageLoader(options) {
+  Times.prototype.storeMapTimes = function(data) {
+    var times = [];
+    xml = $(data);
+    xml.find("time").each(function(index, element) {
+      $element = $(element);
+      var hour = $element.attr("hour");
+      if (hour < 10) {
+        var value = "0" + hour;
+      } else {
+        var value = hour;
+      }
+      times.push({hour: hour, hourString: value, stamp: $element.attr("stamp")});
+    });
+    this.times = times;
+    $("#" + this.id).trigger("timesLoaded", [times]);
+  };
+
+  return Times;
+})();
+
+var Images= (function() {
+  Images.name = "Images";
+
+  // constructor
+  function Images(options) {
+    this.id = options.id;
     this.imgurls = options.images;
     this.images = [];
-    this.allImagesLoadedCallback = options.imagesLoadedCallback;
     this.count = 0;
 
     // Fetch one image for testing
@@ -27,68 +77,182 @@ var ImageLoader= (function() {
     }
   }
 
-  ImageLoader.prototype.imageLoadHandler = function(evt) {
+  Images.prototype.imageLoadHandler = function(evt) {
     this.count++;
     console.log("image loaded correctly, id:", evt.data.id);
-    this.images.push(evt.target);
+    this.images[evt.data.id] = evt.target;
 
+    $("#" + this.id).trigger("images:success", [evt.data, evt.target]);
     if (this.count == this.imgurls.length) {
-      this.allImagesLoaded();
+      console.log(this.images);
+      $("#" + this.id).trigger("images:allLoaded");
     }
     // debugging code
     //$("#wavemaps").append(evt.target); 
   }
 
-  ImageLoader.prototype.imageLoadErrorHandler = function(evt) {
+  Images.prototype.imageLoadErrorHandler = function(evt) {
     this.count++;
     console.log("error loading image, id:", evt.data.id);
 
+    $("#" + this.id).trigger("images:error", [evt.data, evt.target]);
     if (this.count == this.imgurls.length) {
-      this.allImagesLoaded();
+      $("#" + this.id).trigger("images:allLoaded");
     }
   }
 
-  ImageLoader.prototype.allImagesLoaded = function() {
-    if (this.allImagesLoadedCallback) {
-      this.allImagesLoadedCallback.call();
+  return Images;
+})();
+
+var TimeBar = (function() {
+  TimeBar.name = "TimeBar";
+
+  function TimeBar(options) {
+    this.layer = options.layer;
+    this.times = options.times;
+
+    this.drawTimeBar();
+  }
+
+  TimeBar.prototype.drawTimeBar = function() {
+    var height = 0;
+    if (this.times.length > 31) {
+      height = 392;
+    } else {
+      height = (this.times.length * 11) + 7;
     }
+    console.log("height", height);
+    var rect = new Kinetic.Rect({
+      x: 512.5,
+      y: -0.5,
+      width: 29,
+      height: height,
+      fill: "rgba(255, 255, 255, 0.6)",
+      stroke: "#177496",
+      strokeWidth: 1
+    });
+    this.layer.add(rect);
+
+    var timeNavGroup = new Kinetic.Group({
+      x: 512,
+      y: 5
+    });
+    // Draw times buttons
+    for (var i = 0; i < this.times.length; i++) {
+      var text = new Kinetic.Text({
+        text: this.times[i].hourString,
+        textFill: "#000000",
+        align: "right",
+        width: 23,
+        x: 0,
+        y: i * 11,
+        fontSize: 8,
+        fontFamily: "Arial",
+        fontStyle: "bold"
+      });
+      timeNavGroup.add(text);
+    }
+
+    // Yellow highlight box
+    rect = new Kinetic.Rect({
+      x: 1,
+      y: -2,
+      width: 28,
+      height: 10,
+      fill: "rgba(254, 254, 0, 0.6)"
+    });
+    timeNavGroup.add(rect);
+    rect.setZIndex(0);
+
+    this.layer.add(timeNavGroup);
+    this.layer.draw();
+    
   };
 
-  return ImageLoader;
+  return TimeBar;
 })();
 
 var WaveMap = (function() {
   WaveMap.name = "WaveMap";
 
-  function WaveMap() {
-    this.stage = new Kinetic.Stage({container: "wavemaps", width: 543, height: 415});
+  // constructor
+  function WaveMap(options) {
+    this.id = options.id;
+    this.title = options.title;
+    this.mapImages = options.map_images;
+    this.stage = new Kinetic.Stage({container: options.id, width: 541, height: 391});
 
     this.mapLayer = new Kinetic.Layer();
+    this.infoLayer = new Kinetic.Layer();
 
     this.stage.add(this.mapLayer);
+    this.stage.add(this.infoLayer);
 
-    var imgurls = [];
-    for (var i = 0; i < 25; i += 3) {
-      var number = ("0" + i).substr(-2);
-      imgurls.push("http://www.swellinfo.com/imgs/wave_maps/wna_midat/wna_midat" + number + ".png");
-    }
-    this.deepWaterWaves = new ImageLoader({
-      images: imgurls,
-      imagesLoadedCallback: $.proxy(this.loadMap, this),
+    var times = new Times({
+      id: this.id,
+      timezone: options.timezone,
+      map: options.map,
+      maptype: options.maptype
     });
 
+    $("#" + this.id).on("timesLoaded", $.proxy(this.handleLoadedTimes, this));
+
+    this.drawInfoLayer();
   }
 
-  WaveMap.prototype.loadMap = function(evt) {
-    var image = new Kinetic.Image({
-      id: "mapimage",
-      image: this.deepWaterWaves.images[0],
+  WaveMap.prototype.drawInfoLayer = function() {
+    // Title background Rectangle
+    var rect = new Kinetic.Rect({
       x: 0,
-      y: 0
+      y: 0,
+      fill: "rgba(255, 255, 255, 0.6)",
+      width:512,
+      height: 27,
     });
-    image.on("click", $.proxy(this.animateMap, this));
-    this.mapLayer.add(image);
-    this.mapLayer.draw();
+    this.infoLayer.add(rect);
+
+    var text = new Kinetic.Text({
+      x: 8,
+      y: 8,
+      text: this.title,
+      textFill: "#0E4A74",
+      fontSize: 12,
+      fontFamily: "Arial",
+      fontStyle: 'italic bold',
+    });
+    this.infoLayer.add(text);
+
+    this.infoLayer.draw();
+  };
+
+  WaveMap.prototype.handleLoadedTimes = function(event, times) {
+    this.timesBar = new TimeBar({layer: this.infoLayer, times: times});
+
+    var imgurls = [];
+    for (var i = 0; i < times.length; i++) {
+      var number = times[i].hourString;
+      imgurls.push("http://www.swellinfo.com/imgs" + this.mapImages + number + ".png");
+    }
+    $("#" + this.id).on("images:success", $.proxy(this.loadMap, this));
+    this.deepWaterWaves = new Images({
+      id: this.id,
+      images: imgurls
+    });
+
+  };
+
+  WaveMap.prototype.loadMap = function(event, data, target) {
+    if (data.id == 0) {
+      var image = new Kinetic.Image({
+        id: "mapimage",
+        image: target,
+        x: 0,
+        y: 0
+      });
+      image.on("click", $.proxy(this.animateMap, this));
+      this.mapLayer.add(image);
+      this.mapLayer.draw();
+    }
   };
 
   WaveMap.prototype.animateMap = function() {
@@ -110,7 +274,38 @@ var WaveMap = (function() {
 
 $(function() {
   var canvas2DSupported = !!window.CanvasRenderingContext2D;
-  if ($("#wavemaps").length > 0 && canvas2DSupported) {
-    new WaveMap();
+  if ($("#waveheights").length > 0 && canvas2DSupported) {
+    new WaveMap({
+      id: "waveheights",
+      title: "DEEP WATER WAVES",
+      map_images: "/wave_maps/wna_midat/wna_midat",
+      timezone: "ET",
+      map: "wna_midat",
+      maptype: "wavemaps"
+    });
+    new WaveMap({
+      id: "waveperiods",
+      title: "Mean Wave Periods",
+      map_images: "/pergraphs/wna_ec/wna_ec_per",
+      timezone: "ET",
+      map: "wna_ec",
+      maptype: "periodmaps"
+    });
+    new WaveMap({
+      id: "nearshorewind",
+      title: "Near Shore Winds",
+      map_images: "/nearshorewind/wna_nj_wind/wna_nj_wind",
+      timezone: "ET",
+      map: "wna_nj",
+      maptype: "windmaps"
+    });
+    new WaveMap({
+      id: "pressurewind",
+      title: "PRESSURE / WIND MAP",
+      map_images: "/pressure/wna_ec_pressure/wna_ec_pressure",
+      timezone: "ET",
+      map: "wna_ec",
+      maptype: "pressurewindmap"
+    });
   }
 });
