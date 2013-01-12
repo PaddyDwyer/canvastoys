@@ -260,7 +260,55 @@ var PlayControls = (function() {
   }
 
   PlayControls.prototype.drawInitial = function() {
-    
+    this.playButtonGroup = new Kinetic.Group({
+      x: 449,
+      y: 30
+    });
+
+    // background rect
+    var rect = new Kinetic.Rect({
+      x: 0.5,
+        y: 0.5,
+        width: 21,
+        height: 17,
+        strokeWidth: 1,
+        stroke: "#177496",
+        fill: "rgba(255, 255, 255, 0.6)"
+    });
+    this.playButtonGroup.add(rect);
+
+    this.stopButton = new Kinetic.Rect({
+      x: 7,
+      y: 5,
+      width: 8,
+      height: 8,
+      fill: "#0E4A74"
+    });
+    this.playButtonGroup.add(this.stopButton);
+    this.stopButton.hide();
+    this.playButton = new Kinetic.Polygon({
+      points: [5, 4, 18, 9, 5, 14],
+      fill: "#0E4A74"
+    });
+    this.playButtonGroup.add(this.playButton);
+
+    this.playButtonGroup.on("click", $.proxy(this.clickHandler, this));
+
+    this.layer.add(this.playButtonGroup);
+    this.layer.draw();
+  };
+
+  PlayControls.prototype.clickHandler = function(event) {
+    if (this.playButton.isVisible()) {
+      $("#" + this.id).trigger("playcontrol:play");
+      this.playButton.hide();
+      this.stopButton.show();
+    } else {
+      $("#" + this.id).trigger("playcontrol:stop");
+      this.playButton.show();
+      this.stopButton.hide();
+    }
+    this.layer.draw();
   };
 
   return PlayControls;
@@ -350,7 +398,6 @@ var WaveMap = (function() {
         x: 0,
         y: 0
       });
-      image.on("click", $.proxy(this.animateMap, this));
       this.mapLayer.add(image);
       this.mapLayer.draw();
     }
@@ -358,20 +405,28 @@ var WaveMap = (function() {
 
   WaveMap.prototype.showControlButtons = function() {
     this.progressBar.hide();
+
+    this.controls = new PlayControls({id: this.id, layer: this.infoLayer});
+    $("#" + this.id).on("playcontrol:play", $.proxy(this.startAnimation, this));
+    $("#" + this.id).on("playcontrol:stop", $.proxy(this.stopAnimation, this));
   };
 
-  WaveMap.prototype.animateMap = function() {
+  WaveMap.prototype.startAnimation = function() {
     var image = this.mapLayer.get("#mapimage")[0];
 
     var fps = 4;
     var frameNum = 0;
     var animImages = this.deepWaterWaves.images;
-    var anim = new Kinetic.Animation(function(frame) {
+    this.animation = new Kinetic.Animation(function(frame) {
       frameNum = Math.floor(frame.time / (1000 / fps)) % animImages.length;
       image.setImage(animImages[frameNum]);
     }, this.mapLayer);
 
-    anim.start();
+    this.animation.start();
+  };
+
+  WaveMap.prototype.stopAnimation = function() {
+    this.animation.stop();
   };
 
   return WaveMap;
