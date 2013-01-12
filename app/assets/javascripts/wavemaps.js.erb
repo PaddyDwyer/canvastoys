@@ -260,22 +260,54 @@ var PlayControls = (function() {
   }
 
   PlayControls.prototype.drawInitial = function() {
-    this.playButtonGroup = new Kinetic.Group({
+    var group = new Kinetic.Group({
       x: 449,
       y: 30
     });
 
-    // background rect
-    var rect = new Kinetic.Rect({
+    var leftButtonGroup = new Kinetic.Group();
+    var backgroundRect = new Kinetic.Rect({
       x: 0.5,
-        y: 0.5,
-        width: 21,
-        height: 17,
-        strokeWidth: 1,
-        stroke: "#177496",
-        fill: "rgba(255, 255, 255, 0.6)"
+      y: 0.5,
+      width: 16,
+      height: 17,
+      strokeWidth: 1,
+      stroke: "#177496",
+      fill: "rgba(255, 255, 255, 0.6)"
     });
-    this.playButtonGroup.add(rect);
+    leftButtonGroup.add(backgroundRect);
+
+    var poly = new Kinetic.Polygon({
+      points: [3, 9, 10, 4, 10, 6, 14, 4, 14, 14, 10, 12, 10, 14],
+      fill: "#0E4A74"
+    });
+    leftButtonGroup.add(poly);
+    var id = this.id;
+    leftButtonGroup.on("click", function() {
+      $("#" + id).trigger("playcontrol:prev");
+    });
+
+    group.add(leftButtonGroup);
+
+    var rightButtonGroup = new Kinetic.Group({ x: 43 });
+    backgroundRect = backgroundRect.clone();
+    rightButtonGroup.add(backgroundRect);
+
+    poly = poly.clone();
+    poly.setOffset(17, 18);
+    poly.rotateDeg(180);
+    rightButtonGroup.add(poly);
+    rightButtonGroup.on("click", function() {
+      $("#" + id).trigger("playcontrol:next");
+    });
+
+    group.add(rightButtonGroup);
+
+    var playButtonGroup = new Kinetic.Group({ x: 19 });
+    // background rect
+    backgroundRect = backgroundRect.clone();
+    backgroundRect.setWidth(21);
+    playButtonGroup.add(backgroundRect);
 
     this.stopButton = new Kinetic.Rect({
       x: 7,
@@ -284,21 +316,23 @@ var PlayControls = (function() {
       height: 8,
       fill: "#0E4A74"
     });
-    this.playButtonGroup.add(this.stopButton);
+    playButtonGroup.add(this.stopButton);
     this.stopButton.hide();
     this.playButton = new Kinetic.Polygon({
       points: [5, 4, 18, 9, 5, 14],
       fill: "#0E4A74"
     });
-    this.playButtonGroup.add(this.playButton);
+    playButtonGroup.add(this.playButton);
 
-    this.playButtonGroup.on("click", $.proxy(this.clickHandler, this));
+    playButtonGroup.on("click", $.proxy(this.playClickHandler, this));
 
-    this.layer.add(this.playButtonGroup);
+    group.add(playButtonGroup);
+
+    this.layer.add(group);
     this.layer.draw();
   };
 
-  PlayControls.prototype.clickHandler = function(event) {
+  PlayControls.prototype.playClickHandler = function(event) {
     if (this.playButton.isVisible()) {
       $("#" + this.id).trigger("playcontrol:play");
       this.playButton.hide();
