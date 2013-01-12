@@ -85,11 +85,8 @@ var Images= (function() {
 
     $("#" + this.id).trigger("images:success", [evt.data, evt.target]);
     if (this.count == this.imgurls.length) {
-      console.log(this.images);
       $("#" + this.id).trigger("images:allLoaded");
     }
-    // debugging code
-    //$("#wavemaps").append(evt.target); 
   }
 
   Images.prototype.imageLoadErrorHandler = function(evt) {
@@ -109,20 +106,15 @@ var TimeBar = (function() {
   TimeBar.name = "TimeBar";
 
   function TimeBar(options) {
+    this.id = options.id;
     this.layer = options.layer;
     this.times = options.times;
 
-    this.drawTimeBar();
+    this.drawInitial();
   }
 
-  TimeBar.prototype.drawTimeBar = function() {
-    var height = 0;
-    if (this.times.length > 31) {
-      height = 392;
-    } else {
-      height = (this.times.length * 11) + 7;
-    }
-    console.log("height", height);
+  TimeBar.prototype.drawInitial = function() {
+    var height = (this.times.length * 11) + 7;
     var rect = new Kinetic.Rect({
       x: 512.5,
       y: -0.5,
@@ -134,13 +126,14 @@ var TimeBar = (function() {
     });
     this.layer.add(rect);
 
-    var timeNavGroup = new Kinetic.Group({
+    this.timeNavGroup = new Kinetic.Group({
       x: 512,
       y: 5
     });
     // Draw times buttons
     for (var i = 0; i < this.times.length; i++) {
       var text = new Kinetic.Text({
+        id: this.times[i].hour,
         text: this.times[i].hourString,
         textFill: "#000000",
         align: "right",
@@ -151,23 +144,45 @@ var TimeBar = (function() {
         fontFamily: "Arial",
         fontStyle: "bold"
       });
-      timeNavGroup.add(text);
+      this.timeNavGroup.add(text);
     }
 
     // Yellow highlight box
-    rect = new Kinetic.Rect({
+    this.yellowBox = new Kinetic.Rect({
       x: 1,
       y: -2,
       width: 28,
       height: 10,
       fill: "rgba(254, 254, 0, 0.6)"
     });
-    timeNavGroup.add(rect);
-    rect.setZIndex(0);
+    this.timeNavGroup.add(this.yellowBox);
+    this.yellowBox.setZIndex(0);
+    this.layer.add(this.timeNavGroup);
 
-    this.layer.add(timeNavGroup);
+    this.stampText = new Kinetic.Text({
+      text: this.times[0].stamp,
+      textFill: "#000000",
+      fontFamily: "Arial",
+      fontStyle: "bold",
+      x: 312,
+      y: 10,
+      width: 194,
+      align: "right",
+      fontSize: 9,
+    });
+    this.layer.add(this.stampText);
+
     this.layer.draw();
+
+    $("#" + this.id).on("map:update", $.proxy(this.update, this));
     
+  };
+
+  TimeBar.prototype.update = function(event, time) {
+    var hourText = this.timeNavGroup.get("#" + time.hour)[0];
+    this.yellowBox.setY(hourText.getY() - 2);
+    this.stampText.setText(time.stamp);
+    this.layer.draw();
   };
 
   return TimeBar;
@@ -364,7 +379,7 @@ var WaveMap = (function() {
     this.stage.add(this.mapLayer);
     this.stage.add(this.infoLayer);
 
-    var times = new Times({
+    this.times = new Times({
       id: this.id,
       timezone: options.timezone,
       map: options.map,
@@ -402,7 +417,7 @@ var WaveMap = (function() {
   };
 
   WaveMap.prototype.handleLoadedTimes = function(event, times) {
-    this.timesBar = new TimeBar({layer: this.infoLayer, times: times});
+    this.timesBar = new TimeBar({id: this.id, layer: this.infoLayer, times: times});
 
     var imgurls = [];
     for (var i = 0; i < times.length; i++) {
@@ -441,22 +456,66 @@ var WaveMap = (function() {
     this.progressBar.hide();
 
     this.controls = new PlayControls({id: this.id, layer: this.infoLayer});
+
+    this.animationData = {
+      frameNum: 0,
+      frameNumOffset: 0
+    };
+
     $("#" + this.id).on("playcontrol:play", $.proxy(this.startAnimation, this));
     $("#" + this.id).on("playcontrol:stop", $.proxy(this.stopAnimation, this));
+    $("#" + this.id).on("playcontrol:prev", $.proxy(this.previousMap, this));
+    $("#" + this.id).on("playcontrol:next", $.proxy(this.nextMap, this));
+  };
+
+  WaveMap.mod = function(i, n) {
+    return ((i % n) + n) % n;
+  };
+
+  WaveMap.prototype.previousMap = function() {
+    this.animationData.frameNumOffset--;
+    if (!Kinetic.Animation.animRunning) {
+      this.updateMap();
+    }
+  };
+
+  WaveMap.prototype.nextMap = function() {
+    this.animationData.frameNumOffset++;
+    if (!Kinetic.Animation.animRunning) {
+      this.updateMap();
+    }
+  };
+
+  WaveMap.prototype.updateMap = function() {
+    var image = this.mapLayer.get("#mapimage")[0];
+    var frame = WaveMap.mod(this.animationData.frameNum + this.animationData.frameNumOffset, this.deepWaterWaves.images.length);
+    image.setImage(this.deepWaterWaves.images[frame]);
+    $("#" + this.id).trigger("map:update", [this.times.times[frame]]);
+    this.mapLayer.draw();
   };
 
   WaveMap.prototype.startAnimation = function() {
-    var image = this.mapLayer.get("#mapimage")[0];
+    if (!this.animation) {
+      var image = this.mapLayer.get("#mapimage")[0];
 
-    var fps = 4;
-    var frameNum = 0;
-    var animImages = this.deepWaterWaves.images;
-    this.animation = new Kinetic.Animation(function(frame) {
-      frameNum = Math.floor(frame.time / (1000 / fps)) % animImages.length;
-      image.setImage(animImages[frameNum]);
-    }, this.mapLayer);
+      var fps = 4;
+      var animImages = this.deepWaterWaves.images;
+      var times = this.times.times;
+      var id = this.id;
+      var animationData = this.animationData;
+      this.animation = new Kinetic.Animation(function(frame) {
+        animationData.frameNum = (Math.floor(frame.time / (1000 / fps)) % animImages.length);
 
-    this.animation.start();
+        var frame = WaveMap.mod(animationData.frameNum + animationData.frameNumOffset, animImages.length);
+
+        image.setImage(animImages[frame]);
+        $("#" + id).trigger("map:update", [times[frame]]);
+      }, this.mapLayer);
+
+      this.animation.start();
+    } else {
+      this.animation.start();
+    }
   };
 
   WaveMap.prototype.stopAnimation = function() {
