@@ -130,6 +130,7 @@ var TimeBar = (function() {
       x: 512,
       y: 5
     });
+    var id = this.id;
     // Draw times buttons
     for (var i = 0; i < this.times.length; i++) {
       var text = new Kinetic.Text({
@@ -145,6 +146,7 @@ var TimeBar = (function() {
         fontStyle: "bold"
       });
       this.timeNavGroup.add(text);
+      text.on("click", this.updateTrigger(i));
     }
 
     // Yellow highlight box
@@ -176,6 +178,13 @@ var TimeBar = (function() {
 
     $("#" + this.id).on("map:update", $.proxy(this.update, this));
     
+  };
+
+  TimeBar.prototype.updateTrigger = function(index) {
+    var id = this.id;
+    return function() {
+      $("#" + id).trigger("timebar:update", [index]);
+    };
   };
 
   TimeBar.prototype.update = function(event, time) {
@@ -419,6 +428,8 @@ var WaveMap = (function() {
   WaveMap.prototype.handleLoadedTimes = function(event, times) {
     this.timesBar = new TimeBar({id: this.id, layer: this.infoLayer, times: times});
 
+    $("#" + this.id).on("timebar:update", $.proxy(this.timeBarUpdate, this));
+
     var imgurls = [];
     for (var i = 0; i < times.length; i++) {
       var number = times[i].hourString;
@@ -437,6 +448,12 @@ var WaveMap = (function() {
       imageLoader: this.deepWaterWaves,
       numberOfImages: imgurls.length
     });
+  };
+
+  WaveMap.prototype.timeBarUpdate = function(event, index) {
+    var frameNum = this.animationData.frameNum;
+    this.animationData.frameNumOffset = index - frameNum;
+    this.updateMap();
   };
 
   WaveMap.prototype.loadMap = function(event, data, target) {
