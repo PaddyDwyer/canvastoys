@@ -372,6 +372,199 @@ var PlayControls = (function() {
   return PlayControls;
 })();
 
+var ScalePopup = (function() {
+  ScalePopup.name = "ScalePopup";
+
+  var heightSteps = [{feet: 0, meters: 0, color: "#0000FF"},
+      {feet: 1.5, meters: 0.5, color: "#0066FF" },
+      {feet:3, meters:0.9, color: "#00B6FF" },
+      {feet:4.5, meters:1.4, color: "#00DFFF" },
+      {feet:6, meters:1.8, color: "#00FFFF" },
+      {feet:7.5, meters:2.3, color: "#00FFCC" },
+      {feet:9, meters:2.7, color: "#00FF99" },
+      {feet:12, meters:3.7, color: "#00FF00" },
+      {feet:15, meters:4.6, color: "#99FF00" },
+      {feet:18, meters:5.5, color: "#CCFF00" },
+      {feet:21, meters:6.4, color: "#FFFF00" },
+      {feet:24, meters:7.3, color: "#FFCC00" },
+      {feet:27, meters:8.2, color: "#FF9900" },
+      {feet:30, meters:9.1, color: "#FF6600" },
+      {feet:33, meters:10, color: "#FF0000" },
+      {feet:36, meters:11, color: "#AF2F5F" },
+      {feet:39, meters:12, color: "#CF1F8F" },
+      {feet:42, meters:13, color: "#FF00FF" },
+  ];
+
+  var timeSteps = [{seconds: 0, color: "#0000FF"},
+      {seconds: 4, color: "#0066FF"},
+      {seconds: 5, color: "#00B6FF"},
+      {seconds: 6, color: "#00DFFF"},
+      {seconds: 7, color: "#00FFFF"},
+      {seconds: 8, color: "#00FFCC"},
+      {seconds: 9, color: "#00FF99"},
+      {seconds: 10, color: "#00FF00"},
+      {seconds: 11, color: "#99FF00"},
+      {seconds: 12, color: "#CCFF00"},
+      {seconds: 13, color: "#FFFF00"},
+      {seconds: 14, color: "#FFCC00"},
+      {seconds: 15, color: "#FF9900"},
+      {seconds: 16, color: "#FF6600"},
+      {seconds: 17, color: "#FF0000"},
+      {seconds: 18, color: "#AF2F5F"},
+      {seconds: 19, color: "#CF1F8F"},
+      {seconds: 20, color: "#FF00FF"},
+  ];
+
+  var speedSteps = [{knots: 0, color: "#0000FF"},
+      {knots: 4, color: "#0066FF"},
+      {knots: 6, color: "#00B6FF"},
+      {knots: 8, color: "#00DFFF"},
+      {knots: 10, color: "#00FFFF"},
+      {knots: 12, color: "#00FFCC"},
+      {knots: 14, color: "#00FF99"},
+      {knots: 16, color: "#00FF00"},
+      {knots: 18, color: "#99FF00"},
+      {knots: 20, color: "#CCFF00"},
+      {knots: 25, color: "#FFFF00"},
+      {knots: 30, color: "#FFCC00"},
+      {knots: 35, color: "#FF9900"},
+      {knots: 40, color: "#FF6600"},
+      {knots: 45, color: "#FF0000"},
+      {knots: 50, color: "#AF2F5F"},
+      {knots: 55, color: "#CF1F8F"},
+      {knots: 60, color: "#FF00FF"},
+  ];
+
+  function ScalePopup(options) {
+    this.layer = options.layer;
+    this.mapType = options.mapType;
+
+    if (this.mapType == "wavemaps" || this.mapType == "periodmaps" || this.mapType == "windmaps") {
+      this.drawInitial();
+    }
+  }
+
+  ScalePopup.prototype.drawInitial = function() {
+    var group = new Kinetic.Group({
+      x: 0,
+      //y: 43
+      y: 0
+    });
+    var shape = new Kinetic.Shape({
+      drawFunc: function(canvas) {
+        var context = canvas.getContext();
+        context.beginPath();
+        context.moveTo(11, 349);
+        context.lineTo(11, 342);
+        context.arcTo(11, 338, 15.5, 338, 5);
+        context.lineTo(65, 338);
+        context.arcTo(70, 337.5, 70, 342, 5);
+        context.lineTo(70, 349);
+        context.closePath();
+        canvas.fill(this);
+      },
+      fill: "#FFFFFF"
+    });
+    group.add(shape);
+
+    shape = new Kinetic.Shape({
+      drawFunc: function(canvas) {
+        var context = canvas.getContext();
+        context.beginPath();
+        context.moveTo(0, 348.5);
+        context.lineTo(10.5, 348.5);
+        context.lineTo(10.5, 342);
+        context.arcTo(10.5, 337.5, 15.5, 337.5, 5);
+        context.lineTo(65, 337.5);
+        context.arcTo(70.5, 337.5, 70.5, 342, 5);
+        context.lineTo(70.5, 348.5);
+        context.lineTo(512, 348.5);
+        canvas.stroke(this);
+      },
+      stroke: "#177496",
+      strokeWidth: 1
+    });
+    group.add(shape);
+
+    var text = new Kinetic.Text({
+      x: 22,
+      y: 340,
+      textFill: "#000000",
+      text: "SCALE",
+      fontFamily: "Arial",
+      fontSize: 8,
+      fontStyle: "bold"
+    });
+    group.add(text);
+
+    var rect = new Kinetic.Rect({
+      x: 0,
+      y: 348,
+      fill: "rgba(255, 255, 255, 0.6)",
+      width: 512,
+      height: 43
+    });
+    group.add(rect);
+
+    var steps, scale;
+    switch (this.mapType) {
+      case "wavemaps":
+        steps = heightSteps;
+        scale = "feet";
+        break;
+      case "periodmaps":
+        steps = timeSteps;
+        scale = "seconds";
+        break;
+      case "windmaps":
+        steps = speedSteps;
+        scale = "knots";
+        break;
+    }
+
+    for (var i = 0; i < steps.length; i++) {
+      var rect = new Kinetic.Rect({
+        x: (25 * i) + 13,
+        y: 360,
+        fill: steps[i].color,
+        width: 25,
+        height: 16
+      });
+      group.add(rect);
+
+      var text = new Kinetic.Text({
+        x: (25 * i) + 2,
+        y: 378,
+        textFill: "#000000",
+        text: steps[i][scale],
+        fontFamily: "Arial",
+        fontStyle: "bold",
+          fontSize: 10,
+          width: 24,
+          align: "center",
+      });
+      group.add(text);
+    }
+
+    var text = new Kinetic.Text({
+      x: 461,
+        y: 378,
+        textFill: "#000000",
+        text: scale,
+        fontFamily: "Arial",
+        fontStyle: "bold",
+        fontSize: 8,
+        width: 47,
+        align: "right"
+    });
+    group.add(text);
+
+    this.layer.add(group);
+  };
+
+  return ScalePopup;
+})();
+
 var WaveMap = (function() {
   WaveMap.name = "WaveMap";
 
@@ -380,6 +573,7 @@ var WaveMap = (function() {
     this.id = options.id;
     this.title = options.title;
     this.mapImages = options.map_images;
+    this.mapType = options.maptype;
     this.stage = new Kinetic.Stage({container: options.id, width: 541, height: 391});
 
     this.mapLayer = new Kinetic.Layer();
@@ -423,6 +617,8 @@ var WaveMap = (function() {
     this.infoLayer.add(text);
 
     this.infoLayer.draw();
+
+    new ScalePopup({layer: this.infoLayer, mapType: this.mapType});
   };
 
   WaveMap.prototype.handleLoadedTimes = function(event, times) {
