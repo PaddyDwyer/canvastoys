@@ -80,7 +80,7 @@ var Images= (function() {
   Images.prototype.imageLoadHandler = function(evt) {
     this.count++;
     evt.data.count = this.count;
-    console.log("image loaded correctly, id:", evt.data.id);
+    console.info("image loaded correctly, id:", evt.data.id);
     this.images[evt.data.id] = evt.target;
 
     $("#" + this.id).trigger("images:success", [evt.data, evt.target]);
@@ -91,7 +91,7 @@ var Images= (function() {
 
   Images.prototype.imageLoadErrorHandler = function(evt) {
     this.count++;
-    console.log("error loading image, id:", evt.data.id);
+    console.error("error loading image, id:", evt.data.id);
 
     $("#" + this.id).trigger("images:error", [evt.data, evt.target]);
     if (this.count == this.imgurls.length) {
@@ -146,7 +146,7 @@ var TimeBar = (function() {
         fontStyle: "bold"
       });
       this.timeNavGroup.add(text);
-      text.on("click", this.updateTrigger(i));
+      text.on("mousedown", this.updateTrigger(i));
     }
 
     // Yellow highlight box
@@ -160,6 +160,36 @@ var TimeBar = (function() {
     this.timeNavGroup.add(this.yellowBox);
     this.yellowBox.setZIndex(0);
     this.layer.add(this.timeNavGroup);
+
+    this.dragBox = new Kinetic.Rect({
+      x: 2,
+      y: -2,
+      width: 28,
+      height: 10,
+      draggable: true,
+      dragBoundFunc: function(pos) {
+        var newY;
+        if (pos.y < 0) {
+          newY = 0;
+        } else if (pos.y > (height - 10)) {
+          newY = height - 10;
+        } else {
+          newY = pos.y;
+        }
+        return {
+          x: this.getAbsolutePosition().x,
+          y: newY
+        }
+      }
+    });
+    this.dragBox.hide();
+    var _this = this;
+    this.dragBox.on("dragmove", $.proxy(this.dragMoveHandler, this));
+    this.dragBox.on("dragend", $.proxy(this.dragEndHandler, this));
+    this.dragBox.on("mouseup", function(event) {
+      this.hide();
+    });
+    this.timeNavGroup.add(this.dragBox);
 
     this.stampText = new Kinetic.Text({
       text: this.times[0].stamp,
@@ -182,15 +212,42 @@ var TimeBar = (function() {
 
   TimeBar.prototype.updateTrigger = function(index) {
     var id = this.id;
-    return function() {
+    var _this = this;
+    return function(event) {
       $("#" + id).trigger("timebar:update", [index]);
+      var position = event.shape.getPosition();
+      _this.dragBox.setPosition({x: position.x + 1, y: position.y - 2});
+      _this.dragBox.show();
+      _this.dragBox.simulate('mousedown');
+      _this.dragBox.simulate('dragstart');
     };
   };
 
+  TimeBar.prototype.dragMoveHandler = function(event) {
+    var position = event.shape.getPosition();
+    this.yellowBox.setPosition(position);
+
+    var index = Math.round((position.y + 2) / 11);
+
+    $("#" + this.id).trigger("timebar:update", [index]);
+  };
+
+  TimeBar.prototype.dragEndHandler = function(event) {
+    this.dragBox.hide();
+    this.updateYellowBox(this.selectedTime);
+  };
+
   TimeBar.prototype.update = function(event, time) {
+    this.selectedTime = time;
+    this.stampText.setText(time.stamp);
+    if (!this.dragBox.isVisible()) {
+      this.updateYellowBox(time);
+    }
+  };
+
+  TimeBar.prototype.updateYellowBox = function(time) {
     var hourText = this.timeNavGroup.get("#" + time.hour)[0];
     this.yellowBox.setY(hourText.getY() - 2);
-    this.stampText.setText(time.stamp);
     this.layer.draw();
   };
 
