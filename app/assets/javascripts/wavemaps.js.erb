@@ -519,8 +519,7 @@ var ScalePopup = (function() {
   ScalePopup.prototype.drawInitial = function() {
     this.scaleGroup = new Kinetic.Group({
       x: 0,
-      //y: 43
-      y: 0
+      y: 43
     });
     var shape = new Kinetic.Shape({
       drawFunc: function(canvas) {
@@ -556,6 +555,7 @@ var ScalePopup = (function() {
       stroke: "#177496",
       strokeWidth: 1
     });
+    shape.on("click", $.proxy(this.toggleScale, this));
     this.scaleGroup.add(shape);
 
     var text = new Kinetic.Text({
@@ -567,6 +567,7 @@ var ScalePopup = (function() {
       fontSize: 8,
       fontStyle: "bold"
     });
+    text.on("click", $.proxy(this.toggleScale, this));
     this.scaleGroup.add(text);
 
     var rect = new Kinetic.Rect({
@@ -605,7 +606,7 @@ var ScalePopup = (function() {
       this.scaleGroup.add(text);
     }
 
-    this.scaleButton = new Kinetic.Text({
+    this.scaleTypeButton = new Kinetic.Text({
       x: 461,
       y: 378,
       textFill: "#000000",
@@ -617,21 +618,21 @@ var ScalePopup = (function() {
       align: "right"
     });
     if (this.alternateScale) {
-      this.scaleButton.on("click", $.proxy(this.changeScale, this));
+      this.scaleTypeButton.on("click", $.proxy(this.changeScale, this));
     }
-    this.scaleGroup.add(this.scaleButton);
+    this.scaleGroup.add(this.scaleTypeButton);
 
     this.layer.add(this.scaleGroup);
   };
 
   ScalePopup.prototype.changeScale = function() {
-    var text = this.scaleButton.getText();
+    var text = this.scaleTypeButton.getText();
     var scale;
     if (text == this.scale) {
-      this.scaleButton.setText(this.alternateScale);
+      this.scaleTypeButton.setText(this.alternateScale);
       scale = this.alternateScale;
     } else if (text == this.alternateScale) {
-      this.scaleButton.setText(this.scale);
+      this.scaleTypeButton.setText(this.scale);
       scale = this.scale;
     }
     var stepText = this.scaleGroup.get(".step");
@@ -639,6 +640,20 @@ var ScalePopup = (function() {
     for (var  i = 0; i < stepText.length; i++) {
       stepText[i].setText(steps[i][scale]);
     }
+
+    this.layer.draw();
+  };
+
+  ScalePopup.prototype.toggleScale = function() {
+    var position = this.scaleGroup.getPosition();
+
+    if (position.y == 0) {
+      position.y = 43
+    } else if (position.y == 43) {
+      position.y = 0
+    }
+
+    this.scaleGroup.setPosition(position);
 
     this.layer.draw();
   };
