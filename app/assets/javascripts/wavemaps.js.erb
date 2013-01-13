@@ -496,13 +496,28 @@ var ScalePopup = (function() {
     this.layer = options.layer;
     this.mapType = options.mapType;
 
-    if (this.mapType == "wavemaps" || this.mapType == "periodmaps" || this.mapType == "windmaps") {
-      this.drawInitial();
+    switch (this.mapType) {
+      case "wavemaps":
+        this.steps = heightSteps;
+        this.scale = "feet";
+        this.alternateScale = "meters";
+        this.drawInitial();
+        break;
+      case "periodmaps":
+        this.steps = timeSteps;
+        this.scale = "seconds";
+        this.drawInitial();
+        break;
+      case "windmaps":
+        this.steps = speedSteps;
+        this.scale = "knots";
+        this.drawInitial();
+        break;
     }
   }
 
   ScalePopup.prototype.drawInitial = function() {
-    var group = new Kinetic.Group({
+    this.scaleGroup = new Kinetic.Group({
       x: 0,
       //y: 43
       y: 0
@@ -522,7 +537,7 @@ var ScalePopup = (function() {
       },
       fill: "#FFFFFF"
     });
-    group.add(shape);
+    this.scaleGroup.add(shape);
 
     shape = new Kinetic.Shape({
       drawFunc: function(canvas) {
@@ -541,7 +556,7 @@ var ScalePopup = (function() {
       stroke: "#177496",
       strokeWidth: 1
     });
-    group.add(shape);
+    this.scaleGroup.add(shape);
 
     var text = new Kinetic.Text({
       x: 22,
@@ -552,7 +567,7 @@ var ScalePopup = (function() {
       fontSize: 8,
       fontStyle: "bold"
     });
-    group.add(text);
+    this.scaleGroup.add(text);
 
     var rect = new Kinetic.Rect({
       x: 0,
@@ -561,23 +576,9 @@ var ScalePopup = (function() {
       width: 512,
       height: 43
     });
-    group.add(rect);
+    this.scaleGroup.add(rect);
 
-    var steps, scale;
-    switch (this.mapType) {
-      case "wavemaps":
-        steps = heightSteps;
-        scale = "feet";
-        break;
-      case "periodmaps":
-        steps = timeSteps;
-        scale = "seconds";
-        break;
-      case "windmaps":
-        steps = speedSteps;
-        scale = "knots";
-        break;
-    }
+    var steps = this.steps, scale = this.scale;
 
     for (var i = 0; i < steps.length; i++) {
       var rect = new Kinetic.Rect({
@@ -587,36 +588,59 @@ var ScalePopup = (function() {
         width: 25,
         height: 16
       });
-      group.add(rect);
+      this.scaleGroup.add(rect);
 
       var text = new Kinetic.Text({
+        name: "step",
         x: (25 * i) + 2,
         y: 378,
         textFill: "#000000",
         text: steps[i][scale],
         fontFamily: "Arial",
         fontStyle: "bold",
-          fontSize: 10,
-          width: 24,
-          align: "center",
+        fontSize: 10,
+        width: 24,
+        align: "center",
       });
-      group.add(text);
+      this.scaleGroup.add(text);
     }
 
-    var text = new Kinetic.Text({
+    this.scaleButton = new Kinetic.Text({
       x: 461,
-        y: 378,
-        textFill: "#000000",
-        text: scale,
-        fontFamily: "Arial",
-        fontStyle: "bold",
-        fontSize: 8,
-        width: 47,
-        align: "right"
+      y: 378,
+      textFill: "#000000",
+      text: scale,
+      fontFamily: "Arial",
+      fontStyle: "bold",
+      fontSize: 8,
+      width: 47,
+      align: "right"
     });
-    group.add(text);
+    if (this.alternateScale) {
+      this.scaleButton.on("click", $.proxy(this.changeScale, this));
+    }
+    this.scaleGroup.add(this.scaleButton);
 
-    this.layer.add(group);
+    this.layer.add(this.scaleGroup);
+  };
+
+  ScalePopup.prototype.changeScale = function() {
+    var text = this.scaleButton.getText();
+    var scale;
+    if (text == this.scale) {
+      this.scaleButton.setText(this.alternateScale);
+      scale = this.alternateScale;
+    } else if (text == this.alternateScale) {
+      this.scaleButton.setText(this.scale);
+      scale = this.scale;
+    }
+    var stepText = this.scaleGroup.get(".step");
+    var steps = this.steps;
+    for (var  i = 0; i < stepText.length; i++) {
+      stepText[i].setText(steps[i][scale]);
+    }
+
+    this.layer.draw();
   };
 
   return ScalePopup;
