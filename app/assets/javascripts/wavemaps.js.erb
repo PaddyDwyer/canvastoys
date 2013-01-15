@@ -332,9 +332,11 @@ var MapHierarchy = (function() {
 
   MapHierarchy.prototype.createChangeMapFunction = function(key) {
     var options = this.options;
+    var id = this.id;
     return function() {
       options.map = key;
       options.stage.reset();
+      $("#" + id).off(".wavemaps");
       new WaveMap(options);
     } 
   };
@@ -375,7 +377,7 @@ var Images= (function() {
       // Add cachebuster
       imgurl += ("?_=") + (new Date()).getTime();
       $("<img/>")
-          .load({id: i}, $.proxy(this.imageLoadHandler, this))
+          .one("load", {id: i}, $.proxy(this.imageLoadHandler, this))
           .error({id: i}, $.proxy(this.imageLoadErrorHandler, this))
           .attr("src", imgurl)
     }
@@ -510,7 +512,7 @@ var TimeBar = (function() {
 
     this.layer.draw();
 
-    $("#" + this.id).on("map:update", $.proxy(this.update, this));
+    $("#" + this.id).on("map:update.wavemaps", $.proxy(this.update, this));
     
   };
 
@@ -569,7 +571,7 @@ var ProgressBar = (function() {
 
     this.drawInitial();
 
-    $("#" + this.id).on("images:success", $.proxy(this.update, this));
+    $("#" + this.id).on("images:success.wavemaps", $.proxy(this.update, this));
   }
 
   ProgressBar.prototype.update = function(event, data, target) {
@@ -989,7 +991,7 @@ var WaveMap = (function() {
       maptype: options.maptype
     });
 
-    $("#" + this.id).on("timesLoaded", $.proxy(this.handleLoadedTimes, this));
+    $("#" + this.id).on("timesLoaded.wavemaps", $.proxy(this.handleLoadedTimes, this));
 
     options.stage = this.stage;
     options.layer = this.infoLayer;
@@ -1028,15 +1030,15 @@ var WaveMap = (function() {
   WaveMap.prototype.handleLoadedTimes = function(event, times) {
     this.timesBar = new TimeBar({id: this.id, layer: this.infoLayer, times: times});
 
-    $("#" + this.id).on("timebar:update", $.proxy(this.timeBarUpdate, this));
+    $("#" + this.id).on("timebar:update.wavemaps", $.proxy(this.timeBarUpdate, this));
 
     var imgurls = [];
     for (var i = 0; i < times.length; i++) {
       var number = times[i].hourString;
       imgurls.push("http://www.swellinfo.com/imgs" + this.mapImages + number + ".png");
     }
-    $("#" + this.id).on("images:success", $.proxy(this.loadMap, this));
-    $("#" + this.id).on("images:allLoaded", $.proxy(this.showControlButtons, this));
+    $("#" + this.id).on("images:success.wavemaps", $.proxy(this.loadMap, this));
+    $("#" + this.id).on("images:allLoaded.wavemaps", $.proxy(this.showControlButtons, this));
     this.deepWaterWaves = new Images({
       id: this.id,
       images: imgurls
@@ -1079,10 +1081,10 @@ var WaveMap = (function() {
       frameNumOffset: 0
     };
 
-    $("#" + this.id).on("playcontrol:play", $.proxy(this.startAnimation, this));
-    $("#" + this.id).on("playcontrol:stop", $.proxy(this.stopAnimation, this));
-    $("#" + this.id).on("playcontrol:prev", $.proxy(this.previousMap, this));
-    $("#" + this.id).on("playcontrol:next", $.proxy(this.nextMap, this));
+    $("#" + this.id).on("playcontrol:play.wavemaps", $.proxy(this.startAnimation, this));
+    $("#" + this.id).on("playcontrol:stop.wavemaps", $.proxy(this.stopAnimation, this));
+    $("#" + this.id).on("playcontrol:prev.wavemaps", $.proxy(this.previousMap, this));
+    $("#" + this.id).on("playcontrol:next.wavemaps", $.proxy(this.nextMap, this));
   };
 
   WaveMap.mod = function(i, n) {
