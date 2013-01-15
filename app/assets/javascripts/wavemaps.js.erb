@@ -53,6 +53,312 @@ var Times = (function() {
   return Times;
 })();
 
+var MapHierarchy = (function() {
+  MapHierarchy.name = "MapHierarchy";
+
+  function MapHierarchy(options) {
+    this.id = options.id;
+    this.layer = options.layer;
+    this.map = options.map;
+    this.options = options;
+    var maptype = options.maptype;
+
+    var url = "";
+    switch(maptype){
+      case "wavemaps":
+        url = "<%= data_wave_maps_hierarchy_path :format => :xml %>";
+        break;
+      case "periodmaps":
+        url = "<%= data_period_maps_hierarchy_path :format => :xml %>";
+        break;
+      case "windmaps":
+        url = "<%= data_nearshorewind_maps_hierarchy_path :format => :xml %>";
+        break;
+      case "pressurewindmap":
+        url = "<%= data_pressure_maps_hierarchy_path :format => :xml %>";
+        break;
+    }
+
+    $.get(url, $.proxy(this.storeMapHierarchy, this));
+  };
+
+  var bindNodes = function() {
+    return {name: $(this).attr("name"), key: $(this).attr("key")};
+  };
+
+  MapHierarchy.prototype.storeMapHierarchy = function(data) {
+    var mapNode = $(data).find("[key=" + this.map + "]:last");
+    var parentNode = mapNode.parent().map(bindNodes);
+    var siblingNodes = mapNode.siblings().map(bindNodes);
+    var childNodes = mapNode.children().map(bindNodes);
+
+    this.controlGroup = new Kinetic.Group({
+      x: 0,
+      y: 28
+    });
+    this.layer.add(this.controlGroup);
+    var yoffset = 0;
+    if (parentNode.length > 0) {
+      this.drawButtons("parent", parentNode, yoffset);
+      yoffset += 21;
+    }
+
+    if (siblingNodes.length > 0) {
+      this.drawButtons("siblings", siblingNodes, yoffset);
+      yoffset += 21;
+    }
+
+    if (childNodes.length > 0) {
+      this.drawButtons("children", childNodes, yoffset);
+      yoffset += 21;
+    }
+
+    this.layer.draw();
+  };
+
+  MapHierarchy.prototype.drawButtons = function(type, nodes, yoffset) {
+    var buttonGroup = new Kinetic.Group({
+      y: yoffset
+    });
+    var rect = new Kinetic.Rect({
+      width: 20,
+      height: 20,
+      fill: "#0E4A74"
+    });
+    buttonGroup.add(rect);
+    if (type == "parent" || type == "children") {
+      var circle = new Kinetic.Circle({
+        x: 8,
+        y: 8,
+        radius: 6,
+        stroke: "#FFFFFF",
+        strokeWidth: 2
+      });
+      buttonGroup.add(circle);
+
+      var line = new Kinetic.Line({
+        points: [12, 12, 19, 19],
+        strokeWidth: 2,
+        stroke: "#FFFFFF",
+      });
+      buttonGroup.add(line);
+
+      line = new Kinetic.Line({
+        points: [4, 8, 12, 8],
+        stroke: "#FFFFFF",
+        strokeWidth: 2
+      });
+      buttonGroup.add(line);
+
+      if (type == "children") {
+        line = new Kinetic.Line({
+          points: [8, 4, 8, 12],
+          stroke: "#FFFFFF",
+          strokeWidth: 2
+        });
+        buttonGroup.add(line);
+      }
+    }
+
+    if (type == "siblings") {
+      // Vertical Line
+      var line = new Kinetic.Line({
+        points: [10, 3, 10, 17],
+        stroke: "#FFFFFF",
+        strokeWidth: 2,
+        lineCap: 'round',
+      });
+      buttonGroup.add(line);
+
+      // Arrow Caps
+      line = new Kinetic.Line({
+        points: [10, 3, 12, 5],
+        stroke: "#FFFFFF",
+        strokeWidth: 2,
+        lineCap: 'round',
+      });
+      buttonGroup.add(line);
+      line = new Kinetic.Line({
+        points: [10, 3, 8, 5],
+        stroke: "#FFFFFF",
+        strokeWidth: 2,
+        lineCap: 'round',
+      });
+      buttonGroup.add(line);
+      line = new Kinetic.Line({
+        points: [10, 17, 12, 15],
+        stroke: "#FFFFFF",
+        strokeWidth: 2,
+        lineCap: 'round',
+      });
+      buttonGroup.add(line);
+      line = new Kinetic.Line({
+        points: [10, 17, 8, 15],
+        stroke: "#FFFFFF",
+        strokeWidth: 2,
+        lineCap: 'round',
+      });
+      buttonGroup.add(line);
+
+      // Horizontal Line
+      line = new Kinetic.Line({
+        points: [3, 10, 17, 10],
+        stroke: "#FFFFFF",
+        strokeWidth: 2,
+        lineCap: 'round',
+      });
+      buttonGroup.add(line);
+
+      // Arrow Caps
+      line = new Kinetic.Line({
+        points: [3, 10, 5, 12],
+        stroke: "#FFFFFF",
+        strokeWidth: 2,
+        lineCap: 'round',
+      });
+      buttonGroup.add(line);
+      line = new Kinetic.Line({
+        points: [3, 10, 5, 8],
+        stroke: "#FFFFFF",
+        strokeWidth: 2,
+        lineCap: 'round',
+      });
+      buttonGroup.add(line);
+      line = new Kinetic.Line({
+        points: [17, 10, 15, 12],
+        stroke: "#FFFFFF",
+        strokeWidth: 2,
+        lineCap: 'round',
+      });
+      buttonGroup.add(line);
+      line = new Kinetic.Line({
+        points: [17, 10, 15, 8],
+        stroke: "#FFFFFF",
+        strokeWidth: 2,
+        lineCap: 'round',
+      });
+      buttonGroup.add(line);
+    }
+
+    this.controlGroup.add(buttonGroup);
+
+    var subMenuButtonsContainer = this.drawSubmenuButtons(nodes, yoffset);
+    this.controlGroup.add(subMenuButtonsContainer);
+
+    buttonGroup.on("mouseenter", this.createShowGroupFunction(subMenuButtonsContainer));
+    // call a function that will create a timer to hide the submenu buttons
+    buttonGroup.on("mouseleave", $.proxy(this.hideSubmenuButtonsTimer, this));
+  };
+
+  MapHierarchy.prototype.hideSubmenuButtonsTimer = function() {
+    this.timer = setTimeout($.proxy(this.hideSubMenuButtons, this), 500);
+  };
+
+  MapHierarchy.prototype.hideSubMenuButtons = function() {
+    var allSubMenuButtonsGroups = this.controlGroup.get(".subMenuButtonsContainer");
+    for (var i = 0; i < allSubMenuButtonsGroups.length; i++) {
+      allSubMenuButtonsGroups[i].hide();
+    }
+    this.layer.draw();
+  };
+
+  MapHierarchy.prototype.createShowGroupFunction = function(subMenuButtonsContainer) {
+    var layer = this.layer;
+    var controlGroup = this.controlGroup;
+    var _this = this;
+    return function() {
+      clearTimeout(_this.timer);
+      var allSubMenuButtonsGroups = controlGroup.get(".subMenuButtonsContainer");
+      for (var i = 0; i < allSubMenuButtonsGroups.length; i++) {
+        allSubMenuButtonsGroups[i].hide();
+      }
+
+      subMenuButtonsContainer.show();
+      layer.draw();
+    };
+  };
+
+  MapHierarchy.prototype.drawSubmenuButtons = function(items, yoffset) {
+    var group = new Kinetic.Group({
+      name: "subMenuButtonsContainer",
+      x: 21,
+      y: yoffset
+    });
+
+    var btnWidth = tempBtnWidth = 0;
+    for (var i = 0; i < items.length; i++) {
+      var item = items[i];
+      tempBtnWidth = (Math.ceil(items[i].name.length * 6.6)) + 10;
+      if (tempBtnWidth > btnWidth) {
+        btnWidth = tempBtnWidth;
+      }
+    }
+
+    for (i = 0; i < items.length; i++) {
+      var buttonGroup = new Kinetic.Group({
+        id: items[i].key,
+        name: "subMenuButtonsGroup",
+        y: i * 21
+      });
+      var rect = new Kinetic.Rect({
+        name: items[i].key,
+        width: btnWidth,
+        height: 20,
+        fill: "#0E4A74"
+      });
+      buttonGroup.add(rect);
+
+      var text = new Kinetic.Text({
+        name: items[i].key,
+        x: 4,
+        y: 7,
+        width: btnWidth,
+        text: items[i].name,
+        textFill: "#FFFFFF",
+        fontFamily: "Arial",
+        fontSize: 9,
+      });
+      buttonGroup.add(text);
+      buttonGroup.on("mouseenter", $.proxy(this.submenuRollover, this));
+      buttonGroup.on("mouseleave", $.proxy(this.hideSubmenuButtonsTimer, this));
+      buttonGroup.on("click", this.createChangeMapFunction(items[i].key));
+      group.add(buttonGroup);
+    }
+
+    group.hide();
+
+    return group;
+  };
+
+  MapHierarchy.prototype.createChangeMapFunction = function(key) {
+    var options = this.options;
+    return function() {
+      options.map = key;
+      options.stage.reset();
+      new WaveMap(options);
+    } 
+  };
+
+  MapHierarchy.prototype.submenuRollover = function(event) {
+    clearTimeout(this.timer);
+    var name = event.shape.getName();
+
+    var allSubMenuButtonsGroups = this.controlGroup.get(".subMenuButtonsGroup");
+    for (var i = 0; i < allSubMenuButtonsGroups.length; i++) {
+      var rect = allSubMenuButtonsGroups[i].getChildren()[0];
+      rect.setFill("#0E4A74");
+    }
+
+    var subMenuButtonGroup = this.controlGroup.get("#" + name)[0];
+    var rect = subMenuButtonGroup.getChildren()[0];
+    rect.setFill("#CCCCCC");
+
+    this.layer.draw();
+  };
+
+  return MapHierarchy;
+})();
+
 var Images= (function() {
   Images.name = "Images";
 
@@ -668,7 +974,7 @@ var WaveMap = (function() {
     this.title = options.title;
     this.mapImages = options.map_images;
     this.mapType = options.maptype;
-    this.stage = new Kinetic.Stage({container: options.id, width: 541, height: 391});
+    this.stage = options.stage || new Kinetic.Stage({container: options.id, width: 541, height: 391});
 
     this.mapLayer = new Kinetic.Layer();
     this.infoLayer = new Kinetic.Layer();
@@ -684,6 +990,10 @@ var WaveMap = (function() {
     });
 
     $("#" + this.id).on("timesLoaded", $.proxy(this.handleLoadedTimes, this));
+
+    options.stage = this.stage;
+    options.layer = this.infoLayer;
+    new MapHierarchy(options);
 
     this.drawInfoLayer();
   }

@@ -21,4 +21,20 @@ class SurfData
   def self.get_pressure_map_times(timezone, map, maptype)
     get("/scripts/pressure_map_times.xml.php?timezone=#{timezone}&map=#{map}&maptype=#{maptype}")
   end
+
+  def self.get_wave_maps_hierarchy
+    get("/wave_maps_hierarchy.xml.php")
+  end
+
+  def self.get_period_maps_hierarchy
+    get("/period_maps_hierarchy.xml.php")
+  end
+
+  def self.get_nearshorewind_maps_hierarchy
+    get("/nearshorewind_maps_hierarchy.xml")
+  end
+
+  def self.get_pressure_maps_hierarchy
+    get("/pressure_maps_hierarchy.xml")
+  end
 end

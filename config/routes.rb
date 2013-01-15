@@ -10,9 +10,15 @@ Canvas::Application.routes.draw do
 
     get "data/timeline" => "data#timeline"
     get "data/bullxml" => "data#bullxml"
+
     get "data/wave_map_times" => "data#wave_map_times"
     get "data/wind_map_times" => "data#wind_map_times"
     get "data/pressure_map_times" => "data#pressure_map_times"
+
+    get "data/wave_maps_hierarchy" => "data#wave_maps_hierarchy"
+    get "data/period_maps_hierarchy" => "data#period_maps_hierarchy"
+    get "data/nearshorewind_maps_hierarchy" => "data#nearshorewind_maps_hierarchy"
+    get "data/pressure_maps_hierarchy" => "data#pressure_maps_hierarchy"
 
     # The priority is based upon order of creation:
     # first created -> highest priority.
