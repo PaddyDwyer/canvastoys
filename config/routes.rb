@@ -8,13 +8,12 @@ Canvas::Application.routes.draw do
     get "forecast/canvas" => "forecast#canvas"
     get "forecast/wavemaps" => "forecast#wavemaps"
 
-    namespace :data do
-      resources :timelines, :path => 'timeline'
-      resources :bull_xmls, :path => 'bull_xml'
-      resources :wave_map_times
-      resources :wind_map_times
-      resources :pressure_map_times
-    end
+    get "data/timeline" => "data#timeline"
+    get "data/bullxml" => "data#bullxml"
+    get "data/wave_map_times" => "data#wave_map_times"
+    get "data/wind_map_times" => "data#wind_map_times"
+    get "data/pressure_map_times" => "data#pressure_map_times"
+
     # The priority is based upon order of creation:
     # first created -> highest priority.
 
