@@ -19,14 +19,14 @@ var Times = (function() {
     switch (maptype) {
       case "wavemaps":
       case "periodmaps":
-        url = "<%= data_wave_map_times_path :format => :xml %>";
+        url = "/canvas/data/wave_map_times.xml";
         params.maptype = options.maptype;
         break;
       case "windmaps":
-        url = "<%= data_wind_map_times_path :format => :xml %>";
+        url = "/canvas/data/wind_map_times.xml";
         break;
       case "pressurewindmap":
-        url = "<%= data_pressure_map_times_path :format => :xml %>";
+        url = "/canvas/data/pressure_map_times.xml";
         params.maptype = options.maptype;
         break;
     }
@@ -66,16 +66,16 @@ var MapHierarchy = (function() {
     var url = "";
     switch(maptype){
       case "wavemaps":
-        url = "<%= data_wave_maps_hierarchy_path :format => :xml %>";
+        url = "/canvas/data/wave_maps_hierarchy.xml";
         break;
       case "periodmaps":
-        url = "<%= data_period_maps_hierarchy_path :format => :xml %>";
+        url = "/canvas/data/period_maps_hierarchy.xml";
         break;
       case "windmaps":
-        url = "<%= data_nearshorewind_maps_hierarchy_path :format => :xml %>";
+        url = "/canvas/data/nearshorewind_maps_hierarchy.xml";
         break;
       case "pressurewindmap":
-        url = "<%= data_pressure_maps_hierarchy_path :format => :xml %>";
+        url = "/canvas/data/pressure_maps_hierarchy_path.xml";
         break;
     }
 
