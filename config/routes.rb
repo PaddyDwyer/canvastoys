@@ -9,7 +9,7 @@ Canvas::Application.routes.draw do
     get "forecast/wavemaps" => "forecast#wavemaps"
 
     get "data/timeline" => "data#timeline"
-    get "data/bullxml" => "data#bullxml"
+    get "data/bull_xml" => "data#bull_xml"
 
     get "data/wave_map_times" => "data#wave_map_times"
     get "data/wind_map_times" => "data#wind_map_times"
