@@ -88,7 +88,7 @@ var MapHierarchy = (function() {
 
   MapHierarchy.prototype.storeMapHierarchy = function(data) {
     var mapNode = $(data).find("[key=" + this.map + "]:last");
-    var parentNode = mapNode.parent().map(bindNodes);
+    var parentNode = mapNode.parents().length > 0 ? mapNode.parent().map(bindNodes) : [];
     var siblingNodes = mapNode.siblings().map(bindNodes);
     var childNodes = mapNode.children().map(bindNodes);
 
@@ -976,6 +976,7 @@ var WaveMap = (function() {
     this.title = options.title;
     this.mapImages = options.map_images;
     this.mapType = options.maptype;
+    this.map = options.map;
     this.stage = options.stage || new Kinetic.Stage({container: options.id, width: 541, height: 391});
 
     this.mapLayer = new Kinetic.Layer();
@@ -1032,10 +1033,30 @@ var WaveMap = (function() {
 
     $("#" + this.id).on("timebar:update.wavemaps", $.proxy(this.timeBarUpdate, this));
 
+    var mapPath, pathSuffix = imgSuffix = ""; 
+    switch (this.mapType) {
+      case "wavemaps":
+        mapPath = "/wave_maps/";
+        break;
+      case "periodmaps":
+        mapPath = "/pergraphs/";
+        imgSuffix = "_per";
+        break;
+      case "windmaps":
+        mapPath = "/nearshorewind/";
+        pathSuffix = imgSuffix = "_wind";
+        break;
+      case "pressurewindmap":
+        mapPath = "/pressure/";
+        pathSuffix = imgSuffix = "_pressure";
+        break;
+    }
+
     var imgurls = [];
+    var map = this.map;
     for (var i = 0; i < times.length; i++) {
       var number = times[i].hourString;
-      imgurls.push("http://www.swellinfo.com/imgs" + this.mapImages + number + ".png");
+      imgurls.push("http://www.swellinfo.com/imgs" + mapPath + map + pathSuffix + "/" + map + imgSuffix + number + ".png");
     }
     $("#" + this.id).on("images:success.wavemaps", $.proxy(this.loadMap, this));
     $("#" + this.id).on("images:allLoaded.wavemaps", $.proxy(this.showControlButtons, this));
