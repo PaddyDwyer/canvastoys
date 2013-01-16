@@ -185,7 +185,7 @@ var SurfForecast = (function() {
     direction = direction || this.beachDirection;
     _this = this;
     // change the base path to the actual data timeline path
-    var basePath = "/canvas/data/timelines/";
+    var basePath = "<%= data_timeline_path %>/";
     $.ajax(basePath + this.filenames[direction] + ".xml", {
       success: function(data, textStatus, xhr) {
         _this.bindSurfData(data, textStatus, xhr, direction);
@@ -198,7 +198,7 @@ var SurfForecast = (function() {
   SurfForecast.prototype.fetchSwellData = function() {
     _this = this;
     // change the base path to the actual data bull xmls path
-    var basePath = "/canvas/data/bull_xml/";
+    var basePath = "<%= data_bull_xmls_path %>/";
     $.ajax(basePath + this.filenames[this.locationDirs[0]] + ".xml", {
       success: $.proxy(this.bindSwellData, this),
       cache: false

@@ -19,14 +19,14 @@ var Times = (function() {
     switch (maptype) {
       case "wavemaps":
       case "periodmaps":
-        url = "/canvas/data/wave_map_times.xml";
+        url = "<%= data_wave_map_times_path :format => :xml %>";
         params.maptype = options.maptype;
         break;
       case "windmaps":
-        url = "/canvas/data/wind_map_times.xml";
+        url = "<%= data_wind_map_times_path :format => :xml %>";
         break;
       case "pressurewindmap":
-        url = "/canvas/data/pressure_map_times.xml";
+        url = "<%= data_pressure_map_times_path :format => :xml %>";
         params.maptype = options.maptype;
         break;
     }
@@ -53,8 +53,66 @@ var Times = (function() {
   return Times;
 })();
 
+/**
+ * The options object can have the following members:
+ * id: Used if you want to trigger the images loaded event. It triggers the event on 
+ * the object with the provided id.
+ * images: Array of images urls that you want the images object to load.
+ */
+var Images= (function() {
+  Images.name = "Images";
+
+  // constructor
+  function Images(options) {
+    this.id = options.id;
+    this.imgurls = options.images;
+    this.images = [];
+    this.count = 0;
+
+    // Fetch one image for testing
+    for (var i = 0; i < this.imgurls.length; i++) {
+      var imgurl = this.imgurls[i];
+      // Add cachebuster
+      imgurl += ("?_=") + (new Date()).getTime();
+      $("<img/>")
+          .one("load", {id: i}, $.proxy(this.imageLoadHandler, this))
+          .error({id: i}, $.proxy(this.imageLoadErrorHandler, this))
+          .attr("src", imgurl)
+    }
+  }
+
+  Images.prototype.imageLoadHandler = function(evt) {
+    this.count++;
+    evt.data.count = this.count;
+    console.info("image loaded correctly, id:", evt.data.id);
+    this.images[evt.data.id] = evt.target;
+
+    $("#" + this.id).trigger("images:success", [evt.data, evt.target]);
+    if (this.count == this.imgurls.length) {
+      $("#" + this.id).trigger("images:allLoaded");
+    }
+  }
+
+  Images.prototype.imageLoadErrorHandler = function(evt) {
+    this.count++;
+    console.error("error loading image, id:", evt.data.id);
+
+    $("#" + this.id).trigger("images:error", [evt.data, evt.target]);
+    if (this.count == this.imgurls.length) {
+      $("#" + this.id).trigger("images:allLoaded");
+    }
+  }
+
+  return Images;
+})();
+
 var MapHierarchy = (function() {
   MapHierarchy.name = "MapHierarchy";
+
+  var buttons = new Images({id: "maphierarchybuttons",
+    images: ["/public/map-parent.png",
+      "/public/map-sibling.png",
+      "/public/map-children.png"]});
 
   function MapHierarchy(options) {
     this.id = options.id;
@@ -66,16 +124,16 @@ var MapHierarchy = (function() {
     var url = "";
     switch(maptype){
       case "wavemaps":
-        url = "/canvas/data/wave_maps_hierarchy.xml";
+        url = "<%= data_wave_maps_hierarchy_path :format => :xml %>";
         break;
       case "periodmaps":
-        url = "/canvas/data/period_maps_hierarchy.xml";
+        url = "<%= data_period_maps_hierarchy_path :format => :xml %>";
         break;
       case "windmaps":
-        url = "/canvas/data/nearshorewind_maps_hierarchy.xml";
+        url = "<%= data_nearshorewind_maps_hierarchy_path :format => :xml %>";
         break;
       case "pressurewindmap":
-        url = "/canvas/data/pressure_maps_hierarchy_path.xml";
+        url = "<%= data_pressure_maps_hierarchy_path :format => :xml %>";
         break;
     }
 
@@ -359,53 +417,6 @@ var MapHierarchy = (function() {
   };
 
   return MapHierarchy;
-})();
-
-var Images= (function() {
-  Images.name = "Images";
-
-  // constructor
-  function Images(options) {
-    this.id = options.id;
-    this.imgurls = options.images;
-    this.images = [];
-    this.count = 0;
-
-    // Fetch one image for testing
-    for (var i = 0; i < this.imgurls.length; i++) {
-      var imgurl = this.imgurls[i];
-      // Add cachebuster
-      imgurl += ("?_=") + (new Date()).getTime();
-      $("<img/>")
-          .one("load", {id: i}, $.proxy(this.imageLoadHandler, this))
-          .error({id: i}, $.proxy(this.imageLoadErrorHandler, this))
-          .attr("src", imgurl)
-    }
-  }
-
-  Images.prototype.imageLoadHandler = function(evt) {
-    this.count++;
-    evt.data.count = this.count;
-    console.info("image loaded correctly, id:", evt.data.id);
-    this.images[evt.data.id] = evt.target;
-
-    $("#" + this.id).trigger("images:success", [evt.data, evt.target]);
-    if (this.count == this.imgurls.length) {
-      $("#" + this.id).trigger("images:allLoaded");
-    }
-  }
-
-  Images.prototype.imageLoadErrorHandler = function(evt) {
-    this.count++;
-    console.error("error loading image, id:", evt.data.id);
-
-    $("#" + this.id).trigger("images:error", [evt.data, evt.target]);
-    if (this.count == this.imgurls.length) {
-      $("#" + this.id).trigger("images:allLoaded");
-    }
-  }
-
-  return Images;
 })();
 
 var TimeBar = (function() {
