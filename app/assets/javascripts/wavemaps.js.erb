@@ -110,9 +110,9 @@ var MapHierarchy = (function() {
   MapHierarchy.name = "MapHierarchy";
 
   var buttons = new Images({id: "maphierarchybuttons",
-    images: ["/public/map-parent.png",
-      "/public/map-sibling.png",
-      "/public/map-children.png"]});
+    images: ["<%= asset_path('map-parent.png') %>",
+      "<%= asset_path('map-sibling.png') %>",
+      "<%= asset_path('map-children.png') %>"]});
 
   function MapHierarchy(options) {
     this.id = options.id;
@@ -178,6 +178,33 @@ var MapHierarchy = (function() {
     var buttonGroup = new Kinetic.Group({
       y: yoffset
     });
+    switch (type) {
+      case "parent":
+        var image = new Kinetic.Image({
+          width: 20,
+          height: 20,
+          image: buttons.images[0]
+        });
+        buttonGroup.add(image);
+        break;
+      case "siblings":
+        var image = new Kinetic.Image({
+          width: 20,
+          height: 20,
+          image: buttons.images[1]
+        });
+        buttonGroup.add(image);
+        break;
+      case "children":
+        var image = new Kinetic.Image({
+          width: 20,
+          height: 20,
+          image: buttons.images[2]
+        });
+        buttonGroup.add(image);
+        break
+    }
+    /*
     var rect = new Kinetic.Rect({
       width: 20,
       height: 20,
@@ -297,6 +324,7 @@ var MapHierarchy = (function() {
       });
       buttonGroup.add(line);
     }
+    */
 
     this.controlGroup.add(buttonGroup);
 

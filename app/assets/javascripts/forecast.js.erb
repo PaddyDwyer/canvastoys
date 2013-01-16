@@ -198,7 +198,7 @@ var SurfForecast = (function() {
   SurfForecast.prototype.fetchSwellData = function() {
     _this = this;
     // change the base path to the actual data bull xmls path
-    var basePath = "<%= data_bull_xmls_path %>/";
+    var basePath = "<%= data_bull_xml_path %>/";
     $.ajax(basePath + this.filenames[this.locationDirs[0]] + ".xml", {
       success: $.proxy(this.bindSwellData, this),
       cache: false
