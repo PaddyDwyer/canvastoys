@@ -122,7 +122,6 @@ var Forecast = (function() {
       this.dataPoints[i].surf_am = imagesObject[this.dataPoints[i].surf_am];
       this.dataPoints[i].surf_pm = imagesObject[this.dataPoints[i].surf_pm];
     }
-    console.debug(this.dataPoints);
 
     $("#" + this.id).trigger("forecastLoaded", [this.dataPoints]);
   };
@@ -378,19 +377,21 @@ var Images= (function() {
 var MapHierarchy = (function() {
   MapHierarchy.name = "MapHierarchy";
 
-  var buttons = new Images({id: "maphierarchybuttons",
-    images: ["<%= asset_path('map-parent.png') %>",
-      "<%= asset_path('map-sibling.png') %>",
-      "<%= asset_path('map-children.png') %>"],
-    collection: "buttons"
-  });
-
   function MapHierarchy(options) {
     this.id = options.id;
     this.layer = options.layer;
     this.map = options.map;
     this.options = options;
     var maptype = options.maptype;
+
+    $("#" + this.id).on("buttons:images:allLoaded.wavemaps", $.proxy(this.imageSuccess, this));
+    this.buttons = new Images({id: this.id,
+      images: ["<%= asset_path('map-parent.png') %>",
+        "<%= asset_path('map-sibling.png') %>",
+        "<%= asset_path('map-children.png') %>"],
+      collection: "buttons"
+    });
+
 
     var url = "";
     switch(maptype){
@@ -408,11 +409,25 @@ var MapHierarchy = (function() {
         break;
     }
 
-    $.get(url, $.proxy(this.storeMapHierarchy, this));
+    $.get(url, $.proxy(this.ajaxSuccess, this));
   };
 
   var bindNodes = function() {
     return {name: $(this).attr("name"), key: $(this).attr("key")};
+  };
+
+  MapHierarchy.prototype.ajaxSuccess = function(data) {
+    this.data = data;
+    if (this.images) {
+      this.storeMapHierarchy(this.data);
+    }
+  };
+
+  MapHierarchy.prototype.imageSuccess = function() {
+    this.images = true;
+    if (this.data) {
+      this.storeMapHierarchy(this.data);
+    }
   };
 
   MapHierarchy.prototype.storeMapHierarchy = function(data) {
@@ -454,7 +469,7 @@ var MapHierarchy = (function() {
         var image = new Kinetic.Image({
           width: 20,
           height: 20,
-          image: buttons.images[0]
+          image: this.buttons.images[0]
         });
         buttonGroup.add(image);
         break;
@@ -462,7 +477,7 @@ var MapHierarchy = (function() {
         var image = new Kinetic.Image({
           width: 20,
           height: 20,
-          image: buttons.images[1]
+          image: this.buttons.images[1]
         });
         buttonGroup.add(image);
         break;
@@ -470,7 +485,7 @@ var MapHierarchy = (function() {
         var image = new Kinetic.Image({
           width: 20,
           height: 20,
-          image: buttons.images[2]
+          image: this.buttons.images[2]
         });
         buttonGroup.add(image);
         break
