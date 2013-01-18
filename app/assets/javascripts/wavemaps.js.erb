@@ -204,127 +204,6 @@ var MapHierarchy = (function() {
         buttonGroup.add(image);
         break
     }
-    /*
-    var rect = new Kinetic.Rect({
-      width: 20,
-      height: 20,
-      fill: "#0E4A74"
-    });
-    buttonGroup.add(rect);
-    if (type == "parent" || type == "children") {
-      var circle = new Kinetic.Circle({
-        x: 8,
-        y: 8,
-        radius: 6,
-        stroke: "#FFFFFF",
-        strokeWidth: 2
-      });
-      buttonGroup.add(circle);
-
-      var line = new Kinetic.Line({
-        points: [12, 12, 19, 19],
-        strokeWidth: 2,
-        stroke: "#FFFFFF",
-      });
-      buttonGroup.add(line);
-
-      line = new Kinetic.Line({
-        points: [4, 8, 12, 8],
-        stroke: "#FFFFFF",
-        strokeWidth: 2
-      });
-      buttonGroup.add(line);
-
-      if (type == "children") {
-        line = new Kinetic.Line({
-          points: [8, 4, 8, 12],
-          stroke: "#FFFFFF",
-          strokeWidth: 2
-        });
-        buttonGroup.add(line);
-      }
-    }
-
-    if (type == "siblings") {
-      // Vertical Line
-      var line = new Kinetic.Line({
-        points: [10, 3, 10, 17],
-        stroke: "#FFFFFF",
-        strokeWidth: 2,
-        lineCap: 'round',
-      });
-      buttonGroup.add(line);
-
-      // Arrow Caps
-      line = new Kinetic.Line({
-        points: [10, 3, 12, 5],
-        stroke: "#FFFFFF",
-        strokeWidth: 2,
-        lineCap: 'round',
-      });
-      buttonGroup.add(line);
-      line = new Kinetic.Line({
-        points: [10, 3, 8, 5],
-        stroke: "#FFFFFF",
-        strokeWidth: 2,
-        lineCap: 'round',
-      });
-      buttonGroup.add(line);
-      line = new Kinetic.Line({
-        points: [10, 17, 12, 15],
-        stroke: "#FFFFFF",
-        strokeWidth: 2,
-        lineCap: 'round',
-      });
-      buttonGroup.add(line);
-      line = new Kinetic.Line({
-        points: [10, 17, 8, 15],
-        stroke: "#FFFFFF",
-        strokeWidth: 2,
-        lineCap: 'round',
-      });
-      buttonGroup.add(line);
-
-      // Horizontal Line
-      line = new Kinetic.Line({
-        points: [3, 10, 17, 10],
-        stroke: "#FFFFFF",
-        strokeWidth: 2,
-        lineCap: 'round',
-      });
-      buttonGroup.add(line);
-
-      // Arrow Caps
-      line = new Kinetic.Line({
-        points: [3, 10, 5, 12],
-        stroke: "#FFFFFF",
-        strokeWidth: 2,
-        lineCap: 'round',
-      });
-      buttonGroup.add(line);
-      line = new Kinetic.Line({
-        points: [3, 10, 5, 8],
-        stroke: "#FFFFFF",
-        strokeWidth: 2,
-        lineCap: 'round',
-      });
-      buttonGroup.add(line);
-      line = new Kinetic.Line({
-        points: [17, 10, 15, 12],
-        stroke: "#FFFFFF",
-        strokeWidth: 2,
-        lineCap: 'round',
-      });
-      buttonGroup.add(line);
-      line = new Kinetic.Line({
-        points: [17, 10, 15, 8],
-        stroke: "#FFFFFF",
-        strokeWidth: 2,
-        lineCap: 'round',
-      });
-      buttonGroup.add(line);
-    }
-    */
 
     this.controlGroup.add(buttonGroup);
 
@@ -445,6 +324,125 @@ var MapHierarchy = (function() {
   };
 
   return MapHierarchy;
+})();
+
+var HotButtonLinks = (function() {
+  HotButtonLinks.name = "HotButtonLinks";
+
+  function HotButtonLinks(options) {
+    this.id = options.id;
+    this.layer = options.layer;
+    this.map = options.map;
+    this.options = options;
+
+    this.drawInitial();
+  }
+
+  HotButtonLinks.prototype.drawInitial = function() {
+    if (this.map == 'wna_ec' || this.map == 'nah_ec') {
+      this.createButton(37, 82, 100, 86.5, 11, "wna_midat", "Mid Atlantic");
+      this.createButton(135, 21, 91, 70, 11, "wna_ne", "Northeast");
+      this.createButton(15, 164, 106, 72, 11, "wna_se", "Southeast");
+      this.createButton(5, 236, 104, 89, 11, "wna_efl", "East Florida");
+    } else if (this.map == "wna_gulf" || this.map == "nah_gulf") {
+      this.createButton(18, 26, 134.5, 134.5, 16, "wna_tx", "Texas");
+      this.createButton(328, 9, 179, 179, 16, "wna_wfl", "West Florida");
+    } else if (this.map == "wna_carib" || this.map == "nah_carib") {
+      this.createButton(153, 142, 190, 84, 12, "car_greater", "Greater Antilles");
+      this.createButton(346, 193, 102, 145, 12, "car_lesser", "Lesser\nAntilles");
+      this.createButton(207, 255, 140, 70, 12, "car_leeward", "Leeward\nAntilles");
+    } else if (this.map == "enp_wc") {
+      this.createButton(314, 48, 116, 95, 11, "enp_nw", "Northwest");
+      this.createButton(330, 143, 129, 111, 11, "enp_norcal", "Northern\nCalifornia");
+      this.createButton(362, 256, 151, 27, 11, "enp_socal", "Southern California", {cornerRadius: 6});
+    } else if(this.map == "nww3_na") {
+      this.createButton(82, 136, 127, 84, 11, "wna_ec", "US East Coast", {cornerRadius: 6});
+      this.createButton(5, 176, 78, 55, 11, "wna_gulf", "Gulf of\nMexico", {cornerRadius: 6});
+      this.createButton(91, 215, 129, 64, 11, "wna_carib", "Caribbean\nIslands", {cornerRadius: 6});
+    } else if(this.map == "nww3_np") {
+      this.createButton(369, 78, 118, 59, 11, "enp_wc", "US West Coast", {cornerRadius: 6});
+      this.createButton(226, 134, 116, 97, 11, "enp_haw", "Hawaiian\nIslands", {cornerRadius: 6});
+      this.createButton(375, 141, 130, 90, 11, "enp_mex", "Mexico", {cornerRadius: 8});
+    } else if (this.map == "nww3") {
+      this.createButton(5, 125, 118, 58, 12, "nww3_np", "North Pacific", {cornerRadius: 6});
+      this.createButton(12, 192, 137, 84, 12, "nww3_sp", "South Pacific");
+      this.createButton(152, 117, 105, 55, 12, "nww3_na", "North Atlantic", {cornerRadius: 8});
+      this.createButton(193, 201, 120, 61, 12, "glo_sa", "South Atlantic");
+      this.createButton(313, 170, 143, 73, 12, "glo_ind", "Indian Ocean", {cornerRadius: 8});
+    } else if (this.map == "glo_ind") {
+      this.createButton(320, 170, 159, 100, 12, "glo_au", "Australia", {cornerRadius: 8});
+    }
+    this.layer.draw();
+  };
+
+  HotButtonLinks.prototype.createButton =
+  function(x, y, width, height, fontSize, id, labelText, options) {
+    options = options || {};
+    var cornerRadius = options.cornerRadius || 10;
+    var buttonGroup = new Kinetic.Group({
+      x: x,
+      y: y,
+      id: id
+    });
+    var rect = new Kinetic.Rect({
+      name: id,
+      width: width,
+      height: height,
+      fill: "rgba(256, 256, 256, 0.61)",
+      cornerRadius: cornerRadius
+    });
+    buttonGroup.add(rect);
+    var text = new Kinetic.Text({
+      name: id,
+      x: rect.getWidth() / 2,
+      y: rect.getHeight() / 2,
+      text: labelText,
+      textFill: "#000000",
+      fontFamily: "Trebuchet MS",
+      fontSize: fontSize,
+      align: 'center'
+    });
+    if (labelText.indexOf("\n") > -1) {
+      text.setLineHeight(1.8);
+    }
+    text.setOffset({
+      x: text.getWidth() / 2,
+      y: text.getHeight() / 2
+    });
+    buttonGroup.add(text);
+    buttonGroup.setOpacity(0);
+    buttonGroup.on("mouseenter", $.proxy(this.showButton, this));
+    buttonGroup.on("mouseleave", $.proxy(this.hideButton, this));
+    buttonGroup.on("click", this.createClickButtonFunction(id));
+    this.layer.add(buttonGroup);
+  };
+
+  HotButtonLinks.prototype.showButton = function(event) {
+    var shape = event.shape;
+    var group = shape.getParent();
+    group.setOpacity(1);
+    this.layer.draw();
+  };
+
+  HotButtonLinks.prototype.hideButton = function(event) {
+    var shape = event.shape;
+    var group = shape.getParent();
+    group.setOpacity(0);
+    this.layer.draw();
+  };
+
+  HotButtonLinks.prototype.createClickButtonFunction = function(key) {
+    var options = this.options;
+    var id = this.id;
+    return function() {
+      options.map = key;
+      options.stage.reset();
+      $("#" + id).off(".wavemaps");
+      new WaveMap(options);
+    } 
+  };
+
+  return HotButtonLinks;
 })();
 
 var TimeBar = (function() {
@@ -1013,7 +1011,6 @@ var WaveMap = (function() {
   function WaveMap(options) {
     this.id = options.id;
     this.title = options.title;
-    this.mapImages = options.map_images;
     this.mapType = options.maptype;
     this.map = options.map;
     this.stage = options.stage || new Kinetic.Stage({container: options.id, width: 541, height: 391});
@@ -1036,6 +1033,10 @@ var WaveMap = (function() {
     options.stage = this.stage;
     options.layer = this.infoLayer;
     new MapHierarchy(options);
+
+    if (this.mapType == "wavemaps") {
+      new HotButtonLinks(options);
+    }
 
     this.drawInfoLayer();
   }
@@ -1210,31 +1211,33 @@ $(function() {
     new WaveMap({
       id: "waveheights",
       title: "DEEP WATER WAVES",
-      map_images: "/wave_maps/wna_midat/wna_midat",
       timezone: "ET",
-      map: "wna_midat",
+      map: "wna_ec",
       maptype: "wavemaps"
     });
+  }
+  if($("#waveperiods").length > 0) {
     new WaveMap({
       id: "waveperiods",
       title: "Mean Wave Periods",
-      map_images: "/pergraphs/wna_ec/wna_ec_per",
       timezone: "ET",
       map: "wna_ec",
       maptype: "periodmaps"
     });
+  }
+  if($("#nearshorewind").length > 0) {
     new WaveMap({
       id: "nearshorewind",
       title: "Near Shore Winds",
-      map_images: "/nearshorewind/wna_nj_wind/wna_nj_wind",
       timezone: "ET",
       map: "wna_nj",
       maptype: "windmaps"
     });
+  }
+  if($("#pressurewind").length > 0) {
     new WaveMap({
       id: "pressurewind",
       title: "PRESSURE / WIND MAP",
-      map_images: "/pressure/wna_ec_pressure/wna_ec_pressure",
       timezone: "ET",
       map: "wna_ec",
       maptype: "pressurewindmap"
