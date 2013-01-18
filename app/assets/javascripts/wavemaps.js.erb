@@ -53,6 +53,271 @@ var Times = (function() {
   return Times;
 })();
 
+var Forecast = (function() {
+  Forecast.name = "Forecast";
+
+  function Forecast(options) {
+    this.id = options.id;
+    var map = options.map;
+    
+    var url = "<%= data_forecast_xy_path :format => :xml %>";
+    $.get(url, {map: map}, $.proxy(this.storeForecast, this));
+  }
+
+  Forecast.prototype.storeForecast = function(data) {
+    var forecast = [];
+    var xml = $(data);
+    var imageUrlSet = {};
+    xml.find("forecast").each(function() {
+      var element = $(this);
+      var data = {};
+      data.id = element.attr("id");
+      data.xcoord = element.attr("xcoord");
+      data.ycoord = element.attr("ycoord");
+      data.xbox = element.attr("xbox");
+      data.ybox = element.attr("ybox");
+      data.brk = element.attr("brk");
+      data.st = element.attr("st");
+      data.surf_am = element.attr("surf_am");
+      data.surf_pm = element.attr("surf_pm");
+      data.surf_txt = element.attr("surf_txt");
+      data.cond_txt = element.attr("cond_txt");
+      data.url = element.attr("url");
+      data.surf_day = element.attr("surf_day");
+      forecast.push(data);
+      imageUrlSet[data.surf_am] = true;
+      imageUrlSet[data.surf_pm] = true;
+    });
+    this.dataPoints = forecast;
+
+    var imageUrls = [];
+    for (var url in imageUrlSet) {
+      if (imageUrlSet.hasOwnProperty(url)) {
+        imageUrls.push("http://www.swellinfo.com/images/icons/" + url);
+      }
+    }
+
+    this.surfImages = new Images({
+      id: this.id,
+      images: imageUrls,
+      collection: "surfImages",
+      cache: true});
+
+    $("#" + this.id).on("surfImages:images:allLoaded.wavemaps", $.proxy(this.imagesLoaded, this));
+  };
+
+  Forecast.prototype.imagesLoaded = function() {
+    var images = this.surfImages.images;
+
+    // convert images array to an object keyed off names
+    var imagesObject = {};
+    for (var i = 0; i < images.length; i++) {
+      var image = images[i];
+      var src = image.src;
+      var imgName = src.substr(38);
+      imagesObject[imgName] = image;
+    }
+
+    for (var i = 0; i < this.dataPoints.length; i++) {
+      this.dataPoints[i].surf_am = imagesObject[this.dataPoints[i].surf_am];
+      this.dataPoints[i].surf_pm = imagesObject[this.dataPoints[i].surf_pm];
+    }
+    console.debug(this.dataPoints);
+
+    $("#" + this.id).trigger("forecastLoaded", [this.dataPoints]);
+  };
+
+  return Forecast;
+})();
+
+var ForecastPoints = (function() {
+  ForecastPoints.name = "ForecastPoints";
+
+  function ForecastPoints(options) {
+    this.id = options.id;
+    this.layer = options.layer;
+    this.data = options.forecastPoints;
+
+    this.drawInitial();
+  }
+
+  ForecastPoints.prototype.drawInitial = function() {
+    for (var i = 0; i < this.data.length; i++) {
+      var circle = new Kinetic.Circle({
+        x: this.data[i].xcoord,
+        y: this.data[i].ycoord,
+        radius: 4,
+        fill: "#990000"
+      });
+      circle.on("click.wavemaps", this.createPointClickFunction(this.data[i]));
+      this.layer.add(circle);
+    }
+
+    this.drawInfoBox();
+
+    this.layer.draw();
+  };
+
+  ForecastPoints.prototype.createPointClickFunction = function(dataPoint) {
+    var _this = this;
+    return function() {
+      _this.url = dataPoint.url;
+      _this.showInfoBox(dataPoint);
+    }
+  };
+
+  ForecastPoints.prototype.showInfoBox = function(dataPoint) {
+    this.infoBoxGroup.show();
+    this.infoBoxGroup.setPosition(dataPoint.xbox - 103, dataPoint.ybox - 78);
+
+    this.name.setText(dataPoint.brk + ", " + dataPoint.st);
+    this.surf_day.setText(dataPoint.surf_day + "'s Forecast");
+    this.surf_am.setImage(dataPoint.surf_am);
+    this.surf_pm.setImage(dataPoint.surf_pm);
+    this.surf_txt.setText(dataPoint.surf_txt);
+    this.cond_txt.setText(dataPoint.cond_txt);
+    this.url_btn.setText("Click for " + dataPoint.brk + " Forecast page");
+
+    this.layer.draw();
+  };
+
+  ForecastPoints.prototype.changeToForecastPage = function() {
+    window.location = this.url;
+  };
+
+  ForecastPoints.prototype.drawInfoBox = function() {
+    this.infoBoxGroup = new Kinetic.Group({
+    });
+
+    // background rectangle
+    var rect = new Kinetic.Rect({
+      width: 201,
+      height: 191,
+      fill: "#FFFFFF",
+      stroke: "#CCCCCC",
+      strokeWidth: 1,
+      cornerRadius: 6
+    });
+    this.infoBoxGroup.add(rect);
+
+    this.name = new Kinetic.Text({
+      x: (rect.getWidth() / 2) - 75,
+      y: 8, 
+      width: 150,
+      textFill: "#0000B4",
+      fontFamily: "Verdana",
+      fontSize: 9,
+      align: "center"
+    });
+    this.name.on("click.wavemaps", $.proxy(this.changeToForecastPage, this));
+    this.infoBoxGroup.add(this.name);
+
+    var closeButton = new Kinetic.Text({
+      x: 189.5,
+      y: 6,
+      text: "x",
+      textFill: "#990000",
+      fontSize: 9,
+      fontFamily: "Arial Black"
+    });
+    closeButton.on("click", $.proxy(this.closeInfoBox, this));
+    this.infoBoxGroup.add(closeButton);
+
+    this.surf_day = new Kinetic.Text({
+      x: 7,
+      y: 34,
+      width: 116,
+      textFill: "#000000",
+      fontSize: 8,
+      fontFamily: "Arial"
+    });
+    this.infoBoxGroup.add(this.surf_day);
+
+    this.surf_am = new Kinetic.Image({
+      x: 134.5,
+      y: 25.5,
+      width: 19,
+      height: 20
+    });
+    this.infoBoxGroup.add(this.surf_am);
+
+    this.surf_pm = new Kinetic.Image({
+      x: 169.5,
+      y: 25.5,
+      width: 19,
+      height: 20
+    });
+    this.infoBoxGroup.add(this.surf_pm);
+
+    var text = new Kinetic.Text({
+      x: 7,
+      y: 51,
+      text: "Surf:",
+      textFill: "#000000",
+      fontFamily: "Arial",
+      fontSize: 8,
+      fontStyle: "bold"
+    });
+    this.infoBoxGroup.add(text);
+
+    this.surf_txt = new Kinetic.Text({
+      x: 7,
+      y: 66,
+      width: 194,
+      height: 41,
+      textFill: "#000000",
+      fontFamily: "Arial",
+      fontSize: 7,
+      lineHeight: 1.8
+    });
+    this.infoBoxGroup.add(this.surf_txt);
+
+    text = new Kinetic.Text({
+      x: 7,
+      y: 112,
+      text: "Conditions:",
+      textFill: "#000000",
+      fontFamily: "Arial",
+      fontSize: 8,
+      fontStyle: "bold"
+    });
+    this.infoBoxGroup.add(text);
+
+    this.cond_txt = new Kinetic.Text({
+      x: 7,
+      y: 127,
+      width: 194,
+      height: 41,
+      textFill: "#000000",
+      fontFamily: "Arial",
+      fontSize: 7,
+      lineHeight: 1.8
+    });
+    this.infoBoxGroup.add(this.cond_txt);
+
+    this.url_btn = new Kinetic.Text({
+      x: 7,
+      y: 179,
+      width: 194,
+      textFill: "#0000B4",
+      fontFamily: "Arial",
+      fontSize: 7
+    });
+    this.url_btn.on("click.wavemaps", $.proxy(this.changeToForecastPage, this));
+    this.infoBoxGroup.add(this.url_btn);
+    this.infoBoxGroup.hide();
+
+    this.layer.add(this.infoBoxGroup);
+  };
+
+  ForecastPoints.prototype.closeInfoBox = function() {
+    this.infoBoxGroup.hide();
+    this.layer.draw();
+  };
+
+  return ForecastPoints;
+})();
+
 /**
  * The options object can have the following members:
  * id: Used if you want to trigger the images loaded event. It triggers the event on 
@@ -68,12 +333,16 @@ var Images= (function() {
     this.imgurls = options.images;
     this.images = [];
     this.count = 0;
+    this.collection = options.collection;
+    this.cache = options.cache || false;
 
     // Fetch one image for testing
     for (var i = 0; i < this.imgurls.length; i++) {
       var imgurl = this.imgurls[i];
       // Add cachebuster
-      imgurl += ("?_=") + (new Date()).getTime();
+      if (!this.cache) {
+        imgurl += ("?_=") + (new Date()).getTime();
+      }
       $("<img/>")
           .one("load", {id: i}, $.proxy(this.imageLoadHandler, this))
           .error({id: i}, $.proxy(this.imageLoadErrorHandler, this))
@@ -87,9 +356,9 @@ var Images= (function() {
     console.info("image loaded correctly, id:", evt.data.id);
     this.images[evt.data.id] = evt.target;
 
-    $("#" + this.id).trigger("images:success", [evt.data, evt.target]);
+    $("#" + this.id).trigger(this.collection + ":images:success", [evt.data, evt.target]);
     if (this.count == this.imgurls.length) {
-      $("#" + this.id).trigger("images:allLoaded");
+      $("#" + this.id).trigger(this.collection + ":images:allLoaded");
     }
   }
 
@@ -97,9 +366,9 @@ var Images= (function() {
     this.count++;
     console.error("error loading image, id:", evt.data.id);
 
-    $("#" + this.id).trigger("images:error", [evt.data, evt.target]);
+    $("#" + this.id).trigger(this.collection + ":images:error", [evt.data, evt.target]);
     if (this.count == this.imgurls.length) {
-      $("#" + this.id).trigger("images:allLoaded");
+      $("#" + this.id).trigger(this.collection + ":images:allLoaded");
     }
   }
 
@@ -112,7 +381,9 @@ var MapHierarchy = (function() {
   var buttons = new Images({id: "maphierarchybuttons",
     images: ["<%= asset_path('map-parent.png') %>",
       "<%= asset_path('map-sibling.png') %>",
-      "<%= asset_path('map-children.png') %>"]});
+      "<%= asset_path('map-children.png') %>"],
+    collection: "buttons"
+  });
 
   function MapHierarchy(options) {
     this.id = options.id;
@@ -605,10 +876,11 @@ var ProgressBar = (function() {
     this.id = options.id;
     this.numberOfImages = options.numberOfImages;
     this.imageLoader = options.imageLoader;
+    this.collection = this.imageLoader.collection;
 
     this.drawInitial();
 
-    $("#" + this.id).on("images:success.wavemaps", $.proxy(this.update, this));
+    $("#" + this.id).on(this.collection + ":images:success.wavemaps", $.proxy(this.update, this));
   }
 
   ProgressBar.prototype.update = function(event, data, target) {
@@ -1021,6 +1293,7 @@ var WaveMap = (function() {
     this.stage.add(this.mapLayer);
     this.stage.add(this.infoLayer);
 
+    $("#" + this.id).on("timesLoaded.wavemaps", $.proxy(this.handleLoadedTimes, this));
     this.times = new Times({
       id: this.id,
       timezone: options.timezone,
@@ -1028,7 +1301,6 @@ var WaveMap = (function() {
       maptype: options.maptype
     });
 
-    $("#" + this.id).on("timesLoaded.wavemaps", $.proxy(this.handleLoadedTimes, this));
 
     options.stage = this.stage;
     options.layer = this.infoLayer;
@@ -1036,6 +1308,8 @@ var WaveMap = (function() {
 
     if (this.mapType == "wavemaps") {
       new HotButtonLinks(options);
+      $("#" + this.id).on("forecastLoaded.wavemaps", $.proxy(this.handleLoadedForecast, this));
+      this.forecast = new Forecast({id: this.id, map: this.map});
     }
 
     this.drawInfoLayer();
@@ -1098,11 +1372,12 @@ var WaveMap = (function() {
       var number = times[i].hourString;
       imgurls.push("http://www.swellinfo.com/imgs" + mapPath + map + pathSuffix + "/" + map + imgSuffix + number + ".png");
     }
-    $("#" + this.id).on("images:success.wavemaps", $.proxy(this.loadMap, this));
-    $("#" + this.id).on("images:allLoaded.wavemaps", $.proxy(this.showControlButtons, this));
+    $("#" + this.id).on("waves:images:success.wavemaps", $.proxy(this.loadMap, this));
+    $("#" + this.id).on("waves:images:allLoaded.wavemaps", $.proxy(this.showControlButtons, this));
     this.deepWaterWaves = new Images({
       id: this.id,
-      images: imgurls
+      images: imgurls,
+      collection: "waves"
     });
 
     this.progressBar = new ProgressBar({
@@ -1110,6 +1385,14 @@ var WaveMap = (function() {
       layer: this.infoLayer,
       imageLoader: this.deepWaterWaves,
       numberOfImages: imgurls.length
+    });
+  };
+
+  WaveMap.prototype.handleLoadedForecast = function(event, forecast) {
+    this.forecastDisplay = new ForecastPoints({
+      id: this.id, 
+      layer: this.infoLayer,
+      forecastPoints: forecast
     });
   };
 
@@ -1212,7 +1495,7 @@ $(function() {
       id: "waveheights",
       title: "DEEP WATER WAVES",
       timezone: "ET",
-      map: "wna_ec",
+      map: "wna_midat",
       maptype: "wavemaps"
     });
   }

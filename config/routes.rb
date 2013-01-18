@@ -20,6 +20,8 @@ Canvas::Application.routes.draw do
     get "data/nearshorewind_maps_hierarchy" => "data#nearshorewind_maps_hierarchy"
     get "data/pressure_maps_hierarchy" => "data#pressure_maps_hierarchy"
 
+    get "data/forecast_xy" => "data#forecast_xy"
+
     # The priority is based upon order of creation:
     # first created -> highest priority.
 
