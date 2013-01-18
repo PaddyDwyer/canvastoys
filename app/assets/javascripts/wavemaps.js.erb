@@ -407,6 +407,9 @@ var MapHierarchy = (function() {
       case "pressurewindmap":
         url = "<%= data_pressure_maps_hierarchy_path :format => :xml %>";
         break;
+      case "surfacetempmap":
+        url = "<%= data_sst_maps_hierarchy_path :format => :xml %>";
+        break;
     }
 
     $.get(url, $.proxy(this.ajaxSuccess, this));
@@ -1122,6 +1125,69 @@ var ScalePopup = (function() {
       {knots: 60, color: "#FF00FF"},
   ];
 
+  var tempSteps = [{color: "#54009F"},
+      {color: "#5100A8"},
+      {color: "#4E00B6"},
+      {color: "#4C00BF"},
+      {color: "#4400CC"},
+      {color: "#3C00D6"},
+      {color: "#3700DF"},
+      {color: "#0500F0"},
+      {color: "#0000FF"},
+      {color: "#000FFF"},
+      {color: "#001EFF"},
+      {color: "#002DFF"},
+      {color: "#003CFF"},
+      {color: "#004BFF"},
+      {color: "#005AFF"},
+      {color: "#0073FF"},
+      {color: "#0082FF"},
+      {color: "#0091FF"},
+      {color: "#00A0FF"},
+      {color: "#00AFFF"},
+      {color: "#00BEFF"},
+      {color: "#00CDFF"},
+      {color: "#00DCFF"},
+      {color: "#00EBFF"},
+      {color: "#00FFFF"},
+      {color: "#00FFE1"},
+      {color: "#00FFC3"},
+      {color: "#00FFA5"},
+      {color: "#00FF87"},
+      {color: "#00FF69"},
+      {color: "#00FF4B"},
+      {color: "#00FF2D"},
+      {color: "#00FF0F"},
+      {color: "#00FF00"},
+      {color: "#1EFF00"},
+      {color: "#3CFF00"},
+      {color: "#5AFF00"},
+      {color: "#78FF00"},
+      {color: "#96FF00"},
+      {color: "#B4FF00"},
+      {color: "#D2FF00"},
+      {color: "#F0FF00"},
+      {color: "#FFFF00"},
+      {color: "#FFF000"},
+      {color: "#FFE100"},
+      {color: "#FFD200"},
+      {color: "#FFC300"},
+      {color: "#FFB400"},
+      {color: "#FFA500"},
+      {color: "#FF9600"},
+      {color: "#FF8700"},
+      {color: "#FF7800"},
+      {color: "#FF6900"},
+      {color: "#FF5A00"},
+      {color: "#FF4B00"},
+      {color: "#FF3C00"},
+      {color: "#FF2D00"},
+      {color: "#FF1E00"},
+      {color: "#FF0F00"},
+      {color: "#FF0000"},
+      {color: "#FF0000"}
+  ];
+
   function ScalePopup(options) {
     this.layer = options.layer;
     this.mapType = options.mapType;
@@ -1141,6 +1207,12 @@ var ScalePopup = (function() {
       case "windmaps":
         this.steps = speedSteps;
         this.scale = "knots";
+        this.drawInitial();
+        break;
+      case "surfacetempmap":
+        this.steps = tempSteps;
+        this.scale = "fahrenheit";
+        this.alternateScale = "celcius";
         this.drawInitial();
         break;
     }
@@ -1211,44 +1283,102 @@ var ScalePopup = (function() {
 
     var steps = this.steps, scale = this.scale;
 
-    for (var i = 0; i < steps.length; i++) {
-      var rect = new Kinetic.Rect({
-        x: (25 * i) + 13,
-        y: 360,
-        fill: steps[i].color,
-        width: 25,
-        height: 16
+    if (this.mapType == "surfacetempmap") {
+      var width = 440 / steps.length;
+      for(var i = 0; i < steps.length; i++) {
+        var rect = new Kinetic.Rect({
+          x: (width * i) + 13,
+          y: 360,
+          fill: steps[i].color,
+          width: width - 1,
+          height: 16
+        });
+        this.scaleGroup.add(rect);
+      }
+      var fahrStepGroup = new Kinetic.Group({
+        id: "fahrsteps"
       });
-      this.scaleGroup.add(rect);
+      width = 434 / 20;
+      for (var i = 33, j = 0; i <= 90; i += 3, j++) {
+        var text = new Kinetic.Text({
+          x: (width * j) + 8,
+          y: 378,
+          textFill: "#000000",
+          text: i,
+          fontFamily: "Arial",
+          fontStyle: "bold",
+          fontSize: 10,
+          width: width,
+          align: "center",
+        });
+        fahrStepGroup.add(text);
+      } 
+      this.scaleGroup.add(fahrStepGroup);
 
-      var text = new Kinetic.Text({
-        name: "step",
-        x: (25 * i) + 2,
-        y: 378,
-        textFill: "#000000",
-        text: steps[i][scale],
-        fontFamily: "Arial",
-        fontStyle: "bold",
-        fontSize: 10,
-        width: 24,
-        align: "center",
+      var celcStepGroup = new Kinetic.Group({
+        id: "celcsteps"
       });
-      this.scaleGroup.add(text);
+      width = 441 / 17;
+      for (var i = 0, j = 0; i <= 32; i+= 2, j++) {
+        var text = new Kinetic.Text({
+          x: (width * j) + 1,
+          y: 378,
+          textFill: "#000000",
+          text: i,
+          fontFamily: "Arial",
+          fontStyle: "bold",
+          fontSize: 10,
+          width: width,
+          align: "center",
+        });
+        celcStepGroup.add(text);
+      }
+      celcStepGroup.hide();
+      this.scaleGroup.add(celcStepGroup);
+    } else {
+      for (var i = 0; i < steps.length; i++) {
+        var rect = new Kinetic.Rect({
+          x: (25 * i) + 13,
+          y: 360,
+          fill: steps[i].color,
+          width: 25,
+          height: 16
+        });
+        this.scaleGroup.add(rect);
+
+        var text = new Kinetic.Text({
+          name: "step",
+          x: (25 * i) + 2,
+          y: 378,
+          textFill: "#000000",
+          text: steps[i][scale],
+          fontFamily: "Arial",
+          fontStyle: "bold",
+          fontSize: 10,
+          width: 24,
+          align: "center",
+        });
+        this.scaleGroup.add(text);
+      }
     }
 
     this.scaleTypeButton = new Kinetic.Text({
-      x: 461,
+      x: 456,
       y: 378,
       textFill: "#000000",
       text: scale,
       fontFamily: "Arial",
       fontStyle: "bold",
       fontSize: 8,
-      width: 47,
+      width: 53,
       align: "right"
     });
     if (this.alternateScale) {
-      this.scaleTypeButton.on("click.wavemaps", $.proxy(this.changeScale, this));
+      if (this.mapType == "surfacetempmap") {
+        this.scaleTypeButton.on("click.wavemaps", $.proxy(this.changeTempScale, this));
+      } else {
+        this.scaleTypeButton.on("click.wavemaps", $.proxy(this.changeScale, this));
+      }
     }
     this.scaleGroup.add(this.scaleTypeButton);
 
@@ -1269,6 +1399,24 @@ var ScalePopup = (function() {
     var steps = this.steps;
     for (var  i = 0; i < stepText.length; i++) {
       stepText[i].setText(steps[i][scale]);
+    }
+
+    this.layer.draw();
+  };
+
+  ScalePopup.prototype.changeTempScale =
+  function() {
+    var text = this.scaleTypeButton.getText();
+    var celcGroup = this.scaleGroup.get("#celcsteps")[0];
+    var fahrGroup = this.scaleGroup.get("#fahrsteps")[0];
+    if (text == this.scale){
+      this.scaleTypeButton.setText(this.alternateScale);
+      celcGroup.show();
+      fahrGroup.hide();
+    } else if (text == this.alternateScale) {
+      this.scaleTypeButton.setText(this.scale);
+      fahrGroup.show();
+      celcGroup.hide();
     }
 
     this.layer.draw();
@@ -1308,13 +1456,23 @@ var WaveMap = (function() {
     this.stage.add(this.mapLayer);
     this.stage.add(this.infoLayer);
 
-    $("#" + this.id).on("timesLoaded.wavemaps", $.proxy(this.handleLoadedTimes, this));
-    this.times = new Times({
-      id: this.id,
-      timezone: options.timezone,
-      map: options.map,
-      maptype: options.maptype
-    });
+    if (this.mapType != "surfacetempmap") {
+      $("#" + this.id).on("timesLoaded.wavemaps", $.proxy(this.handleLoadedTimes, this));
+      this.times = new Times({
+        id: this.id,
+        timezone: options.timezone,
+        map: options.map,
+        maptype: options.maptype
+      });
+    } else if (this.mapType == "surfacetempmap") {
+      $("#" + this.id).on("waves:images:success.wavemaps", $.proxy(this.loadMap, this));
+      var imgurls = ["http://www.swellinfo.com/imgs/sst_graphs/" + this.map + "_sst.png"];
+      this.deepWaterWaves = new Images({
+        id: this.id,
+        images: imgurls,
+        collection: "waves"
+      });
+    }
 
 
     options.stage = this.stage;
@@ -1332,11 +1490,12 @@ var WaveMap = (function() {
 
   WaveMap.prototype.drawInfoLayer = function() {
     // Title background Rectangle
+    var width = this.mapType == "surfacetempmap" ? 541 : 512;
     var rect = new Kinetic.Rect({
       x: 0,
       y: 0,
       fill: "rgba(255, 255, 255, 0.6)",
-      width:512,
+      width: width,
       height: 27,
     });
     this.infoLayer.add(rect);
@@ -1505,6 +1664,15 @@ var WaveMap = (function() {
 
 $(function() {
   var canvas2DSupported = !!window.CanvasRenderingContext2D;
+  if ($("#surfacetemp").length > 0) {
+    new WaveMap({
+      id: "surfacetemp",
+      title: "SEA SURFACE TEMPERATURE",
+      timezone: "ET",
+      map: "wna_midat",
+      maptype: "surfacetempmap"
+    });
+  }
   if ($("#waveheights").length > 0 && canvas2DSupported) {
     new WaveMap({
       id: "waveheights",

@@ -53,6 +53,11 @@ class DataController < ApplicationController
     xml = SurfData.get_pressure_maps_hierarchy
     render :inline => xml.body
   end
+  
+  def sst_maps_hierarchy
+    xml = SurfData.get_sst_maps_hierarchy
+    render :inline => xml.body
+  end
 
   def forecast_xy
     map = params[:map]

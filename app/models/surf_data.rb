@@ -38,6 +38,10 @@ class SurfData
     get("/pressure_maps_hierarchy.xml")
   end
 
+  def self.get_sst_maps_hierarchy
+    get("/sst_maps_hierarchy.xml")
+  end
+
   def self.get_forecast_xy(map)
     get("/forecast_xy.xml.php?map=#{map}")
   end
