@@ -142,7 +142,6 @@ var ForecastPoints = (function() {
   }
 
   ForecastPoints.prototype.drawInitial = function() {
-    console.debug(this.loc);
     for (var i = 0; i < this.data.length; i++) {
       if (this.data[i].url.indexOf(this.loc) > -1) {
         var fill = "#00FF00";
@@ -399,14 +398,14 @@ var MapHierarchy = (function() {
     this.layer = options.layer;
     this.map = options.map;
     this.options = options;
-    var maptype = options.maptype;
+    this.maptype = options.maptype;
 
     if (!buttons.fullyLoaded) {
       $(document).on("buttons:images:allLoaded.wavemaps", $.proxy(this.imageSuccess, this));
     }
 
     var url = "";
-    switch(maptype){
+    switch(this.maptype){
       case "wavemaps":
         url = "<%= data_wave_maps_hierarchy_path :format => :xml %>";
         break;
@@ -456,7 +455,7 @@ var MapHierarchy = (function() {
     });
     this.layer.add(this.controlGroup);
     var yoffset = 0;
-    if (parentNode.length > 0) {
+    if (parentNode.length > 0 && this.maptype != "surfacetmepmap" && parentNode[0].key != "nww3") {
       this.drawButtons("parent", parentNode, yoffset);
       yoffset += 21;
     }
@@ -1452,7 +1451,6 @@ var WaveMap = (function() {
   };
 
   WaveMap.prototype.handleLoadedForecast = function(event, forecast) {
-    console.debug(this.loc);
     this.forecastDisplay = new ForecastPoints({
       id: this.id, 
       layer: this.infoLayer,
