@@ -164,7 +164,7 @@ var ForecastPoints = (function() {
         radius: 4,
         fill: fill
       });
-      circle.on("click.wavemaps", this.createPointClickFunction(this.data[i]));
+      circle.on("click.wavemaps tap.wavemaps", this.createPointClickFunction(this.data[i]));
       circle.on("mouseenter.wavemaps", MouseHandler.mouseenter);
       circle.on("mouseleave.wavemaps", MouseHandler.mouseleave);
       this.layer.add(circle);
@@ -226,7 +226,7 @@ var ForecastPoints = (function() {
       fontSize: 9,
       align: "center"
     });
-    this.name.on("click.wavemaps", $.proxy(this.changeToForecastPage, this));
+    this.name.on("click.wavemaps tap.wavemaps", $.proxy(this.changeToForecastPage, this));
     this.name.on("mouseenter.wavemaps", MouseHandler.mouseenter);
     this.name.on("mouseleave.wavemaps", MouseHandler.mouseleave);
     this.infoBoxGroup.add(this.name);
@@ -239,7 +239,7 @@ var ForecastPoints = (function() {
       fontSize: 9,
       fontFamily: "Arial Black"
     });
-    closeButton.on("click.wavemaps", $.proxy(this.closeInfoBox, this));
+    closeButton.on("click.wavemaps tap.wavemaps", $.proxy(this.closeInfoBox, this));
     closeButton.on("mouseenter.wavemaps", MouseHandler.mouseenter);
     closeButton.on("mouseleave.wavemaps", MouseHandler.mouseleave);
     this.infoBoxGroup.add(closeButton);
@@ -324,7 +324,7 @@ var ForecastPoints = (function() {
       fontFamily: "Arial",
       fontSize: 7
     });
-    this.url_btn.on("click.wavemaps", $.proxy(this.changeToForecastPage, this));
+    this.url_btn.on("click.wavemaps tap.wavemaps", $.proxy(this.changeToForecastPage, this));
     this.url_btn.on("mouseenter.wavemaps", MouseHandler.mouseenter);
     this.url_btn.on("mouseleave.wavemaps", MouseHandler.mouseleave);
     this.infoBoxGroup.add(this.url_btn);
@@ -604,7 +604,7 @@ var MapHierarchy = (function() {
       buttonGroup.add(text);
       buttonGroup.on("mouseenter.wavemaps", $.proxy(this.submenuRollover, this));
       buttonGroup.on("mouseleave.wavemaps", $.proxy(this.hideSubmenuButtonsTimer, this));
-      buttonGroup.on("click.wavemaps", this.createChangeMapFunction(items[i].key));
+      buttonGroup.on("click.wavemaps tap.wavemaps", this.createChangeMapFunction(items[i].key));
       buttonGroup.on("mouseenter.wavemaps", MouseHandler.mouseenter);
       buttonGroup.on("mouseleave.wavemaps", MouseHandler.mouseleave);
       group.add(buttonGroup);
@@ -733,7 +733,7 @@ var HotButtonLinks = (function() {
     buttonGroup.setOpacity(0);
     buttonGroup.on("mouseenter.wavemaps", $.proxy(this.showButton, this));
     buttonGroup.on("mouseleave.wavemaps", $.proxy(this.hideButton, this));
-    buttonGroup.on("click.wavemaps", this.createClickButtonFunction(id));
+    buttonGroup.on("click.wavemaps tap.wavemaps", this.createClickButtonFunction(id));
     buttonGroup.on("mouseenter.wavemaps", MouseHandler.mouseenter);
     buttonGroup.on("mouseleave.wavemaps", MouseHandler.mouseleave);
     this.layer.add(buttonGroup);
@@ -1030,7 +1030,7 @@ var PlayControls = (function() {
     });
     leftButtonGroup.add(poly);
     var id = this.id;
-    leftButtonGroup.on("click.wavemaps", function() {
+    leftButtonGroup.on("click.wavemaps tap.wavemaps", function() {
       $("#" + id).trigger("playcontrol:prev");
     });
     leftButtonGroup.on("mouseenter.wavemaps", MouseHandler.mouseenter);
@@ -1046,7 +1046,7 @@ var PlayControls = (function() {
     poly.setOffset(17, 18);
     poly.rotateDeg(180);
     rightButtonGroup.add(poly);
-    rightButtonGroup.on("click.wavemaps", function() {
+    rightButtonGroup.on("click.wavemaps tap.wavemaps", function() {
       $("#" + id).trigger("playcontrol:next");
     });
     rightButtonGroup.on("mouseenter.wavemaps", MouseHandler.mouseenter);
@@ -1075,7 +1075,7 @@ var PlayControls = (function() {
     });
     playButtonGroup.add(this.playButton);
 
-    playButtonGroup.on("click.wavemaps", $.proxy(this.playClickHandler, this));
+    playButtonGroup.on("click.wavemaps tap.wavemaps", $.proxy(this.playClickHandler, this));
     playButtonGroup.on("mouseenter.wavemaps", MouseHandler.mouseenter);
     playButtonGroup.on("mouseleave.wavemaps", MouseHandler.mouseleave);
 
@@ -1224,7 +1224,7 @@ var ScalePopup = (function() {
       stroke: "#177496",
       strokeWidth: 1
     });
-    shape.on("click.wavemaps", $.proxy(this.toggleScale, this));
+    shape.on("click.wavemaps tap.wavemaps", $.proxy(this.toggleScale, this));
     shape.on("mouseenter.wavemaps", MouseHandler.mouseenter);
     shape.on("mouseleave.wavemaps", MouseHandler.mouseleave);
     this.scaleGroup.add(shape);
@@ -1238,7 +1238,7 @@ var ScalePopup = (function() {
       fontSize: 8,
       fontStyle: "bold"
     });
-    text.on("click.wavemaps", $.proxy(this.toggleScale, this));
+    text.on("click.wavemaps tap.wavemaps", $.proxy(this.toggleScale, this));
     text.on("mouseenter.wavemaps", MouseHandler.mouseenter);
     text.on("mouseleave.wavemaps", MouseHandler.mouseleave);
     this.scaleGroup.add(text);
@@ -1317,7 +1317,7 @@ var ScalePopup = (function() {
       align: "right"
     });
     if (this.alternateUnits) {
-      this.scaleTypeButton.on("click.wavemaps", $.proxy(this.changeScale, this));
+      this.scaleTypeButton.on("click.wavemaps tap.wavemaps", $.proxy(this.changeScale, this));
       this.scaleTypeButton.on("mouseenter.wavemaps", MouseHandler.mouseenter);
       this.scaleTypeButton.on("mouseleave.wavemaps", MouseHandler.mouseleave);
     }
