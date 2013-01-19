@@ -527,7 +527,9 @@ var MapHierarchy = (function() {
     var subMenuButtonsContainer = this.drawSubmenuButtons(nodes, yoffset);
     this.controlGroup.add(subMenuButtonsContainer);
 
-    buttonGroup.on("mouseenter.wavemaps", this.createShowGroupFunction(subMenuButtonsContainer));
+    var showGroupFunction = this.createShowGroupFunction(subMenuButtonsContainer);
+    buttonGroup.on("tap.wavemaps", showGroupFunction); 
+    buttonGroup.on("mouseenter.wavemaps", showGroupFunction);
     // call a function that will create a timer to hide the submenu buttons
     buttonGroup.on("mouseleave.wavemaps", $.proxy(this.hideSubmenuButtonsTimer, this));
   };
