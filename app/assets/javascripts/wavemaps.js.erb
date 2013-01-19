@@ -328,7 +328,7 @@ var Images= (function() {
 
   // constructor
   function Images(options) {
-    this.id = options.id;
+    this.triggerElement = !options.id ? $(document) : $("#" + options.id);
     this.imgurls = options.images;
     this.images = [];
     this.count = 0;
@@ -343,7 +343,7 @@ var Images= (function() {
         imgurl += ("?_=") + (new Date()).getTime();
       }
       $("<img/>")
-          .one("load", {id: i}, $.proxy(this.imageLoadHandler, this))
+          .one("load", {id: i, url: this.imgurls[i]}, $.proxy(this.imageLoadHandler, this))
           .error({id: i}, $.proxy(this.imageLoadErrorHandler, this))
           .attr("src", imgurl)
     }
@@ -355,9 +355,10 @@ var Images= (function() {
     console.info("image loaded correctly, id:", evt.data.id);
     this.images[evt.data.id] = evt.target;
 
-    $("#" + this.id).trigger(this.collection + ":images:success", [evt.data, evt.target]);
+    this.triggerElement.trigger(this.collection + ":images:success", [evt.data, evt.target]);
     if (this.count == this.imgurls.length) {
-      $("#" + this.id).trigger(this.collection + ":images:allLoaded");
+      this.fullyLoaded = true;
+      this.triggerElement.trigger(this.collection + ":images:allLoaded");
     }
   }
 
@@ -365,17 +366,26 @@ var Images= (function() {
     this.count++;
     console.error("error loading image, id:", evt.data.id);
 
-    $("#" + this.id).trigger(this.collection + ":images:error", [evt.data, evt.target]);
+    this.triggerElement.trigger(this.collection + ":images:error", [evt.data, evt.target]);
     if (this.count == this.imgurls.length) {
-      $("#" + this.id).trigger(this.collection + ":images:allLoaded");
+      this.fullyLoaded = true;
+      this.triggerElement.trigger(this.collection + ":images:allLoaded");
     }
   }
 
   return Images;
 })();
 
+
 var MapHierarchy = (function() {
   MapHierarchy.name = "MapHierarchy";
+
+  var buttons = new Images({
+    images: ["<%= asset_path('map-parent.png') %>",
+      "<%= asset_path('map-sibling.png') %>",
+      "<%= asset_path('map-children.png') %>"],
+    collection: "buttons"
+  });
 
   function MapHierarchy(options) {
     this.id = options.id;
@@ -384,14 +394,9 @@ var MapHierarchy = (function() {
     this.options = options;
     var maptype = options.maptype;
 
-    $("#" + this.id).on("buttons:images:allLoaded.wavemaps", $.proxy(this.imageSuccess, this));
-    this.buttons = new Images({id: this.id,
-      images: ["<%= asset_path('map-parent.png') %>",
-        "<%= asset_path('map-sibling.png') %>",
-        "<%= asset_path('map-children.png') %>"],
-      collection: "buttons"
-    });
-
+    if (!buttons.fullyLoaded) {
+      $(document).on("buttons:images:allLoaded.wavemaps", $.proxy(this.imageSuccess, this));
+    }
 
     var url = "";
     switch(maptype){
@@ -421,13 +426,12 @@ var MapHierarchy = (function() {
 
   MapHierarchy.prototype.ajaxSuccess = function(data) {
     this.data = data;
-    if (this.images) {
+    if (buttons.fullyLoaded) {
       this.storeMapHierarchy(this.data);
     }
   };
 
   MapHierarchy.prototype.imageSuccess = function() {
-    this.images = true;
     if (this.data) {
       this.storeMapHierarchy(this.data);
     }
@@ -472,7 +476,7 @@ var MapHierarchy = (function() {
         var image = new Kinetic.Image({
           width: 20,
           height: 20,
-          image: this.buttons.images[0]
+          image: buttons.images[0]
         });
         buttonGroup.add(image);
         break;
@@ -480,7 +484,7 @@ var MapHierarchy = (function() {
         var image = new Kinetic.Image({
           width: 20,
           height: 20,
-          image: this.buttons.images[1]
+          image: buttons.images[1]
         });
         buttonGroup.add(image);
         break;
@@ -488,7 +492,7 @@ var MapHierarchy = (function() {
         var image = new Kinetic.Image({
           width: 20,
           height: 20,
-          image: this.buttons.images[2]
+          image: buttons.images[2]
         });
         buttonGroup.add(image);
         break
@@ -1065,128 +1069,52 @@ var PlayControls = (function() {
 var ScalePopup = (function() {
   ScalePopup.name = "ScalePopup";
 
-  var heightSteps = [{feet: 0, meters: 0, color: "#0000FF"},
-      {feet: 1.5, meters: 0.5, color: "#0066FF" },
-      {feet:3, meters:0.9, color: "#00B6FF" },
-      {feet:4.5, meters:1.4, color: "#00DFFF" },
-      {feet:6, meters:1.8, color: "#00FFFF" },
-      {feet:7.5, meters:2.3, color: "#00FFCC" },
-      {feet:9, meters:2.7, color: "#00FF99" },
-      {feet:12, meters:3.7, color: "#00FF00" },
-      {feet:15, meters:4.6, color: "#99FF00" },
-      {feet:18, meters:5.5, color: "#CCFF00" },
-      {feet:21, meters:6.4, color: "#FFFF00" },
-      {feet:24, meters:7.3, color: "#FFCC00" },
-      {feet:27, meters:8.2, color: "#FF9900" },
-      {feet:30, meters:9.1, color: "#FF6600" },
-      {feet:33, meters:10, color: "#FF0000" },
-      {feet:36, meters:11, color: "#AF2F5F" },
-      {feet:39, meters:12, color: "#CF1F8F" },
-      {feet:42, meters:13, color: "#FF00FF" },
-  ];
+  var heightScale = {
+    meters: {image: "<%= asset_path("scale-meters.png") %>",
+      x: 13
+    },
+    feet: {image: "<%= asset_path("scale-feet.png") %>",
+      x: 13
+    }
+  };
 
-  var timeSteps = [{seconds: 0, color: "#0000FF"},
-      {seconds: 4, color: "#0066FF"},
-      {seconds: 5, color: "#00B6FF"},
-      {seconds: 6, color: "#00DFFF"},
-      {seconds: 7, color: "#00FFFF"},
-      {seconds: 8, color: "#00FFCC"},
-      {seconds: 9, color: "#00FF99"},
-      {seconds: 10, color: "#00FF00"},
-      {seconds: 11, color: "#99FF00"},
-      {seconds: 12, color: "#CCFF00"},
-      {seconds: 13, color: "#FFFF00"},
-      {seconds: 14, color: "#FFCC00"},
-      {seconds: 15, color: "#FF9900"},
-      {seconds: 16, color: "#FF6600"},
-      {seconds: 17, color: "#FF0000"},
-      {seconds: 18, color: "#AF2F5F"},
-      {seconds: 19, color: "#CF1F8F"},
-      {seconds: 20, color: "#FF00FF"},
-  ];
+  var timeSteps = {
+    seconds: {image: "<%= asset_path("scale-seconds.png") %>",
+        x: 13
+      }
+    };
 
-  var speedSteps = [{knots: 0, color: "#0000FF"},
-      {knots: 4, color: "#0066FF"},
-      {knots: 6, color: "#00B6FF"},
-      {knots: 8, color: "#00DFFF"},
-      {knots: 10, color: "#00FFFF"},
-      {knots: 12, color: "#00FFCC"},
-      {knots: 14, color: "#00FF99"},
-      {knots: 16, color: "#00FF00"},
-      {knots: 18, color: "#99FF00"},
-      {knots: 20, color: "#CCFF00"},
-      {knots: 25, color: "#FFFF00"},
-      {knots: 30, color: "#FFCC00"},
-      {knots: 35, color: "#FF9900"},
-      {knots: 40, color: "#FF6600"},
-      {knots: 45, color: "#FF0000"},
-      {knots: 50, color: "#AF2F5F"},
-      {knots: 55, color: "#CF1F8F"},
-      {knots: 60, color: "#FF00FF"},
-  ];
+  var speedSteps = {
+    knots: {image: "<%= asset_path("scale-knots.png") %>",
+      x: 13
+    }
+  };
 
-  var tempSteps = [{color: "#54009F"},
-      {color: "#5100A8"},
-      {color: "#4E00B6"},
-      {color: "#4C00BF"},
-      {color: "#4400CC"},
-      {color: "#3C00D6"},
-      {color: "#3700DF"},
-      {color: "#0500F0"},
-      {color: "#0000FF"},
-      {color: "#000FFF"},
-      {color: "#001EFF"},
-      {color: "#002DFF"},
-      {color: "#003CFF"},
-      {color: "#004BFF"},
-      {color: "#005AFF"},
-      {color: "#0073FF"},
-      {color: "#0082FF"},
-      {color: "#0091FF"},
-      {color: "#00A0FF"},
-      {color: "#00AFFF"},
-      {color: "#00BEFF"},
-      {color: "#00CDFF"},
-      {color: "#00DCFF"},
-      {color: "#00EBFF"},
-      {color: "#00FFFF"},
-      {color: "#00FFE1"},
-      {color: "#00FFC3"},
-      {color: "#00FFA5"},
-      {color: "#00FF87"},
-      {color: "#00FF69"},
-      {color: "#00FF4B"},
-      {color: "#00FF2D"},
-      {color: "#00FF0F"},
-      {color: "#00FF00"},
-      {color: "#1EFF00"},
-      {color: "#3CFF00"},
-      {color: "#5AFF00"},
-      {color: "#78FF00"},
-      {color: "#96FF00"},
-      {color: "#B4FF00"},
-      {color: "#D2FF00"},
-      {color: "#F0FF00"},
-      {color: "#FFFF00"},
-      {color: "#FFF000"},
-      {color: "#FFE100"},
-      {color: "#FFD200"},
-      {color: "#FFC300"},
-      {color: "#FFB400"},
-      {color: "#FFA500"},
-      {color: "#FF9600"},
-      {color: "#FF8700"},
-      {color: "#FF7800"},
-      {color: "#FF6900"},
-      {color: "#FF5A00"},
-      {color: "#FF4B00"},
-      {color: "#FF3C00"},
-      {color: "#FF2D00"},
-      {color: "#FF1E00"},
-      {color: "#FF0F00"},
-      {color: "#FF0000"},
-      {color: "#FF0000"}
-  ];
+  var tempScale = {
+    fahrenheit: {image: "<%= asset_path("scale-fahrenheit.png") %>",
+      x: 13
+    },
+    celcius: {image: "<%= asset_path("scale-celcius.png") %>",
+      x: 13
+    }
+  };
+
+  var scaleImages = new Images({
+    images: ["<%= asset_path("scale-fahrenheit.png") %>",
+      "<%= asset_path("scale-celcius.png") %>",
+      "<%= asset_path("scale-meters.png") %>",
+      "<%= asset_path("scale-feet.png") %>",
+      "<%= asset_path("scale-seconds.png") %>",
+      "<%= asset_path("scale-knots.png") %>"
+    ],
+    collection: "scales"
+  });
+
+  var imagesObj = {};
+  $(document).on("scales:images:success", function(event, data, target) {
+    console.debug(data, event);
+    imagesObj[data.url] = target;
+  });
 
   function ScalePopup(options) {
     this.layer = options.layer;
@@ -1194,31 +1122,39 @@ var ScalePopup = (function() {
 
     switch (this.mapType) {
       case "wavemaps":
-        this.steps = heightSteps;
-        this.scale = "feet";
-        this.alternateScale = "meters";
-        this.drawInitial();
+        this.scale = heightScale;
+        this.units = "feet";
+        this.alternateUnits = "meters";
         break;
       case "periodmaps":
-        this.steps = timeSteps;
-        this.scale = "seconds";
-        this.drawInitial();
+        this.scale = timeSteps;
+        this.units = "seconds";
         break;
       case "windmaps":
-        this.steps = speedSteps;
-        this.scale = "knots";
-        this.drawInitial();
+        this.scale = speedSteps;
+        this.units = "knots";
         break;
       case "surfacetempmap":
-        this.steps = tempSteps;
-        this.scale = "fahrenheit";
-        this.alternateScale = "celcius";
-        this.drawInitial();
+        this.scale = tempScale;
+        this.units = "fahrenheit";
+        this.alternateUnits = "celcius";
         break;
     }
+
+    if (this.scale) {
+      if (!scaleImages.fullyLoaded) {
+        console.debug(this.scale);
+        $(document).on("scales:images:allLoaded", $.proxy(this.drawInitial, this));
+      } else {
+        console.debug(this.scale);
+        this.drawInitial();
+      }
+    }
+
   }
 
   ScalePopup.prototype.drawInitial = function() {
+    console.debug("drawInitial", this.units);
     this.scaleGroup = new Kinetic.Group({
       x: 0,
       y: 43
@@ -1281,60 +1217,31 @@ var ScalePopup = (function() {
     });
     this.scaleGroup.add(rect);
 
-    var steps = this.steps, scale = this.scale;
+    var scale = this.scale, units = this.units;
 
+    /*
     if (this.mapType == "surfacetempmap") {
-      var width = 440 / steps.length;
-      for(var i = 0; i < steps.length; i++) {
-        var rect = new Kinetic.Rect({
-          x: (width * i) + 13,
-          y: 360,
-          fill: steps[i].color,
-          width: width - 1,
-          height: 16
-        });
-        this.scaleGroup.add(rect);
-      }
-      var fahrStepGroup = new Kinetic.Group({
-        id: "fahrsteps"
-      });
-      width = 434 / 20;
-      for (var i = 33, j = 0; i <= 90; i += 3, j++) {
-        var text = new Kinetic.Text({
-          x: (width * j) + 8,
-          y: 378,
-          textFill: "#000000",
-          text: i,
-          fontFamily: "Arial",
-          fontStyle: "bold",
-          fontSize: 10,
-          width: width,
-          align: "center",
-        });
-        fahrStepGroup.add(text);
-      } 
-      this.scaleGroup.add(fahrStepGroup);
+    */
+    var unitImage = new Kinetic.Image({
+      id: "units",
+      x: scale[this.units].x,
+      y: 360,
+      image: imagesObj[scale[this.units].image]
+    });
+    this.scaleGroup.add(unitImage);
 
-      var celcStepGroup = new Kinetic.Group({
-        id: "celcsteps"
+    if (this.alternateUnits) {
+      unitImage = new Kinetic.Image({
+        id: "alternateUnits",
+        x: scale[this.alternateUnits].x,
+        y: 360,
+        image: imagesObj[scale[this.alternateUnits].image]
       });
-      width = 441 / 17;
-      for (var i = 0, j = 0; i <= 32; i+= 2, j++) {
-        var text = new Kinetic.Text({
-          x: (width * j) + 1,
-          y: 378,
-          textFill: "#000000",
-          text: i,
-          fontFamily: "Arial",
-          fontStyle: "bold",
-          fontSize: 10,
-          width: width,
-          align: "center",
-        });
-        celcStepGroup.add(text);
-      }
-      celcStepGroup.hide();
-      this.scaleGroup.add(celcStepGroup);
+      unitImage.hide();
+      this.scaleGroup.add(unitImage);
+    }
+
+    /*
     } else {
       for (var i = 0; i < steps.length; i++) {
         var rect = new Kinetic.Rect({
@@ -1361,60 +1268,38 @@ var ScalePopup = (function() {
         this.scaleGroup.add(text);
       }
     }
+    */
 
     this.scaleTypeButton = new Kinetic.Text({
       x: 456,
       y: 378,
       textFill: "#000000",
-      text: scale,
+      text: units,
       fontFamily: "Arial",
       fontStyle: "bold",
       fontSize: 8,
       width: 53,
       align: "right"
     });
-    if (this.alternateScale) {
-      if (this.mapType == "surfacetempmap") {
-        this.scaleTypeButton.on("click.wavemaps", $.proxy(this.changeTempScale, this));
-      } else {
-        this.scaleTypeButton.on("click.wavemaps", $.proxy(this.changeScale, this));
-      }
+    if (this.alternateUnits) {
+      this.scaleTypeButton.on("click.wavemaps", $.proxy(this.changeScale, this));
     }
     this.scaleGroup.add(this.scaleTypeButton);
 
     this.layer.add(this.scaleGroup);
   };
 
-  ScalePopup.prototype.changeScale = function() {
-    var text = this.scaleTypeButton.getText();
-    var scale;
-    if (text == this.scale) {
-      this.scaleTypeButton.setText(this.alternateScale);
-      scale = this.alternateScale;
-    } else if (text == this.alternateScale) {
-      this.scaleTypeButton.setText(this.scale);
-      scale = this.scale;
-    }
-    var stepText = this.scaleGroup.get(".step");
-    var steps = this.steps;
-    for (var  i = 0; i < stepText.length; i++) {
-      stepText[i].setText(steps[i][scale]);
-    }
-
-    this.layer.draw();
-  };
-
-  ScalePopup.prototype.changeTempScale =
+  ScalePopup.prototype.changeScale =
   function() {
     var text = this.scaleTypeButton.getText();
-    var celcGroup = this.scaleGroup.get("#celcsteps")[0];
-    var fahrGroup = this.scaleGroup.get("#fahrsteps")[0];
-    if (text == this.scale){
-      this.scaleTypeButton.setText(this.alternateScale);
+    var celcGroup = this.scaleGroup.get("#alternateUnits")[0];
+    var fahrGroup = this.scaleGroup.get("#units")[0];
+    if (text == this.units){
+      this.scaleTypeButton.setText(this.alternateUnits);
       celcGroup.show();
       fahrGroup.hide();
-    } else if (text == this.alternateScale) {
-      this.scaleTypeButton.setText(this.scale);
+    } else if (text == this.alternateUnits) {
+      this.scaleTypeButton.setText(this.units);
       fahrGroup.show();
       celcGroup.hide();
     }
