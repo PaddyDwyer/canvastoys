@@ -552,7 +552,6 @@ var BuoyDataPoints = (function() {
   BuoyDataPoints.prototype.createTapHandler = function(dataPoint, mouseOverHandler, clickHandler) {
     var _this = this;
     return function() {
-      console.log("tap tappity");
       if (_this.selected == dataPoint.id) {
         clickHandler();
       } else {
@@ -990,7 +989,6 @@ var Images= (function() {
   Images.prototype.imageLoadHandler = function(evt) {
     this.count++;
     evt.data.count = this.count;
-    console.info("image loaded correctly, id:", evt.data.id);
     this.images[evt.data.id] = evt.target;
 
     this.triggerElement.trigger(this.collection + ":images:success", [evt.data, evt.target]);
@@ -1002,7 +1000,6 @@ var Images= (function() {
 
   Images.prototype.imageLoadErrorHandler = function(evt) {
     this.count++;
-    console.error("error loading image, id:", evt.data.id);
 
     this.triggerElement.trigger(this.collection + ":images:error", [evt.data, evt.target]);
     if (this.count == this.imgurls.length) {
@@ -2013,6 +2010,7 @@ var WaveMap = (function() {
       $("#" + this.id).on("waves:images:success.wavemaps", $.proxy(this.loadMap, this));
       var imgurls = ["http://www.swellinfo.com/imgs/sst_graphs/" + this.map + "_sst.png"];
       this.deepWaterWaves = new Images({
+        id: this.id,
         images: imgurls,
         collection: "waves"
       });
