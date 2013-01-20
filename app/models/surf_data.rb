@@ -42,7 +42,15 @@ class SurfData
     get("/sst_maps_hierarchy.xml")
   end
 
+  def self.get_buoy_maps
+    get("/buoy_maps.xml")
+  end
+
   def self.get_forecast_xy(map)
     get("/forecast_xy.xml.php?map=#{map}")
+  end
+
+  def self.get_buoy_data(map, timezone)
+    get("/buoy_data.xml.php?map=#{map}&timezone=#{timezone}")
   end
 end

@@ -59,9 +59,21 @@ class DataController < ApplicationController
     render :inline => xml.body
   end
 
+  def buoy_maps
+    xml = SurfData.get_buoy_maps
+    render :inline => xml.body
+  end
+
   def forecast_xy
     map = params[:map]
     xml = SurfData.get_forecast_xy(map)
+    render :inline => xml.body
+  end
+
+  def buoy_data
+    map = params[:map]
+    timezone = params[:timezone]
+    xml = SurfData.get_buoy_data(map, timezone)
     render :inline => xml.body
   end
 end

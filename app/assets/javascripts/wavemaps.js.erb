@@ -341,6 +341,620 @@ var ForecastPoints = (function() {
   return ForecastPoints;
 })();
 
+var BuoyData = (function() {
+  BuoyData.name = "BuoyData";
+
+  function BuoyData(options) {
+    this.id = options.id;
+    var map = options.map;
+
+    var url = "<%= data_buoy_data_path :format => :xml %>";
+    $.get(url, {map: map + "buoys"}, $.proxy(this.storeBuoyData, this));
+  }
+
+  BuoyData.prototype.storeBuoyData = function(data) {
+    var buoyData = [];
+    var xml = $(data);
+    xml.find("buoy").each(function() {
+      var element = $(this);
+      var data = {};
+      data.id = element.attr("id");
+      data.type = element.attr("type");
+      data.time = element.attr("time");
+      data.wave_ht = element.attr("wave_ht");
+      data.wave_per = element.attr("wave_per");
+      data.wave_dir = element.attr("wave_dir");
+      data.swell_ht = element.attr("swell_ht");
+      data.swell_per = element.attr("swell_per");
+      data.swell_dir = element.attr("swell_dir");
+      data.wind_dir = element.attr("wind_dir");
+      data.wind_speed = element.attr("wind_speed");
+      data.wind_gusts = element.attr("wind_gusts");
+      data.air_temp = element.attr("air_temp");
+      data.dew_point = element.attr("dew_point");
+      data.water_temp = element.attr("water_temp");
+      data.xcoord = element.attr("xcoord");
+      data.ycoord = element.attr("ycoord");
+      data.xbox = parseInt(element.attr("xbox"), 10);
+      data.ybox = parseInt(element.attr("ybox"), 10);
+      data.current = element.attr("current");
+      if (data.current == "yes") {
+        buoyData.push(data);
+      }
+    });
+    this.dataPoints = buoyData;
+
+    $("#" + this.id).trigger("buoyDataLoaded", [this.dataPoints]);
+  };
+
+  return BuoyData;
+})();
+
+var BuoyDataPoints = (function() {
+  BuoyDataPoints.name = "BuoyDataPoints";
+
+  function BuoyDataPoints(options) {
+    this.id = options.id;
+    this.layer = options.layer;
+    this.data = options.buoyDataPoints;
+    this.map = options.map;
+    this.defaultBuoy = options.defaultBuoy;
+
+    this.drawInitial();
+  }
+
+  BuoyDataPoints.prototype.drawInitial = function() {
+    var dataPoint, group, rect, circle, smDataBox, clickHandler, mouseOverHandler;
+
+    // Position the big data box
+    group = new Kinetic.Group({
+      draggable: true
+    });
+    switch (this.map) {
+      case 'wna_ne':
+        group.setPosition(25, 34);
+        break;
+      case 'wna_midat':
+        group.setPosition(200, 165);
+        break;
+      case 'wna_se':
+        group.setPosition(350, 235);
+        break;
+      case 'wna_efl':
+        group.setPosition(350, 35);
+        break;
+      case 'wna_wfl':
+        group.setPosition(5, 134);
+        break;
+      case 'wna_tx':
+        group.setPosition(260, 240);
+        break;
+      case 'enp_nw':
+        group.setPosition(41, 132);
+        break;
+      case 'enp_calnorth':
+        group.setPosition(94, 174);
+        break;
+      case 'enp_socal':
+        group.setPosition(361, 29);
+        break;
+      case 'enp_hawaii':
+        group.setPosition(355, 33);
+        break;
+      case 'wna_caribnorth':
+        group.setPosition(355, 33);
+        break;
+      case 'wna_caribsouth':
+        group.setPosition(240, 240);
+        break;
+      case 'wna_gulf':
+        group.setPosition(250, 135);
+        break;
+      case 'enp_mex':
+        group.setPosition(100, 200);
+        break;
+      case 'enp_cenam':
+        group.setPosition(60, 180);
+        break;
+      default:
+        group.setPosition(25, 34);
+        break;
+    }
+    this.createBigDataBox(group);
+    this.layer.add(group);
+
+    // Create the Data Points
+    for (var i = 0; i < this.data.length; i++) {
+      clickHandler = null;
+      dataPoint = this.data[i];
+      if (dataPoint.id == this.defaultBuoy) {
+        this.updateDataBox(dataPoint);
+      }
+      group = new Kinetic.Group({
+        x: dataPoint.xcoord,
+        y: dataPoint.ycoord
+      });
+      if (dataPoint.type == "ndbc" || dataPoint.type == "ndbc2") {
+        if (dataPoint.type == "ndbc2") {
+          rect = new Kinetic.Rect({
+            width: 8,
+            height: 8,
+            fill: "#125780"
+          });
+          group.add(rect);
+          rect = new Kinetic.Rect({
+            x: 2,
+            y: 2,
+            width: 4,
+            height: 4,
+            fill: "#F6F43A"
+          });
+          group.add(rect);
+        } else {
+          rect = new Kinetic.Rect({
+            width: 8,
+            height: 8,
+            fill: "#F6F43A"
+          });
+          group.add(rect);
+        }
+
+        smDataBox = this.createSmallDataBox(dataPoint);
+        group.add(smDataBox);
+        clickHandler = this.createClickHandler(dataPoint);
+      } else if (dataPoint.type == "buoycast") {
+        rect = new Kinetic.Rect({
+          width: 8,
+          height: 8,
+          fill: "#125780"
+        });
+        group.add(rect);
+      } else if (dataPoint.type == "inland") {
+        circle = new Kinetic.Circle({
+          radius: 4,
+          fill: "#00FF00"
+        });
+        group.add(circle);
+      } else if (dataPoint.type == "coastal") {
+        circle = new Kinetic.Circle({
+          radius: 4,
+          fill: "#A22B25"
+        });
+        group.add(circle);
+        clickHandler = this.createClickHandler(dataPoint);
+      }
+      if(clickHandler) {
+        group.on("click.wavemaps", clickHandler);
+      }
+      mouseOverHandler = this.createMouseOverHandler(dataPoint);
+      group.on("mouseenter.wavemaps", mouseOverHandler);
+      group.on("tap.wavemaps", this.createTapHandler(dataPoint, mouseOverHandler, clickHandler));
+      this.layer.add(group);
+    }
+
+    this.layer.draw();
+  };
+
+  BuoyDataPoints.prototype.createClickHandler = function(dataPoint) {
+    return function() {
+      var url = "http://ndbc.noaa.gov/station_page.php?station=" + dataPoint.id;
+      window.open(url, "_blank");
+    }
+  };
+
+  BuoyDataPoints.prototype.createMouseOverHandler = function(dataPoint) {
+    var _this = this;
+    return function() {
+      _this.updateDataBox(dataPoint);
+    }
+  };
+
+  BuoyDataPoints.prototype.createTapHandler = function(dataPoint, mouseOverHandler, clickHandler) {
+    var _this = this;
+    return function() {
+      console.log("tap tappity");
+      if (_this.selected == dataPoint.id) {
+        clickHandler();
+      } else {
+        mouseOverHandler();
+        _this.selected = dataPoint.id;
+      }
+    }
+  };
+
+  BuoyDataPoints.prototype.createBigDataBox = function(group) {
+    var rect = new Kinetic.Rect({
+      x: 0.5,
+      y: 0.5,
+      width: 179,
+      height: 144,
+      fill: "rgba(256, 256, 256, 0.8)",
+      stroke: "#000000",
+      strokeWidth: 1
+    });
+    group.add(rect);
+
+    var line = new Kinetic.Line({
+      points: [0.5, 37.5, 179.5, 37.5],
+      strokeWidth: 1,
+      stroke: "#000000"
+    });
+    group.add(line);
+
+    var text = new Kinetic.Text({
+      x: 5,
+      y: 6,
+      text: "Station ID:",
+      textFill: "#000000",
+      fontFamily: "Arial",
+      fontSize: 10
+    });
+    group.add(text);
+
+    this.station_id = new Kinetic.Text({
+      x: 68,
+      y: 6,
+      textFill: "#990000",
+      fontFamily: "Arial",
+      fontSize: 10,
+      fontStyle: "bold"
+    });
+    group.add(this.station_id);
+
+    var text = new Kinetic.Text({
+      x: 5,
+      y: 22,
+      text: "Time:",
+      textFill: "#000000",
+      fontFamily: "Arial",
+      fontSize: 10
+    });
+    group.add(text);
+
+    this.time = new Kinetic.Text({
+      x: 68,
+      y: 22,
+      textFill: "#990000",
+      fontFamily: "Arial",
+      fontSize: 10,
+      fontStyle: "bold"
+    });
+    group.add(this.time);
+
+    var text = new Kinetic.Text({
+      x: 5,
+      y: 46,
+      text: "wave ht:",
+      textFill: "#000000",
+      fontFamily: "Arial",
+      fontSize: 8,
+      width: 42,
+      align: "right"
+    });
+    group.add(text);
+
+    this.wave_ht = new Kinetic.Text({
+      x: 50,
+      y: 46,
+      textFill: "#0066CC",
+      fontFamily: "Arial",
+      fontSize: 8,
+      fontStyle: "bold"
+    });
+    group.add(this.wave_ht);
+
+    var text = new Kinetic.Text({
+      x: 5,
+      y: 59,
+      text: "period:",
+      textFill: "#000000",
+      fontFamily: "Arial",
+      fontSize: 8,
+      width: 42,
+      align: "right"
+    });
+    group.add(text);
+
+    this.wave_per = new Kinetic.Text({
+      x: 50,
+      y: 59,
+      textFill: "#0066CC",
+      fontFamily: "Arial",
+      fontSize: 8,
+      fontStyle: "bold"
+    });
+    group.add(this.wave_per);
+
+    var text = new Kinetic.Text({
+      x: 5,
+      y: 72,
+      text: "direction:",
+      textFill: "#000000",
+      fontFamily: "Arial",
+      fontSize: 8,
+      width: 42,
+      align: "right"
+    });
+    group.add(text);
+
+    this.wave_dir = new Kinetic.Text({
+      x: 50,
+      y: 72,
+      textFill: "#0066CC",
+      fontFamily: "Arial",
+      fontSize: 8,
+      fontStyle: "bold"
+    });
+    group.add(this.wave_dir);
+
+    var text = new Kinetic.Text({
+      x: 5,
+      y: 101,
+      text: "swell ht:",
+      textFill: "#000000",
+      fontFamily: "Arial",
+      fontSize: 8,
+      width: 40,
+      align: "right"
+    });
+    group.add(text);
+
+    this.swell_ht = new Kinetic.Text({
+      x: 50,
+      y: 101,
+      textFill: "#0066CC",
+      fontFamily: "Arial",
+      fontSize: 8,
+      fontStyle: "bold"
+    });
+    group.add(this.swell_ht);
+
+    var text = new Kinetic.Text({
+      x: 5,
+      y: 114,
+      text: "period:",
+      textFill: "#000000",
+      fontFamily: "Arial",
+      fontSize: 8,
+      width: 40,
+      align: "right"
+    });
+    group.add(text);
+
+    this.swell_per = new Kinetic.Text({
+      x: 50,
+      y: 114,
+      textFill: "#0066CC",
+      fontFamily: "Arial",
+      fontSize: 8,
+      fontStyle: "bold"
+    });
+    group.add(this.swell_per);
+
+    var text = new Kinetic.Text({
+      x: 5,
+      y: 127,
+      text: "direction:",
+      textFill: "#000000",
+      fontFamily: "Arial",
+      fontSize: 8,
+      width: 40,
+      align: "right"
+    });
+    group.add(text);
+
+    this.swell_dir = new Kinetic.Text({
+      x: 50,
+      y: 127,
+      textFill: "#0066CC",
+      fontFamily: "Arial",
+      fontSize: 8,
+      fontStyle: "bold"
+    });
+    group.add(this.swell_dir);
+
+    var text = new Kinetic.Text({
+      x: 98,
+      y: 46,
+      text: "wind dir:",
+      textFill: "#000000",
+      fontFamily: "Arial",
+      fontSize: 8,
+      width: 40,
+      align: "right"
+    });
+    group.add(text);
+
+    this.wind_dir = new Kinetic.Text({
+      x: 141,
+      y: 46,
+      textFill: "#0066CC",
+      fontFamily: "Arial",
+      fontSize: 8,
+      fontStyle: "bold"
+    });
+    group.add(this.wind_dir);
+
+    var text = new Kinetic.Text({
+      x: 98,
+      y: 59,
+      text: "speed:",
+      textFill: "#000000",
+      fontFamily: "Arial",
+      fontSize: 8,
+      width: 40,
+      align: "right"
+    });
+    group.add(text);
+
+    this.wind_speed = new Kinetic.Text({
+      x: 141,
+      y: 59,
+      textFill: "#0066CC",
+      fontFamily: "Arial",
+      fontSize: 8,
+      fontStyle: "bold"
+    });
+    group.add(this.wind_speed);
+
+    var text = new Kinetic.Text({
+      x: 98,
+      y: 72,
+      text: "gust:",
+      textFill: "#000000",
+      fontFamily: "Arial",
+      fontSize: 8,
+      width: 40,
+      align: "right"
+    });
+    group.add(text);
+
+    this.wind_gust = new Kinetic.Text({
+      x: 141,
+      y: 72,
+      textFill: "#0066CC",
+      fontFamily: "Arial",
+      fontSize: 8,
+      fontStyle: "bold"
+    });
+    group.add(this.wind_gust);
+
+    var text = new Kinetic.Text({
+      x: 98,
+      y: 101,
+      text: "air tmp:",
+      textFill: "#000000",
+      fontFamily: "Arial",
+      fontSize: 8,
+      width: 40,
+      align: "right"
+    });
+    group.add(text);
+
+    this.air_temp = new Kinetic.Text({
+      x: 141,
+      y: 101,
+      textFill: "#0066CC",
+      fontFamily: "Arial",
+      fontSize: 8,
+      fontStyle: "bold"
+    });
+    group.add(this.air_temp);
+
+    var text = new Kinetic.Text({
+      x: 98,
+      y: 113,
+      text: "dew pt:",
+      textFill: "#000000",
+      fontFamily: "Arial",
+      fontSize: 8,
+      width: 40,
+      align: "right"
+    });
+    group.add(text);
+
+    this.dew_pt = new Kinetic.Text({
+      x: 141,
+      y: 113,
+      textFill: "#0066CC",
+      fontFamily: "Arial",
+      fontSize: 8,
+      fontStyle: "bold"
+    });
+    group.add(this.dew_pt);
+
+    var text = new Kinetic.Text({
+      x: 98,
+      y: 126,
+      text: "wtr tmp:",
+      textFill: "#000000",
+      fontFamily: "Arial",
+      fontSize: 8,
+      width: 40,
+      align: "right"
+    });
+    group.add(text);
+
+    this.wtr_temp = new Kinetic.Text({
+      x: 141,
+      y: 126,
+      textFill: "#0066CC",
+      fontFamily: "Arial",
+      fontSize: 8,
+      fontStyle: "bold"
+    });
+    group.add(this.wtr_temp);
+  };
+
+  BuoyDataPoints.prototype.updateDataBox = function(dataPoint) {
+    this.station_id.setText(dataPoint.id);
+    this.time.setText(dataPoint.time);
+    this.wave_ht.setText(dataPoint.wave_ht);
+    this.wave_per.setText(dataPoint.wave_per);
+    this.wave_dir.setText(dataPoint.wave_dir);
+    this.swell_ht.setText(dataPoint.swell_ht);
+    this.swell_per.setText(dataPoint.swell_per);
+    this.swell_dir.setText(dataPoint.swell_dir);
+    this.wind_dir.setText(dataPoint.wind_dir);
+    this.wind_speed.setText(dataPoint.wind_speed);
+    this.wind_gust.setText(dataPoint.wind_gusts);
+    this.air_temp.setText(dataPoint.air_temp);
+    this.dew_pt.setText(dataPoint.dew_point);
+    this.wtr_temp.setText(dataPoint.water_temp);
+    this.layer.draw();
+  };
+
+  BuoyDataPoints.prototype.createSmallDataBox = function(dataPoint) {
+    var group = new Kinetic.Group({
+      x: (dataPoint.xbox - dataPoint.xcoord + 3.5),
+      y: (dataPoint.ybox - dataPoint.ycoord + 4.5),
+    });
+    var rect = new Kinetic.Rect({
+      stroke: "#FFFF00",
+      strokeWidth: 1,
+      fill: "rgba(256, 256, 256, 0.8)",
+      width: 40,
+      height: 35
+    });
+    group.add(rect);
+
+    var text = new Kinetic.Text({
+      x: 2,
+      y: 3,
+      width: 38,
+      text: dataPoint.wave_ht,
+      fontFamily: "Arial",
+      fontSize: 7,
+      textFill: "#000000"
+    });
+    group.add(text);
+    text = new Kinetic.Text({
+      x: 2,
+      y: 14,
+      width: 38,
+      text: dataPoint.wave_per,
+      fontFamily: "Arial",
+      fontSize: 7,
+      textFill: "#000000"
+    });
+    group.add(text);
+    text = new Kinetic.Text({
+      x: 2,
+      y: 25,
+      width: 36,
+      height: 10,
+      text: dataPoint.wind_dir + " " + dataPoint.wind_speed,
+      fontFamily: "Arial",
+      fontSize: 7,
+      textFill: "#000000"
+    });
+    group.add(text);
+    return group;
+  };
+
+  return BuoyDataPoints;
+})();
+
 /**
  * The options object can have the following members:
  * id: Used if you want to trigger the images loaded event. It triggers the event on 
@@ -439,6 +1053,9 @@ var MapHierarchy = (function() {
       case "surfacetempmap":
         url = "<%= data_sst_maps_hierarchy_path :format => :xml %>";
         break;
+      case "buoydatamap":
+        url = "<%= data_buoy_maps_path :format => :xml %>";
+        break;
     }
 
     $.get(url, $.proxy(this.ajaxSuccess, this));
@@ -473,7 +1090,7 @@ var MapHierarchy = (function() {
     });
     this.layer.add(this.controlGroup);
     var yoffset = 0;
-    if (parentNode.length > 0 && this.maptype != "surfacetmepmap" && parentNode[0].key != "nww3") {
+    if (parentNode.length > 0 && this.maptype != "buoydatamap" && this.maptype != "surfacetmepmap" && parentNode[0].key != "nww3") {
       this.drawButtons("parent", parentNode, yoffset);
       yoffset += 21;
     }
@@ -1373,15 +1990,18 @@ var WaveMap = (function() {
     this.title = options.title;
     this.mapType = options.maptype;
     this.map = options.map;
+    this.defaultBuoy = options.defaultBuoy;
     this.stage = options.stage || new Kinetic.Stage({container: options.id, width: 541, height: 391});
 
     this.mapLayer = new Kinetic.Layer();
+    this.dataLayer = new Kinetic.Layer();
     this.infoLayer = new Kinetic.Layer();
 
     this.stage.add(this.mapLayer);
+    this.stage.add(this.dataLayer);
     this.stage.add(this.infoLayer);
 
-    if (this.mapType != "surfacetempmap") {
+    if (this.mapType != "surfacetempmap" && this.mapType != "buoydatamap") {
       $("#" + this.id).on("timesLoaded.wavemaps", $.proxy(this.handleLoadedTimes, this));
       this.times = new Times({
         id: this.id,
@@ -1392,6 +2012,13 @@ var WaveMap = (function() {
     } else if (this.mapType == "surfacetempmap") {
       $("#" + this.id).on("waves:images:success.wavemaps", $.proxy(this.loadMap, this));
       var imgurls = ["http://www.swellinfo.com/imgs/sst_graphs/" + this.map + "_sst.png"];
+      this.deepWaterWaves = new Images({
+        images: imgurls,
+        collection: "waves"
+      });
+    } else if (this.mapType == "buoydatamap") {
+      $("#" + this.id).on("waves:images:success.wavemaps", $.proxy(this.loadMap, this));
+      var imgurls = ["http://www.swellinfo.com/imgs/buoys/" + this.map + "buoys.png"];
       this.deepWaterWaves = new Images({
         id: this.id,
         images: imgurls,
@@ -1410,12 +2037,17 @@ var WaveMap = (function() {
       this.forecast = new Forecast({id: this.id, map: this.map});
     }
 
+    if (this.mapType == "buoydatamap") {
+      $("#" + this.id).on("buoyDataLoaded.wavemaps", $.proxy(this.handleLoadedBuoyData, this));
+      this.buoyData = new BuoyData({id: this.id, map: this.map});
+    }
+
     this.drawInfoLayer();
   }
 
   WaveMap.prototype.drawInfoLayer = function() {
     // Title background Rectangle
-    var width = this.mapType == "surfacetempmap" ? 541 : 512;
+    var width = this.mapType == "surfacetempmap" || this.mapType == "buoydatamap" ? 541 : 512;
     var rect = new Kinetic.Rect({
       x: 0,
       y: 0,
@@ -1490,9 +2122,19 @@ var WaveMap = (function() {
   WaveMap.prototype.handleLoadedForecast = function(event, forecast) {
     this.forecastDisplay = new ForecastPoints({
       id: this.id, 
-      layer: this.infoLayer,
+      layer: this.dataLayer,
       forecastPoints: forecast,
       loc: this.loc
+    });
+  };
+
+  WaveMap.prototype.handleLoadedBuoyData = function(event, buoyData) {
+    this.buoyDataDisplay = new BuoyDataPoints({
+      id: this.id,
+      layer: this.dataLayer,
+      buoyDataPoints: buoyData,
+      map: this.map,
+      defaultBuoy: this.defaultBuoy
     });
   };
 
@@ -1590,6 +2232,16 @@ var WaveMap = (function() {
 
 $(function() {
   var canvas2DSupported = !!window.CanvasRenderingContext2D;
+  if ($("#buoydata").length > 0) {
+    new WaveMap({
+      id: "buoydata",
+      title: "BUOY DATA",
+      timezone: "ET",
+      map: "wna_ne",
+      maptype: "buoydatamap",
+      defaultBuoy: "44065"
+    });
+  }
   if ($("#surfacetemp").length > 0) {
     new WaveMap({
       id: "surfacetemp",
