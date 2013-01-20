@@ -404,64 +404,86 @@ var BuoyDataPoints = (function() {
   }
 
   BuoyDataPoints.prototype.drawInitial = function() {
-    var dataPoint, group, rect, circle, smDataBox, clickHandler, mouseOverHandler;
+    var dataPoint, group, rect, circle, bigDataBox, smDataBox, clickHandler, mouseOverHandler;
 
     // Position the big data box
-    group = new Kinetic.Group({
-      draggable: true
+    bigDataBox = new Kinetic.Group({
+      draggable: true,
+      dragBoundFunc: function(pos) {
+        var newY;
+        if (pos.y < 27) {
+          newY = 27;
+        } else if (pos.y > (390 - 144)) {
+          newY = 390 - 144;
+        } else {
+          newY = pos.y;
+        }
+        var newX;
+        if (pos.x < 0) {
+          newX = 0;
+        } else if (pos.x > (540 - 179)) {
+          newX = 540 - 179;
+        } else {
+          newX = pos.x;
+        }
+        return {
+          x: newX,
+          y: newY
+        }
+      }
     });
     switch (this.map) {
       case 'wna_ne':
-        group.setPosition(25, 34);
+        bigDataBox.setPosition(25, 34);
         break;
       case 'wna_midat':
-        group.setPosition(200, 165);
+        bigDataBox.setPosition(200, 165);
         break;
       case 'wna_se':
-        group.setPosition(350, 235);
+        bigDataBox.setPosition(350, 235);
         break;
       case 'wna_efl':
-        group.setPosition(350, 35);
+        bigDataBox.setPosition(350, 35);
         break;
       case 'wna_wfl':
-        group.setPosition(5, 134);
+        bigDataBox.setPosition(5, 134);
         break;
       case 'wna_tx':
-        group.setPosition(260, 240);
+        bigDataBox.setPosition(260, 240);
         break;
       case 'enp_nw':
-        group.setPosition(41, 132);
+        bigDataBox.setPosition(41, 132);
         break;
       case 'enp_calnorth':
-        group.setPosition(94, 174);
+        bigDataBox.setPosition(94, 174);
         break;
       case 'enp_socal':
-        group.setPosition(361, 29);
+        bigDataBox.setPosition(361, 29);
         break;
       case 'enp_hawaii':
-        group.setPosition(355, 33);
+        bigDataBox.setPosition(355, 33);
         break;
       case 'wna_caribnorth':
-        group.setPosition(355, 33);
+        bigDataBox.setPosition(355, 33);
         break;
       case 'wna_caribsouth':
-        group.setPosition(240, 240);
+        bigDataBox.setPosition(240, 240);
         break;
       case 'wna_gulf':
-        group.setPosition(250, 135);
+        bigDataBox.setPosition(250, 135);
         break;
       case 'enp_mex':
-        group.setPosition(100, 200);
+        bigDataBox.setPosition(100, 200);
         break;
       case 'enp_cenam':
-        group.setPosition(60, 180);
+        bigDataBox.setPosition(60, 180);
         break;
       default:
-        group.setPosition(25, 34);
+        bigDataBox.setPosition(25, 34);
         break;
     }
-    this.createBigDataBox(group);
-    this.layer.add(group);
+    this.createBigDataBox(bigDataBox);
+    this.layer.add(bigDataBox);
 
     // Create the Data Points
     for (var i = 0; i < this.data.length; i++) {
@@ -529,6 +551,7 @@ var BuoyDataPoints = (function() {
       mouseOverHandler = this.createMouseOverHandler(dataPoint);
       group.on("mouseenter.wavemaps", mouseOverHandler);
       group.on("tap.wavemaps", this.createTapHandler(dataPoint, mouseOverHandler, clickHandler));
+      bigDataBox.setZIndex(1000);
       this.layer.add(group);
     }
 
@@ -552,7 +575,7 @@ var BuoyDataPoints = (function() {
   BuoyDataPoints.prototype.createTapHandler = function(dataPoint, mouseOverHandler, clickHandler) {
     var _this = this;
     return function() {
-      if (_this.selected == dataPoint.id) {
+      if (_this.selected == dataPoint.id && typeof clickHandler == 'function') {
         clickHandler();
       } else {
         mouseOverHandler();
