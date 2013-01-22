@@ -15,6 +15,63 @@ var MouseHandler = {
   }
 }
 
+/**
+ * The options object can have the following members:
+ * id: Used if you want to trigger the images loaded event. It triggers the event on 
+ * the object with the provided id.
+ * images: Array of images urls that you want the images object to load.
+ */
+var Images= (function() {
+  Images.name = "Images";
+
+  // constructor
+  function Images(options) {
+    this.triggerElement = !options.id ? $(document) : $("#" + options.id);
+    this.imgurls = options.images;
+    this.images = [];
+    this.count = 0;
+    this.collection = options.collection;
+    this.cache = options.cache || false;
+
+    // Fetch one image for testing
+    for (var i = 0; i < this.imgurls.length; i++) {
+      var imgurl = this.imgurls[i];
+      // Add cachebuster
+      if (!this.cache) {
+        imgurl += ("?_=") + (new Date()).getTime();
+      }
+      $("<img/>")
+          .one("load", {id: i, url: this.imgurls[i]}, $.proxy(this.imageLoadHandler, this))
+          .error({id: i}, $.proxy(this.imageLoadErrorHandler, this))
+          .attr("src", imgurl)
+    }
+  }
+
+  Images.prototype.imageLoadHandler = function(evt) {
+    this.count++;
+    evt.data.count = this.count;
+    this.images[evt.data.id] = evt.target;
+
+    this.triggerElement.trigger(this.collection + ":images:success", [evt.data, evt.target]);
+    if (this.count == this.imgurls.length) {
+      this.fullyLoaded = true;
+      this.triggerElement.trigger(this.collection + ":images:allLoaded");
+    }
+  }
+
+  Images.prototype.imageLoadErrorHandler = function(evt) {
+    this.count++;
+
+    this.triggerElement.trigger(this.collection + ":images:error", [evt.data, evt.target]);
+    if (this.count == this.imgurls.length) {
+      this.fullyLoaded = true;
+      this.triggerElement.trigger(this.collection + ":images:allLoaded");
+    }
+  }
+
+  return Images;
+})();
+
 var Times = (function() {
   Times.name = "Times";
 
@@ -142,32 +199,47 @@ var Forecast = (function() {
 var ForecastPoints = (function() {
   ForecastPoints.name = "ForecastPoints";
 
+  var pointImages = new Images({
+    images: ["<%= asset_path('green_star_wavemaps.png') %>"],
+    collection: "forecastPoints"
+  });
+
   function ForecastPoints(options) {
     this.id = options.id;
     this.layer = options.layer;
     this.data = options.forecastPoints;
     this.loc = options.loc;
 
-    this.drawInitial();
+    if (!pointImages.fullyLoaded) {
+      $(document).on("forecastPoints:images:allLoaded.wavemaps", $.proxy(this.drawInitial, this));
+    } else {
+      this.drawInitial();
+    }
+
   }
 
   ForecastPoints.prototype.drawInitial = function() {
+    var shape;
     for (var i = 0; i < this.data.length; i++) {
       if (this.data[i].url.indexOf(this.loc) > -1) {
-        var fill = "#00FF00";
+        shape = new Kinetic.Image({
+          x: this.data[i].xcoord,
+          y: this.data[i].ycoord,
+          image: pointImages.images[0]
+        });
+        shape.setOffset(shape.getWidth() / 2, shape.getHeight() / 2);
       } else {
-        var fill = "#990000";
+        shape = new Kinetic.Circle({
+          x: this.data[i].xcoord,
+          y: this.data[i].ycoord,
+          radius: 4,
+          fill: "#990000"
+        });
       }
-      var circle = new Kinetic.Circle({
-        x: this.data[i].xcoord,
-        y: this.data[i].ycoord,
-        radius: 4,
-        fill: fill
-      });
-      circle.on("click.wavemaps tap.wavemaps", this.createPointClickFunction(this.data[i]));
-      circle.on("mouseenter.wavemaps", MouseHandler.mouseenter);
-      circle.on("mouseleave.wavemaps", MouseHandler.mouseleave);
-      this.layer.add(circle);
+      shape.on("click.wavemaps tap.wavemaps", this.createPointClickFunction(this.data[i]));
+      shape.on("mouseenter.wavemaps", MouseHandler.mouseenter);
+      shape.on("mouseleave.wavemaps", MouseHandler.mouseleave);
+      this.layer.add(shape);
     }
 
     this.drawInfoBox();
@@ -977,62 +1049,6 @@ var BuoyDataPoints = (function() {
   return BuoyDataPoints;
 })();
 
-/**
- * The options object can have the following members:
- * id: Used if you want to trigger the images loaded event. It triggers the event on 
- * the object with the provided id.
- * images: Array of images urls that you want the images object to load.
- */
-var Images= (function() {
-  Images.name = "Images";
-
-  // constructor
-  function Images(options) {
-    this.triggerElement = !options.id ? $(document) : $("#" + options.id);
-    this.imgurls = options.images;
-    this.images = [];
-    this.count = 0;
-    this.collection = options.collection;
-    this.cache = options.cache || false;
-
-    // Fetch one image for testing
-    for (var i = 0; i < this.imgurls.length; i++) {
-      var imgurl = this.imgurls[i];
-      // Add cachebuster
-      if (!this.cache) {
-        imgurl += ("?_=") + (new Date()).getTime();
-      }
-      $("<img/>")
-          .one("load", {id: i, url: this.imgurls[i]}, $.proxy(this.imageLoadHandler, this))
-          .error({id: i}, $.proxy(this.imageLoadErrorHandler, this))
-          .attr("src", imgurl)
-    }
-  }
-
-  Images.prototype.imageLoadHandler = function(evt) {
-    this.count++;
-    evt.data.count = this.count;
-    this.images[evt.data.id] = evt.target;
-
-    this.triggerElement.trigger(this.collection + ":images:success", [evt.data, evt.target]);
-    if (this.count == this.imgurls.length) {
-      this.fullyLoaded = true;
-      this.triggerElement.trigger(this.collection + ":images:allLoaded");
-    }
-  }
-
-  Images.prototype.imageLoadErrorHandler = function(evt) {
-    this.count++;
-
-    this.triggerElement.trigger(this.collection + ":images:error", [evt.data, evt.target]);
-    if (this.count == this.imgurls.length) {
-      this.fullyLoaded = true;
-      this.triggerElement.trigger(this.collection + ":images:allLoaded");
-    }
-  }
-
-  return Images;
-})();
 
 
 var MapHierarchy = (function() {
