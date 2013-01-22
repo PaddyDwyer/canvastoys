@@ -218,8 +218,8 @@ var ForecastPoints = (function() {
     this.infoBoxGroup.add(rect);
 
     this.name = new Kinetic.Text({
-      x: (rect.getWidth() / 2) - 75,
-      y: 8, 
+      x: (rect.getWidth() / 2) - 75.5,
+      y: 8.5, 
       width: 150,
       textFill: "#0000B4",
       fontFamily: "Verdana",
@@ -245,8 +245,8 @@ var ForecastPoints = (function() {
     this.infoBoxGroup.add(closeButton);
 
     this.surf_day = new Kinetic.Text({
-      x: 7,
-      y: 34,
+      x: 7.5,
+      y: 34.5,
       width: 116,
       textFill: "#000000",
       fontSize: 8,
@@ -282,8 +282,8 @@ var ForecastPoints = (function() {
     this.infoBoxGroup.add(text);
 
     this.surf_txt = new Kinetic.Text({
-      x: 7,
-      y: 66,
+      x: 7.5,
+      y: 66.5,
       width: 194,
       height: 44,
       textFill: "#000000",
@@ -305,8 +305,8 @@ var ForecastPoints = (function() {
     this.infoBoxGroup.add(text);
 
     this.cond_txt = new Kinetic.Text({
-      x: 7,
-      y: 127,
+      x: 7.5,
+      y: 127.5,
       width: 194,
       height: 44,
       textFill: "#000000",
@@ -317,12 +317,12 @@ var ForecastPoints = (function() {
     this.infoBoxGroup.add(this.cond_txt);
 
     this.url_btn = new Kinetic.Text({
-      x: 7,
-      y: 179,
+      x: 7.5,
+      y: 179.5,
       width: 194,
       textFill: "#0000B4",
       fontFamily: "Arial",
-      fontSize: 7
+      fontSize: 8
     });
     this.url_btn.on("click.wavemaps tap.wavemaps", $.proxy(this.changeToForecastPage, this));
     this.url_btn.on("mouseenter.wavemaps", MouseHandler.mouseenter);
@@ -604,8 +604,8 @@ var BuoyDataPoints = (function() {
     group.add(line);
 
     var text = new Kinetic.Text({
-      x: 5,
-      y: 6,
+      x: 5.5,
+      y: 6.5,
       text: "Station ID:",
       textFill: "#000000",
       fontFamily: "Arial",
@@ -614,8 +614,8 @@ var BuoyDataPoints = (function() {
     group.add(text);
 
     this.station_id = new Kinetic.Text({
-      x: 68,
-      y: 6,
+      x: 68.5,
+      y: 6.5,
       textFill: "#990000",
       fontFamily: "Arial",
       fontSize: 10,
@@ -624,8 +624,8 @@ var BuoyDataPoints = (function() {
     group.add(this.station_id);
 
     var text = new Kinetic.Text({
-      x: 5,
-      y: 22,
+      x: 5.5,
+      y: 22.5,
       text: "Time:",
       textFill: "#000000",
       fontFamily: "Arial",
@@ -634,8 +634,8 @@ var BuoyDataPoints = (function() {
     group.add(text);
 
     this.time = new Kinetic.Text({
-      x: 68,
-      y: 22,
+      x: 68.5,
+      y: 22.5,
       textFill: "#990000",
       fontFamily: "Arial",
       fontSize: 10,
@@ -644,8 +644,8 @@ var BuoyDataPoints = (function() {
     group.add(this.time);
 
     var text = new Kinetic.Text({
-      x: 5,
-      y: 46,
+      x: 5.5,
+      y: 46.5,
       text: "wave ht:",
       textFill: "#000000",
       fontFamily: "Arial",
@@ -656,8 +656,8 @@ var BuoyDataPoints = (function() {
     group.add(text);
 
     this.wave_ht = new Kinetic.Text({
-      x: 50,
-      y: 46,
+      x: 50.5,
+      y: 46.5,
       textFill: "#0066CC",
       fontFamily: "Arial",
       fontSize: 8,
@@ -666,8 +666,8 @@ var BuoyDataPoints = (function() {
     group.add(this.wave_ht);
 
     var text = new Kinetic.Text({
-      x: 5,
-      y: 59,
+      x: 5.5,
+      y: 59.5,
       text: "period:",
       textFill: "#000000",
       fontFamily: "Arial",
@@ -678,8 +678,8 @@ var BuoyDataPoints = (function() {
     group.add(text);
 
     this.wave_per = new Kinetic.Text({
-      x: 50,
-      y: 59,
+      x: 50.5,
+      y: 59.5,
       textFill: "#0066CC",
       fontFamily: "Arial",
       fontSize: 8,
@@ -688,8 +688,8 @@ var BuoyDataPoints = (function() {
     group.add(this.wave_per);
 
     var text = new Kinetic.Text({
-      x: 5,
-      y: 72,
+      x: 5.5,
+      y: 72.5,
       text: "direction:",
       textFill: "#000000",
       fontFamily: "Arial",
@@ -700,8 +700,8 @@ var BuoyDataPoints = (function() {
     group.add(text);
 
     this.wave_dir = new Kinetic.Text({
-      x: 50,
-      y: 72,
+      x: 50.5,
+      y: 72.5,
       textFill: "#0066CC",
       fontFamily: "Arial",
       fontSize: 8,
@@ -710,8 +710,8 @@ var BuoyDataPoints = (function() {
     group.add(this.wave_dir);
 
     var text = new Kinetic.Text({
-      x: 5,
-      y: 101,
+      x: 5.5,
+      y: 101.5,
       text: "swell ht:",
       textFill: "#000000",
       fontFamily: "Arial",
@@ -722,8 +722,8 @@ var BuoyDataPoints = (function() {
     group.add(text);
 
     this.swell_ht = new Kinetic.Text({
-      x: 50,
-      y: 101,
+      x: 50.5,
+      y: 101.5,
       textFill: "#0066CC",
       fontFamily: "Arial",
       fontSize: 8,
@@ -732,8 +732,8 @@ var BuoyDataPoints = (function() {
     group.add(this.swell_ht);
 
     var text = new Kinetic.Text({
-      x: 5,
-      y: 114,
+      x: 5.5,
+      y: 114.5,
       text: "period:",
       textFill: "#000000",
       fontFamily: "Arial",
@@ -744,8 +744,8 @@ var BuoyDataPoints = (function() {
     group.add(text);
 
     this.swell_per = new Kinetic.Text({
-      x: 50,
-      y: 114,
+      x: 50.5,
+      y: 114.5,
       textFill: "#0066CC",
       fontFamily: "Arial",
       fontSize: 8,
@@ -754,8 +754,8 @@ var BuoyDataPoints = (function() {
     group.add(this.swell_per);
 
     var text = new Kinetic.Text({
-      x: 5,
-      y: 127,
+      x: 5.5,
+      y: 127.5,
       text: "direction:",
       textFill: "#000000",
       fontFamily: "Arial",
@@ -766,8 +766,8 @@ var BuoyDataPoints = (function() {
     group.add(text);
 
     this.swell_dir = new Kinetic.Text({
-      x: 50,
-      y: 127,
+      x: 50.5,
+      y: 127.5,
       textFill: "#0066CC",
       fontFamily: "Arial",
       fontSize: 8,
@@ -776,8 +776,8 @@ var BuoyDataPoints = (function() {
     group.add(this.swell_dir);
 
     var text = new Kinetic.Text({
-      x: 98,
-      y: 46,
+      x: 98.5,
+      y: 46.5,
       text: "wind dir:",
       textFill: "#000000",
       fontFamily: "Arial",
@@ -788,8 +788,8 @@ var BuoyDataPoints = (function() {
     group.add(text);
 
     this.wind_dir = new Kinetic.Text({
-      x: 141,
-      y: 46,
+      x: 141.5,
+      y: 46.5,
       textFill: "#0066CC",
       fontFamily: "Arial",
       fontSize: 8,
@@ -798,8 +798,8 @@ var BuoyDataPoints = (function() {
     group.add(this.wind_dir);
 
     var text = new Kinetic.Text({
-      x: 98,
-      y: 59,
+      x: 98.5,
+      y: 59.5,
       text: "speed:",
       textFill: "#000000",
       fontFamily: "Arial",
@@ -810,8 +810,8 @@ var BuoyDataPoints = (function() {
     group.add(text);
 
     this.wind_speed = new Kinetic.Text({
-      x: 141,
-      y: 59,
+      x: 141.5,
+      y: 59.5,
       textFill: "#0066CC",
       fontFamily: "Arial",
       fontSize: 8,
@@ -820,8 +820,8 @@ var BuoyDataPoints = (function() {
     group.add(this.wind_speed);
 
     var text = new Kinetic.Text({
-      x: 98,
-      y: 72,
+      x: 98.5,
+      y: 72.5,
       text: "gust:",
       textFill: "#000000",
       fontFamily: "Arial",
@@ -832,8 +832,8 @@ var BuoyDataPoints = (function() {
     group.add(text);
 
     this.wind_gust = new Kinetic.Text({
-      x: 141,
-      y: 72,
+      x: 141.5,
+      y: 72.5,
       textFill: "#0066CC",
       fontFamily: "Arial",
       fontSize: 8,
@@ -842,8 +842,8 @@ var BuoyDataPoints = (function() {
     group.add(this.wind_gust);
 
     var text = new Kinetic.Text({
-      x: 98,
-      y: 101,
+      x: 98.5,
+      y: 101.5,
       text: "air tmp:",
       textFill: "#000000",
       fontFamily: "Arial",
@@ -854,8 +854,8 @@ var BuoyDataPoints = (function() {
     group.add(text);
 
     this.air_temp = new Kinetic.Text({
-      x: 141,
-      y: 101,
+      x: 141.5,
+      y: 101.5,
       textFill: "#0066CC",
       fontFamily: "Arial",
       fontSize: 8,
@@ -864,8 +864,8 @@ var BuoyDataPoints = (function() {
     group.add(this.air_temp);
 
     var text = new Kinetic.Text({
-      x: 98,
-      y: 113,
+      x: 98.5,
+      y: 113.5,
       text: "dew pt:",
       textFill: "#000000",
       fontFamily: "Arial",
@@ -876,8 +876,8 @@ var BuoyDataPoints = (function() {
     group.add(text);
 
     this.dew_pt = new Kinetic.Text({
-      x: 141,
-      y: 113,
+      x: 141.5,
+      y: 113.5,
       textFill: "#0066CC",
       fontFamily: "Arial",
       fontSize: 8,
@@ -886,8 +886,8 @@ var BuoyDataPoints = (function() {
     group.add(this.dew_pt);
 
     var text = new Kinetic.Text({
-      x: 98,
-      y: 126,
+      x: 98.5,
+      y: 126.5,
       text: "wtr tmp:",
       textFill: "#000000",
       fontFamily: "Arial",
@@ -898,8 +898,8 @@ var BuoyDataPoints = (function() {
     group.add(text);
 
     this.wtr_temp = new Kinetic.Text({
-      x: 141,
-      y: 126,
+      x: 141.5,
+      y: 126.5,
       textFill: "#0066CC",
       fontFamily: "Arial",
       fontSize: 8,
@@ -941,33 +941,33 @@ var BuoyDataPoints = (function() {
     group.add(rect);
 
     var text = new Kinetic.Text({
-      x: 2,
-      y: 3,
+      x: 2.5,
+      y: 3.5,
       width: 38,
       text: dataPoint.wave_ht,
       fontFamily: "Arial",
-      fontSize: 7,
+      fontSize: 8,
       textFill: "#000000"
     });
     group.add(text);
     text = new Kinetic.Text({
-      x: 2,
-      y: 14,
+      x: 2.5,
+      y: 14.5,
       width: 38,
       text: dataPoint.wave_per,
       fontFamily: "Arial",
-      fontSize: 7,
+      fontSize: 8,
       textFill: "#000000"
     });
     group.add(text);
     text = new Kinetic.Text({
-      x: 2,
-      y: 25,
+      x: 2.5,
+      y: 25.5,
       width: 36,
       height: 10,
       text: dataPoint.wind_dir + " " + dataPoint.wind_speed,
       fontFamily: "Arial",
-      fontSize: 7,
+      fontSize: 8,
       textFill: "#000000"
     });
     group.add(text);
