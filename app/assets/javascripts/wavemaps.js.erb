@@ -157,6 +157,7 @@ var Forecast = (function() {
     });
     this.dataPoints = forecast;
 
+    /*
     var imageUrls = [];
     for (var url in imageUrlSet) {
       if (imageUrlSet.hasOwnProperty(url)) {
@@ -171,6 +172,8 @@ var Forecast = (function() {
       cache: true});
 
     $("#" + this.id).on("surfImages:images:allLoaded.wavemaps", $.proxy(this.imagesLoaded, this));
+    */
+    $("#" + this.id).trigger("forecastLoaded", [this.dataPoints]);
   };
 
   Forecast.prototype.imagesLoaded = function() {
@@ -256,18 +259,19 @@ var ForecastPoints = (function() {
   };
 
   ForecastPoints.prototype.showInfoBox = function(dataPoint) {
-    this.infoBoxGroup.show();
-    this.infoBoxGroup.setPosition(dataPoint.xbox - 102.5, dataPoint.ybox - 77.5);
+    this.infoBox.show();
+    this.infoBox.css("left", dataPoint.xbox - 102);
+    this.infoBox.css("top", dataPoint.ybox - 77);
 
-    this.name.setText(dataPoint.brk + ", " + dataPoint.st);
-    this.surf_day.setText(dataPoint.surf_day + "'s Forecast");
-    this.surf_am.setImage(dataPoint.surf_am);
-    this.surf_pm.setImage(dataPoint.surf_pm);
-    this.surf_txt.setText(dataPoint.surf_txt);
-    this.cond_txt.setText(dataPoint.cond_txt);
-    this.url_btn.setText("Click for " + dataPoint.brk + " Forecast page");
-
-    this.layer.draw();
+    this.name.html(dataPoint.brk + ", " + dataPoint.st);
+    this.name.attr("href", dataPoint.url);
+    this.surf_day.html(dataPoint.surf_day + "'s Forecast");
+    this.surf_am.attr("src", "http://www.swellinfo.com/images/icons/" + dataPoint.surf_am);
+    this.surf_pm.attr("src", "http://www.swellinfo.com/images/icons/" + dataPoint.surf_pm);
+    this.surf_txt.html(dataPoint.surf_txt);
+    this.cond_txt.html(dataPoint.cond_txt);
+    this.url_btn.html("Click for " + dataPoint.brk + " Forecast page");
+    this.url_btn.attr("href", dataPoint.url);
   };
 
   ForecastPoints.prototype.changeToForecastPage = function() {
@@ -275,6 +279,21 @@ var ForecastPoints = (function() {
   };
 
   ForecastPoints.prototype.drawInfoBox = function() {
+    this.infoBox = $("#" + this.id + " .infobox");
+    this.infoBox.hide();
+
+    this.name = this.infoBox.find(".name a");
+    this.surf_day = this.infoBox.find(".surf_day span");
+    this.surf_am = this.infoBox.find(".surf_am");
+    this.surf_pm = this.infoBox.find(".surf_pm");
+    this.surf_txt = this.infoBox.find(".surf_txt");
+    this.cond_txt = this.infoBox.find(".cond_txt");
+    this.url_btn = this.infoBox.find(".url_btn a");
+    var infoBox = this.infoBox;
+    this.infoBox.find(".closebutton").on("click", function(event) {
+      infoBox.hide();
+    });
+    /*
     this.infoBoxGroup = new Kinetic.Group({
     });
 
@@ -403,6 +422,7 @@ var ForecastPoints = (function() {
     this.infoBoxGroup.hide();
 
     this.layer.add(this.infoBoxGroup);
+    */
   };
 
   ForecastPoints.prototype.closeInfoBox = function() {
@@ -2269,60 +2289,78 @@ var WaveMap = (function() {
 
 $(function() {
   var canvas2DSupported = !!window.CanvasRenderingContext2D;
-  if ($("#buoydata").length > 0) {
-    new WaveMap({
+
+  var mapData ={
+    buoydata: {
       id: "buoydata",
       title: "BUOY DATA",
       timezone: "ET",
       map: "wna_ne",
       maptype: "buoydatamap",
       defaultBuoy: "44065"
-    });
-  }
-  if ($("#surfacetemp").length > 0) {
-    new WaveMap({
+    },
+    surfacetemp: {
       id: "surfacetemp",
       title: "SEA SURFACE TEMPERATURE",
       timezone: "ET",
       map: "wna_midat",
       maptype: "surfacetempmap",
-    });
-  }
-  if ($("#waveheights").length > 0 && canvas2DSupported) {
-    new WaveMap({
+    },
+    waveheights: {
       id: "waveheights",
       title: "DEEP WATER WAVES",
       timezone: "ET",
       map: "wna_midat",
       maptype: "wavemaps",
       loc: "ocean-city-maryland"
-    });
-  }
-  if($("#waveperiods").length > 0) {
-    new WaveMap({
+    },
+    waveperiods: {
       id: "waveperiods",
       title: "Mean Wave Periods",
       timezone: "ET",
       map: "wna_ec",
       maptype: "periodmaps"
-    });
-  }
-  if($("#nearshorewind").length > 0) {
-    new WaveMap({
+    },
+    nearshorewind: {
       id: "nearshorewind",
       title: "Near Shore Winds",
       timezone: "ET",
       map: "wna_nj",
       maptype: "windmaps"
-    });
-  }
-  if($("#pressurewind").length > 0) {
-    new WaveMap({
+    },
+    pressurewind: {
       id: "pressurewind",
       title: "PRESSURE / WIND MAP",
       timezone: "ET",
       map: "wna_ec",
       maptype: "pressurewindmap"
+    }
+  };
+  var mapObjects = {};
+  $("#mapmenu a").on("click", function(event) {
+    var id = $(this).attr("id");
+    id = id.substring(0, id.length - 4);
+
+    var mapObject = mapObjects[id];
+    if (mapObject) {
+    } else {
+      mapObjects[id] = new WaveMap(mapData[id]);
+    }
+
+    $("#mapdisplay .map").hide();
+    $("#" + id).show();
+
+    event.preventDefault();
+  });
+
+  if ($("#waveheights").length > 0 && canvas2DSupported) {
+    mapObjects["waveheights"] = new WaveMap({
+      id: "waveheights",
+      title: "DEEP WATER WAVES",
+      timezone: "ET",
+      map: "wna_midat",
+      maptype: "wavemaps",
+      loc: "ocean-city-maryland"
     });
   }
 });

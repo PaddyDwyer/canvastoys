@@ -1,14 +1,53 @@
 %h1 Forecast#wavemaps
 %p Find me in app/views/forecast/wavemaps.html.haml
 
-#buoydata.map
+%ul#mapmenu
+  %li
+    %a#waveheightslink(href="#") Waves
+    %ul
+      %li
+        %a#waveheightslink(href="#") Significant Wave Heights
+      %li
+        %a#waveperiodslink(href="#") Dominant Wave Periods
+  %li
+    %a#nearshorewindlink(href="#") Winds
+    %ul
+      %li
+        %a#nearshorewindlink(href="#") Nearshore Winds
+      %li
+        %a#pressurewindlink(href="#") Pressure / Wind
+  %li
+    %a#buoydatalink(href="#") Buoy / Land Data
+  %li
+    %a#surfacetemplink(href="#") Ocean Temps
+.clear
 
-#surfacetemp.map
+#mapdisplay
+  #buoydata.map.hidden
 
-#waveheights.map
+  #surfacetemp.map.hidden
 
-#waveperiods.map
+  #waveheights.map
+    .infobox
+      .name
+        %a
+      %img.closebutton(src="#{asset_path('close.png')}")
+      .surf_day
+        %span
+        %img.surf_am
+        %img.surf_pm
+      .label Surf:
+      .surf_txt
+      .label Conditions:
+      .cond_txt
+      .url_btn
+        %a
 
-#nearshorewind.map
+  #waveperiods.map.hidden
 
-#pressurewind.map
+  #nearshorewind.map.hidden
+
+  #pressurewind.map.hidden
+
+:javascript
+  //alert("hello")

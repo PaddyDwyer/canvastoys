@@ -30,6 +30,7 @@ group :assets do
 end
 
 gem 'jquery-rails'
+gem 'jquery-ui-rails', '~> 3.0.1'
 
 # Going to use HTTParty for managing some server calls
 gem 'httparty'
