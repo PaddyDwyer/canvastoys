@@ -638,7 +638,8 @@ var Kinetic = {};
                 switch(fillType) {
                     case 'COLOR':
                         context.fillStyle = fill;
-                        context.fill(context);
+                        //context.fill(context);
+                        context.fill();
                         break;
                     case 'PATTERN':
                         if(fill.x || fill.y) {
@@ -655,7 +656,8 @@ var Kinetic = {};
                         }
 
                         context.fillStyle = context.createPattern(fill.image, fill.repeat || 'repeat');
-                        context.fill(context);
+                        //context.fill(context);
+                        context.fill();
                         break;
                     case 'LINEAR_GRADIENT':
                         var s = fill.start;
@@ -668,7 +670,8 @@ var Kinetic = {};
                             grd.addColorStop(colorStops[n], colorStops[n + 1]);
                         }
                         context.fillStyle = grd;
-                        context.fill(context);
+                        //context.fill(context);
+                        context.fill();
 
                         break;
                     case 'RADIAL_GRADIENT':
@@ -682,11 +685,13 @@ var Kinetic = {};
                             grd.addColorStop(colorStops[n], colorStops[n + 1]);
                         }
                         context.fillStyle = grd;
-                        context.fill(context);
+                        //context.fill(context);
+                        context.fill();
                         break;
                     default:
                         context.fillStyle = 'black';
-                        context.fill(context);
+                        //context.fill(context);
+                        context.fill();
                         break;
                 }
 
@@ -715,7 +720,8 @@ var Kinetic = {};
                 }
                 context.lineWidth = strokeWidth || 2;
                 context.strokeStyle = stroke || 'black';
-                context.stroke(context);
+                //context.stroke(context);
+                context.stroke();
                 context.restore();
 
                 if(!skipShadow && shadow && shadow.opacity) {
@@ -763,7 +769,8 @@ var Kinetic = {};
             var context = this.context;
             context.save();
             context.fillStyle = '#' + shape.colorKey;
-            context.fill(context);
+            //context.fill(context);
+            context.fill();
             context.restore();
         },
         _stroke: function(shape) {
@@ -773,7 +780,8 @@ var Kinetic = {};
                 context.save();
                 context.lineWidth = strokeWidth || 2;
                 context.strokeStyle = '#' + shape.colorKey;
-                context.stroke(context);
+                //context.stroke(context);
+                context.stroke();
                 context.restore();
             }
         }

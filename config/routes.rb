@@ -8,7 +8,7 @@ Canvas::Application.routes.draw do
     get "forecast/canvas" => "forecast#canvas"
     get "forecast/wavemaps" => "forecast#wavemaps"
 
-    get "data/timeline" => "data#timeline"
+    get "data/timeline/:id" => "data#timeline"
     get "data/bull_xml" => "data#bull_xml"
 
     get "data/wave_map_times" => "data#wave_map_times"
