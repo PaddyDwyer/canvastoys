@@ -1,7 +1,7 @@
 source 'https://rubygems.org'
 gem 'rake', '10.0.3'
 
-gem 'rails', '4.0.11'
+gem 'rails', '4.1.7'
 
 # Bundle edge Rails instead:
 # gem 'rails', :git => 'git://github.com/rails/rails.git'
@@ -68,7 +68,10 @@ group :production do
 end
 group :test do
   # Enable perf testing
-  gem 'ruby-prof', :git => 'git://github.com/wycats/ruby-prof.git'
+  #gem 'ruby-prof', :git => 'git://github.com/wycats/ruby-prof.git'
 
   gem 'test-unit'
+end
+group :development do
+  gem 'spring'
 end

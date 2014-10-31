@@ -13,3 +13,6 @@
 # Ignore all logfiles and tempfiles.
 /log/*.log
 /tmp
+
+# Ignore binstubs, they're not portable (For Now, This shouldn't be a problem if we use rbenv)
+/bin/*
