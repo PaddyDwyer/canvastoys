@@ -7,15 +7,15 @@ gem 'rails', '4.1.7'
 # gem 'rails', :git => 'git://github.com/rails/rails.git'
 
 # Use unicorn as the web server
-gem 'unicorn'
+gem 'unicorn', '~> 4.8'
 
 # Deploy with Capistrano
-gem 'capistrano'
+gem 'capistrano', '~> 3.2'
 
 # remove database
 #gem 'sqlite3'
 
-gem 'haml-rails'
+gem 'haml-rails', '~> 0.5'
 
 # Use SCSS for stylesheets
 gem 'sass-rails', '~> 4.0.2'
@@ -39,11 +39,11 @@ gem 'coffee-rails', '~> 4.0.0'
 #   gem 'uglifier', '>= 1.0.3'
 # end
 
-gem 'jquery-rails'
+gem 'jquery-rails', '~> 3.1'
 gem 'jquery-ui-rails', '~> 3.0.1'
 
 # Going to use HTTParty for managing some server calls
-gem 'httparty'
+gem 'httparty', '~> 0.13'
 
 # To use ActiveModel has_secure_password
 # gem 'bcrypt-ruby', '~> 3.0.0'
@@ -64,14 +64,14 @@ gem 'httparty'
 # put test-only gems in this group so their generators
 # and rake tasks are available in development mode:
 group :production do
-  gem 'therubyracer'
+  gem 'therubyracer', '~> 0.12'
 end
 group :test do
   # Enable perf testing
   #gem 'ruby-prof', :git => 'git://github.com/wycats/ruby-prof.git'
 
-  gem 'test-unit'
+  gem 'test-unit', '~> 3.0'
 end
 group :development do
-  gem 'spring'
+  gem 'spring', '~> 1.1'
 end
