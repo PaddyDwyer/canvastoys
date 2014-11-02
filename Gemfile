@@ -9,9 +9,6 @@ gem 'rails', '4.1.7'
 # Use unicorn as the web server
 gem 'unicorn', '~> 4.8'
 
-# Deploy with Capistrano
-gem 'capistrano', '~> 3.2'
-
 # remove database
 #gem 'sqlite3'
 
@@ -74,4 +71,10 @@ group :test do
 end
 group :development do
   gem 'spring', '~> 1.1'
+
+  # Deploy with Capistrano
+  gem 'capistrano', '~> 3.2'
+  gem 'capistrano-rbenv', '~> 2.0'
+  gem 'capistrano-bundler', '~> 1.1.2'
+  gem 'capistrano3-unicorn', '~> 0.2'
 end
