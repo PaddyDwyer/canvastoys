@@ -1,92 +1,63 @@
-# Bundler Integration
-# http://github.com/carlhuda/bundler/blob/master/lib/bundler/capistrano.rb
-require 'bundler/capistrano'
+# config valid only for Capistrano 3.1
+lock '3.2.1'
 
-# Application Settings
-unless exists? :user
-  set :user,        "p"
-end
-unless exists? :server_ip
-  set :server_ip,   "server_ip"
-end
-unless exists? :port
-  set :port,        0
-end
-set :application,   "canvas"
-set :deploy_to,     "/home/#{user}/#{application}"
-set :rails_env,     "production"
-set :use_sudo,      false
-set :keep_releases, 5
+set :application, 'canvas'
+set :repo_url,    "git@github.com:kertap/canvastoys.git"
 
-# Git Settings
-set :scm,           :git
-set :branch do
-  default_tag = `git tag`.split("\n").last
+# Default branch is :master
+# ask :branch, proc { `git rev-parse --abbrev-ref HEAD`.chomp }.call
 
-  tag = Capistrano::CLI.ui.ask "Tag to deploy (make sure to push the tag first): [#{default_tag}] "
-  tag = default_tag if tag.empty?
-  tag
-end
-set :repository,    "git@github.com:kertap/canvastoys.git"
-set :deploy_via,    :remote_cache
+# Default deploy_to directory is /var/www/my_app
+set :deploy_to, "/home/deploy/canvas"
 
-# Uses local instead of remote server keys, good for github ssh key deploy.
-ssh_options[:forward_agent] = true
-ssh_options[:keys] = [File.join(ENV["HOME"], ".ssh", "kertap_rsa")]
-ssh_options[:port] = port
+# Default value for :scm is :git
+# set :scm, :git
 
-# Server Roles
-role :web, "#{server_ip}"                     # Your HTTP server, Apache/etc
-role :app, "#{server_ip}"                     # This may be the same as your `Web` server
-role :db,  "#{server_ip}", :primary => true   # This is where Rails migrations will run
+# Default value for :format is :pretty
+# set :format, :pretty
 
-# Set default environment so we cap will use rbenv
-set :default_environment, {
-  'PATH' => "/home/#{user}/.rbenv/shims:/home/#{user}/.rbenv/bin:$PATH",
-  'RAILS_RELATIVE_URL_ROOT' => "/canvas"
-}
+# Default value for :log_level is :debug
+# set :log_level, :debug
 
-# Using Unicorn and Bundler binstubs and shit https://github.com/sstephenson/rbenv/issues/101
-set :bundle_flags, "--deployment --binstubs --quiet --shebang ruby-local-exec"
+# Default value for :pty is false
+# set :pty, true
 
-# Unicorn deploy restart https://gist.github.com/393178
-set :unicorn_binary, "#{current_path}/bin/unicorn_rails"
-set :unicorn_config, "#{current_path}/config/unicorn.rb"
-set :unicorn_pid, "#{current_path}/tmp/pids/unicorn.pid"
+# Default value for :linked_files is []
+# set :linked_files, %w{config/database.yml}
+
+# Default value for linked_dirs is []
+set :linked_dirs, %w{bin log tmp/pids tmp/cache tmp/sockets vendor/bundle}
+
+# Default value for default_env is {}
+# set :default_env, { path: "/opt/ruby/bin:$PATH" }
+
+# Default value for keep_releases is 5
+# set :keep_releases, 5
+
+# Set up rbenv
+set :rbenv_type, :system
+set :rbenv_ruby, '2.0.0-p576'
+
 namespace :deploy do
-  task :routes do
-    run "cd #{current_path} && bundle exec rake routes"
-  end
-  task :start do
-    run "cd #{current_path} && #{unicorn_binary} -c #{unicorn_config} -E #{rails_env} -D"
-  end
-  task :stop do
-    if remote_file_exists?(unicorn_pid)
-      run "kill `cat #{unicorn_pid}`"
-    end
-  end
-  task :reload do
-    if remote_file_exists?(unicorn_pid)
-      run "kill -s USR2 `cat #{unicorn_pid}`"
-    else
-      start
-    end
-  end
+
+  desc 'Restart application'
   task :restart do
-    stop
-    start
+    on roles(:app), in: :sequence, wait: 5 do
+      invoke 'unicorn:restart'
+      # Your restart mechanism here, for example:
+      # execute :touch, release_path.join('tmp/restart.txt')
+    end
   end
-end
 
-task :show_options do
-  p "ssh key is #{ssh_options[:keys]}"
-  p "user is #{user}"
-  p "deploy_to is #{deploy_to}"
-  p "port is #{port}"
-  p "server is #{server_ip}"
-end
+  after :publishing, :restart
 
-# In order for kill to work we need to know if the pid. If it doesn't exist it'll fail
-def remote_file_exists?(full_path)
-  'true' == capture("if [ -e #{full_path} ]; then echo 'true'; fi").strip
+  after :restart, :clear_cache do
+    on roles(:web), in: :groups, limit: 3, wait: 10 do
+      # Here we can do anything such as:
+      # within release_path do
+      #   execute :rake, 'cache:clear'
+      # end
+    end
+  end
+
 end
