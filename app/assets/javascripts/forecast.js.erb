@@ -185,7 +185,7 @@ var SurfForecast = (function() {
     direction = direction || this.beachDirection;
     _this = this;
     // change the base path to the actual data timeline path
-    var basePath = "<%= data_timeline_path %>/";
+    var basePath = "<%= data_timelines_path %>/";
     $.ajax(basePath + this.filenames[direction] + ".xml", {
       success: function(data, textStatus, xhr) {
         _this.bindSurfData(data, textStatus, xhr, direction);

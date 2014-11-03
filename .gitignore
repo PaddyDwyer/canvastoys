@@ -16,3 +16,6 @@
 
 # Ignore binstubs, they're not portable (For Now, This shouldn't be a problem if we use rbenv)
 /bin/*
+
+# Ignore generated assets
+/public/assets/*
