@@ -1,4 +1,4 @@
-class TimelinesController < ApplicationController
+class Data::TimelinesController < ApplicationController
   def show
     id = params[:id]
     xml = SurfData.get_timeline(id)
