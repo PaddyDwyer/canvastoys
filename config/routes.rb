@@ -24,7 +24,7 @@ Canvas::Application.routes.draw do
     get "data/forecast_xy" => "data#forecast_xy"
     get "data/buoy_data" => "data#buoy_data"
 
-    resource :data do
+    namespace :data do
       resources :timelines
     end
 
