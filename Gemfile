@@ -40,7 +40,7 @@ gem 'jquery-rails', '~> 3.1'
 gem 'jquery-ui-rails', '~> 3.0.1'
 
 # Going to use HTTParty for managing some server calls
-gem 'httparty', '~> 0.13'
+gem 'httparty', '~> 0.21'
 
 # To use ActiveModel has_secure_password
 # gem 'bcrypt-ruby', '~> 3.0.0'
